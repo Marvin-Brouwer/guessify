@@ -1,5 +1,6 @@
 import { Accessor, Component, createContext, createMemo, createSignal, onMount, useContext } from 'solid-js'
 import { SpotifyApi, UserProfile } from '@spotify/web-api-ts-sdk';
+import { useDictionaries } from '../i18n/dictionary'
 
 const clientId = import.meta.env['VITE_SPOTIFY_CLIENT'];
 const hostName = import.meta.env['VITE_SPOTIFY_HOST'];
@@ -75,9 +76,11 @@ if(initialLocation.searchParams.has('error')) {
 
 const errorMessage = () => {
 	if(!errorCode()) return undefined;
-	if (errorCode() === 'access_denied') return "Access denied, please try again!"
 
-	return "Unexpected error, please try again!"
+	const { dictionary } = useDictionaries();
+	if (errorCode() === 'access_denied') return dictionary.spotify.errors.access_denied;
+
+	return dictionary.spotify.errors.unknown;
 }
 
 const [profile, setProfile] = createSignal<UserProfile>()
@@ -102,9 +105,12 @@ export const SpotifyContext: Component = () => {
 		}
 	})
 
+	const { dictionary, locale } = useDictionaries();
+
 	return <spotifyContext.Provider value={{
 		...spotifyContext.defaultValue,
-		isValid: createMemo(checkValid, isAuthenticated)
+		isValid: createMemo(checkValid, isAuthenticated),
+		errorMessage: createMemo(errorMessage, [dictionary, locale, errorCode])
 	}}>
 		<></>
 	</spotifyContext.Provider>

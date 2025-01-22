@@ -8,10 +8,12 @@ import logoutIcon from '../assets/logout_24dp_E8EAED.svg'
 import loginIcon from '../assets/login_24dp_E8EAED.svg'
 
 import { useSpotifyContext } from '../context/spotify-context'
+import { useDictionaries } from '../i18n/dictionary'
 
 export const SpotifyCard: Component = () => {
 
-	const spotifyContext = useSpotifyContext();
+	const spotifyContext = useSpotifyContext()
+	const { dictionary } = useDictionaries()
 
 	const activeCard = createMemo(() => {
 		if (!spotifyContext.isAuthenticating() && spotifyContext.isAuthenticated())
@@ -21,20 +23,20 @@ export const SpotifyCard: Component = () => {
 	}, [spotifyContext.isAuthenticated, spotifyContext.isAuthenticating])
 
 	return <div class='spotify-card'>
-		<h2>Spotify</h2>
+		<h2>{dictionary.spotify.title}</h2>
 		{activeCard()}
 	</div>
 }
 const SpotifyLoginCard: Component = () => {
 
-	const spotifyContext = useSpotifyContext();
+	const spotifyContext = useSpotifyContext()
+	const { dictionary } = useDictionaries()
 
 	return <>
 		<div class='spotify-login-card card'>
 			<div class="details">
-				<p>Please connect to spotify. <br/>
-				We need you to log into spotify to be able to play music in the browser.</p>
-				<p>For spotify to allow this app to play music, your account needs to be a premium subscription</p>
+				<p>{dictionary.spotify.explainer[0]}</p>
+				<p>{dictionary.spotify.explainer[1]}</p>
 				{spotifyContext.errorMessage() && <p class='error'>
 					{spotifyContext.errorMessage()}
 				</p>}
@@ -44,8 +46,8 @@ const SpotifyLoginCard: Component = () => {
 					spotifyContext.logIn()
 				}}>
 					{spotifyContext.isAuthenticating()
-						? <span>Signing in</span>
-						: <span>Sign in to spotify</span>
+						? <span>{dictionary.spotify.signingIn}</span>
+						: <span>{dictionary.spotify.signIn}</span>
 					}
 					{!spotifyContext.isAuthenticating() && <img src={loginIcon} />}
 				</button>
@@ -56,61 +58,59 @@ const SpotifyLoginCard: Component = () => {
 
 const SpotifyProfileCard: Component = () => {
 
-	const spotifyContext = useSpotifyContext();
+	const spotifyContext = useSpotifyContext()
+	const { dictionary } = useDictionaries()
 
-	const profile = spotifyContext.profile();
-	if(!profile) return null;
+	const profile = spotifyContext.profile()
+	if (!profile) return null
 
 	// TODO find a way to downscale to getClientRect
-	const profileThumbnail = profile.images?.find(image => image.width === 300) ?? undefined;
-	const [image, setImage] = createSignal(<img src={profilePlaceHolder} class="placeholder" />);
+	const profileThumbnail = profile.images?.find(image => image.width === 300) ?? undefined
+	const [image, setImage] = createSignal(<img src={profilePlaceHolder} class="placeholder" />)
 
-	createEffect(() =>{
-		if (!profileThumbnail) return;
+	createEffect(() => {
+		if (!profileThumbnail) return
 		if ((image() as HTMLImageElement).src === profileThumbnail.url) return
 
-		console.info(`loading ${profileThumbnail.url}`)
-
-		const profileImage = ((image() as Node).cloneNode(true)) as HTMLImageElement;
+		const profileImage = ((image() as Node).cloneNode(true)) as HTMLImageElement
 		profileImage.className = ''
-		profileImage.addEventListener('load', () => { setImage(profileImage) ; console.log('yay'); }, { once: true });
-		profileImage.src = profileThumbnail.url;
+		profileImage.addEventListener('load', () => setImage(profileImage), { once: true })
+		profileImage.src = profileThumbnail.url
 
 	}, profileThumbnail)
 
-	const hasPremium = spotifyContext.isValid();
+	const hasPremium = spotifyContext.isValid()
 
-	console.log(profile)
 	return <div class='spotify-profile-card card'>
 		<div class="thumbnail">{image()}</div>
 		<p class="stats">
-			<b>Country</b>
+			<b>{dictionary.spotify.stats.country}</b>
 			<i>{profile.country}</i>
 		</p>
 		<p class="stats">
-			<b>Followers</b>
+			<b>{dictionary.spotify.stats.followers}</b>
 			<i>{profile.followers.total}</i>
 		</p>
 		<p class="stats">
-			<b>Premium</b>
+			<b>{dictionary.spotify.stats.premium}</b>
 			<i>
-				<img	src={hasPremium ? premiumIcon : noPremiumIcon} />
+				<img src={hasPremium ? premiumIcon : noPremiumIcon} />
 			</i>
 		</p>
 
 		<div class="details">
 			<h3>{profile.display_name}</h3>
 			{hasPremium
-				? <p>Spotify premium user</p>
+				? <p>{dictionary.spotify.details.hasPremium}</p>
 				: <>
-					<p class="no-premium">User doesn't have premium account</p>
-					<p>For spotify to allow this app to play music, your account needs to be a premium subscription</p>
+					<p class="no-premium">{dictionary.spotify.details.noPremium}</p>
+					<p>{dictionary.spotify.explainer[1]}</p>
 				</>
 			}
 		</div>
 		<div class="controls">
 			<button onclick={() => spotifyContext.logOut()}>
-				<span>Sign out</span>
+				<span>{dictionary.spotify.signOut}</span>
 				<img src={logoutIcon} />
 			</button>
 		</div>
