@@ -5,6 +5,9 @@ import solid from 'vite-plugin-solid'
 
 export default defineConfig({
 	appType: 'spa',
+	server: {
+		port: 5173
+	},
 	plugins: [
 		{
 			...eslint({
