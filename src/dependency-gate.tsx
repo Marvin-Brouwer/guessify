@@ -1,6 +1,7 @@
 import { Component, createMemo, ParentProps } from 'solid-js'
 import { useCameraContext } from './context/camera-context'
 import { useSpotifyContext } from './context/spotify-context'
+import { SpotifyCard } from './components/spotify-card'
 
 export const DependencyGate: Component<ParentProps> = ({ children }) => {
 
@@ -21,15 +22,9 @@ export const DependencyGate: Component<ParentProps> = ({ children }) => {
 		if(dependenciesMet()) return children
 
 		return <div>
-			<button disabled={spotifyContext.isAuthenticating() || spotifyContext.isAuthenticated()} onClick={() => spotifyContext.logIn()}>login</button>
-			<button disabled={spotifyContext.isAuthenticating() || !spotifyContext.isAuthenticated()} onClick={() => spotifyContext.logOut()}>logout</button>
-			<p>{
-				spotifyContext.isAuthenticating() ? 'loading' :
-				spotifyContext.isAuthenticated() ? 'logged in' : 'not logged in'
-			}</p>
-			{spotifyContext.isAuthenticated() && <p>{spotifyContext.profile()?.display_name}</p>}
-			{spotifyContext.isAuthenticated() && <p>{spotifyContext.profile()?.product}</p>}
+			<SpotifyCard />
 
+			<p>&nbsp;</p>
 			<button disabled={!cameraContext.canPrompt()} onClick={() => cameraContext.requestPermission()}>request cam</button>
 			<p>{cameraContext.permission()}</p>
 		</div>

@@ -1,4 +1,4 @@
-import { Accessor, Component, createContext, createMemo, createSignal, useContext } from 'solid-js'
+import { Accessor, Component, createContext, createMemo, createSignal, onMount, useContext } from 'solid-js'
 import { SpotifyApi, UserProfile } from '@spotify/web-api-ts-sdk';
 
 const clientId = import.meta.env['VITE_SPOTIFY_CLIENT'];
@@ -40,25 +40,45 @@ function logOut() {
 async function logIn() {
 
 	setIsAuthenticating(true)
+	setErrorCode(undefined)
 	const response = await sdk.authenticate();
-	setAuthenticated(response.authenticated)
+
+	// This means the browser is redirected
+	if (response.accessToken.access_token === "emptyAccessToken") return
+
 	const currentProfile = await sdk.currentUser.profile();
 	setProfile(currentProfile);
+	setAuthenticated(response.authenticated)
 	setIsAuthenticating(false)
 }
 
+type ErrorCode = 'access_denied' | string | undefined
 export type SpotifyContext = {
 	logOut: () => void
 	logIn: () => Promise<void>
 	isAuthenticating: Accessor<boolean>,
 	isAuthenticated: Accessor<boolean>,
 	isValid: Accessor<boolean>,
+	errorMessage: Accessor<string | undefined>,
 	profile: Accessor<UserProfile | undefined>
 }
 
 const hasExistingToken = await sdk.getAccessToken().then(t => !!t)
 const [isAuthenticating, setIsAuthenticating] = createSignal(hasExistingToken);
 const [isAuthenticated, setAuthenticated] = createSignal(false);
+
+// Errors are put in the redirect url
+const [errorCode, setErrorCode] = createSignal<ErrorCode>()
+if(initialLocation.searchParams.has('error')) {
+	setErrorCode(initialLocation.searchParams.get('error')!)
+}
+
+const errorMessage = () => {
+	if(!errorCode()) return undefined;
+	if (errorCode() === 'access_denied') return "Access denied, please try again!"
+
+	return "Unexpected error, please try again!"
+}
 
 const [profile, setProfile] = createSignal<UserProfile>()
 const checkValid = () => isAuthenticated() && profile()?.product === 'premium'
@@ -69,26 +89,22 @@ const spotifyContext = createContext<SpotifyContext>({
 	isAuthenticating,
 	isAuthenticated,
 	isValid: checkValid,
-	profile
-	// permission: cameraPermission,
-	// hasPermission: () => cameraPermission() === 'granted',
-	// canPrompt: () => cameraPermission() === 'unknown' || cameraPermission() === 'error:inuse',
-	// requestPermission
+	profile,
+	errorMessage
 })
 export const useSpotifyContext = () => useContext(spotifyContext);
 
-
 export const SpotifyContext: Component = () => {
 
-	if (isAuthenticating()) {
-		logIn()
-	}
+	onMount(() => {
+		if (hasExistingToken) {
+			logIn()
+		}
+	})
 
 	return <spotifyContext.Provider value={{
 		...spotifyContext.defaultValue,
 		isValid: createMemo(checkValid, isAuthenticated)
-		// hasPermission: createMemo(() => cameraPermission() === 'granted', cameraPermission),
-		// canPrompt: createMemo(() => cameraPermission() === 'unknown' || cameraPermission() === 'error:inuse', cameraPermission),
 	}}>
 		<></>
 	</spotifyContext.Provider>
