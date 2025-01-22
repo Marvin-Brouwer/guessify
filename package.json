@@ -1,0 +1,29 @@
+{
+	"name": "Guessify",
+	"version": "1.0.0-alpha.0",
+	"description": "A spotify code scanner for playing songs blind",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc -b && vite build",
+		"preview": "vite preview"
+	},
+	"keywords": [
+		"spotify",
+		"spotify-code",
+		"pub-quiz",
+		"music-quiz"
+	],
+	"author": "Marvin Brouwer",
+	"license": "Apache-2.0",
+	"packageManager": "pnpm@9.1.1+sha512.14e915759c11f77eac07faba4d019c193ec8637229e62ec99eefb7cf3c3b75c64447882b7c485142451ee3a6b408059cdfb7b7fa0341b975f12d0f7629c71195",
+	"devDependencies": {
+		"typescript": "~5.7.2",
+		"vite": "^6.0.11",
+		"vite-plugin-eslint": "^1.8.1",
+		"vite-plugin-solid": "^2.11.0"
+	},
+	"dependencies": {
+		"solid-js": "^1.9.4"
+	}
+}
