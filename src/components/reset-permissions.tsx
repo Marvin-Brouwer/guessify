@@ -61,7 +61,7 @@ export const ResetPermissionModal: Component = () => {
 		const browserDetails = await parseBrowser()
 
 		const instructionUrl = getUrl(browserDetails, locale())
-		if (!!instructionUrl) return modalElement.showModal()
+		if (!instructionUrl) return modalElement.showModal()
 
 		window.open(instructionUrl, '_blank')
 	}

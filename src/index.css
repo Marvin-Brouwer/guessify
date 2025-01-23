@@ -2,6 +2,7 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  font-size: 0.9rem;
 
   color-scheme: dark;
   color: rgba(255, 255, 255, 0.87);
@@ -31,12 +32,19 @@ body {
 }
 
 h1 {
-  font-size: 3.2em;
+  font-size: 2em;
   line-height: 1.1;
+  color:#1e96d7;
+  text-align: center;
+}
+h2 {
+  font-size: 1.2em;
+  margin-bottom: 1ex;
 }
 
 button,
 .card,
+select,
 dialog {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -46,15 +54,19 @@ dialog {
   font-family: inherit;
   background-color: #1a1a1a;
 }
-button {
+button,
+select {
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
+button:hover,
+select:hover {
   border-color: #646cff;
 }
 button:focus,
-button:focus-visible {
+button:focus-visible,
+select:focus,
+select:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
@@ -63,12 +75,12 @@ button:focus-visible {
 }
 
 dialog {
-	padding: 0;
-	min-width: 320px;
-	max-width: 60ex;
-	background-color: rgb(32, 32, 32);
+  padding: 0;
+  min-width: 320px;
+  max-width: 60ex;
+  background-color: rgb(32, 32, 32);
 }
 
 ::backdrop {
-	background: rgba(0,0,0,.7)
+  background: rgba(0, 0, 0, 0.7);
 }

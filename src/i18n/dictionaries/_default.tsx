@@ -30,6 +30,22 @@ export const default_dictionary = {
 	},
 	camera: {
 		title: 'Camera',
+		explainer: [
+			`To be able to scan the codes, we need access to your device's camera.`,
+			`Please, give your browser permission to access the camera.`
+		],
+		noSupport: [
+			`Your device likely doesn't have a camera, or your system doesn't allow your browser to access the camera.`,
+			`Sadly, you cannot use the app.`
+		],
+		noPermission: [
+			`Your browser doesn't have the correct permissions, possibly you denied the use of the camera.`,
+			`To use this application, you need to `
+		],
+		selectedCamera: `You selected "{{label}}" to scan the codes.`,
+		switchBanner: `When using the app, you can change the camera at any time.`,
+		requestPermission: 'Request permission',
+		requestingPermission: 'Requesting permission...',
 		permissions: {
 			title: 'Reset browser permissions',
 			permissionLink: 'reset your browser permissions',

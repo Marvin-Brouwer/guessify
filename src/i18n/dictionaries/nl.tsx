@@ -32,6 +32,22 @@ export const nl_dictionary: Dictionary = {
 	},
 	camera: {
 		title: 'Video camera',
+		explainer: [
+			`Om de codes te kunnen scannen hebben wij toegang nodig tot uw camera.`,
+			`Verleen uw browser a.u.b. toegang tot de camera.`
+		],
+		noSupport: [
+			`Uw apparaat heeft mogelijk geen camera, of uw besturingssysteem staat het gebruik hiervan niet toe.`,
+			'Helaas kunt u deze applicatie niet gebruiken.'
+		],
+		noPermission: [
+			`Uw browser geeft geen toestemming tot het gebruik van de camera. Mogelijk heeft u de toestemming geweigerd.`,
+			`Om gebruik te kunnen maken van de camera moet u `
+		],
+		selectedCamera: `U heeft "{{label}}" geselecteerd voor het scannen.`,
+		switchBanner: `U kunt dit later altijd nog veranderen.`,
+		requestPermission: 'Vraag toestemming',
+		requestingPermission: 'Toestemming vragen...',
 		permissions: {
 			title: 'Browser toestemming herstellen',
 			permissionLink: 'uw browser toestemming herstellen',

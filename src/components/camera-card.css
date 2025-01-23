@@ -17,63 +17,20 @@
   justify-content: flex-start;
   align-items: center;
   padding: 4ex 4ex 0 4ex;
-}
-
-.camera-request-card .no-controls {
-
-	grid-template-rows: 8ex 1fr 0px;
-}
-
-.camera-profile-card .thumbnail {
-  border-radius: 100%;
-  width: 8ex;
-  height: 8ex;
+  position: relative;
   overflow: hidden;
-  align-content: center;
-  justify-content: center;
-  align-items: center;
-  grid-area: thumbnail;
 }
-.camera-profile-card .thumbnail :not(.placeholder) {
-  width: 10ex;
+
+.camera-request-card.no-controls {
+
+	padding: 4ex 4ex 4ex 4ex;
 }
-.camera-profile-card .thumbnail .placeholder {
-  margin: -1ex;
-  width: 10.1ex;
-}
-.camera-profile-card .stats {
-  height: 8ex;
-  margin: 0;
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-columns: 1fr;
-  grid-template-rows: min-content 1fr;
-  gap: 0;
-  grid-template-areas:
-    "."
-    ".";
-  text-align: center;
-}
-.camera-profile-card .stats b {
-  font-size: 2.1ex;
-  font-weight: bolder;
-}
-.camera-profile-card .stats i {
-  font-size: 1.9ex;
-  flex-direction: column;
-  align-content: center;
-  justify-content: center;
-  align-items: center;
-}
-.camera-profile-card .stats i img {
-  height: 4ex;
-  width: 4ex;
-}
-.camera-profile-card .details {
+
+.camera-request-card .details {
   grid-area: details;
-  border-top: 1px solid #3b3b3b;
   margin-top:1ex;
   padding-top: 0ex;
+  width: 100%;
 }
 .camera-card .no-premium, .error {
   font-weight: bold;
@@ -88,10 +45,17 @@
 	width: calc(100% + 8ex);
   }
   .camera-request-card .controls {
-	margin: 4ex -4ex 0 -4ex;
+	margin: 0 -4ex 0 -4ex;
+	position: relative;
   }
 
-.camera-card .controls button {
+  .camera-card .controls button[disabled] img ,
+	.camera-card .controls .fake-button.disabled img {
+	opacity: .4;
+  }
+  .camera-card .controls button ,
+  .camera-card .controls select,
+  .camera-card .controls .fake-button {
   width: 100%;
   height: 8ex;
   display: grid;
@@ -104,9 +68,60 @@
   justify-content: center;
   align-items: center;
 }
-.camera-card .controls button span {
+
+.camera-card .controls select {
+	text-align:center;
+	padding-left: 8ex;
+	padding-right: 8ex;
+	padding-top: 2ex;
+	padding-bottom: 2ex;
+}
+.camera-card .controls option {
+	text-align:left;
+	padding-left: 8ex;
+	padding-right: 8ex;
+	padding-top: 2ex;
+	padding-bottom: 2ex;
+}
+
+.camera-card .controls .fake-button {
+	position: absolute;
+	bottom:0;
+	pointer-events: none;
+}
+.camera-card .controls button span ,
+.camera-card .controls .fake-button span {
   grid-area: text;
 }
-.camera-card .controls button img {
+.camera-card .controls .fake-button span {
+	background-color: #1a1a1a;
+	text-align: center;
+}
+.camera-card .controls button img ,
+	.camera-card .controls .fake-button img {
   grid-area: icon;
+}
+.camera-request-card video,
+.camera-request-card .video-blur {
+    display: block;
+    width: calc(100% + 8ex);
+    height: 15ex;
+	display: block;
+    pointer-events: none;
+	object-fit: none;
+	object-align: center center; /* default, anchor to center of video */
+	margin: -4ex -4ex 0 -4ex;
+}
+.camera-request-card .video-blur {
+	background-color: rgb(255 255 255 / 20%);
+	backdrop-filter: blur(2px);
+	display: block;
+	position:absolute;
+	margin: -4ex 0 0 0;
+	width: 100%;
+}
+.camera-card .controls select {
+	-webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }

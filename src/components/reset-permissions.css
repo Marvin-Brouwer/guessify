@@ -17,7 +17,7 @@
   width: calc(100% + 8ex);
 }
 .camera-request-card .controls {
-  margin: 4ex -4ex 0 -4ex;
+	margin: 0 -4ex 0 -4ex;
 }
 
 .reset-permissions-modal .controls button {
