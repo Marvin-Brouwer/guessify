@@ -1,8 +1,10 @@
-import { Component, createMemo, createSignal, ParentProps } from 'solid-js'
+import { Component, createMemo, ParentProps } from 'solid-js'
 import { useCameraContext } from './context/camera-context'
 import { useSpotifyContext } from './context/spotify-context'
 import { SpotifyCard } from './components/spotify-card'
 import { CameraCard } from './components/camera-card'
+
+import logo from '../public/guessify-logo.svg'
 
 export const DependencyGate: Component<ParentProps> = ({ children }) => {
 
@@ -22,10 +24,10 @@ export const DependencyGate: Component<ParentProps> = ({ children }) => {
 	return <>{createMemo(() => {
 		if (dependenciesMet()) return children
 
-		return <>
-			<h1>Guessify</h1>
+		return <div class="dependency-gate">
+			<h1 class="logo"><img src={logo} /> Guessify</h1>
 			<SpotifyCard />
 			<CameraCard />
-		</>
+		</div>
 	}, dependenciesMet)()}</>
 }

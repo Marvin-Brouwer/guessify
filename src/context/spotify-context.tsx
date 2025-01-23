@@ -72,6 +72,10 @@ const [isAuthenticated, setAuthenticated] = createSignal(false);
 const [errorCode, setErrorCode] = createSignal<ErrorCode>()
 if(initialLocation.searchParams.has('error')) {
 	setErrorCode(initialLocation.searchParams.get('error')!)
+	// redirect to hide this from refresh
+	const newLocation = new URL(initialLocation)
+	newLocation.searchParams.delete('error');
+	history.replaceState(null, '', newLocation)
 }
 
 const errorMessage = () => {

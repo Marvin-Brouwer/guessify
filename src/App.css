@@ -2,5 +2,22 @@
   max-width: 60ex;
   width: 100%;
   margin: 0 auto;
-  padding: 2ex;
+  padding: 2ex 6ex;
+}
+
+.dependency-gate {
+	margin-top: 2.2em;
+}
+.logo {
+	padding-right: .5em;
+	position: fixed;
+    top: .5em;
+    width: 100%;
+    left: 0;
+}
+.logo img{
+
+    display: inline-block;
+    height: 1.5em;
+    margin-bottom: -.3em;
 }
