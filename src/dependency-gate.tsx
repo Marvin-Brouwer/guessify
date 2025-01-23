@@ -2,6 +2,7 @@ import { Component, createMemo, ParentProps } from 'solid-js'
 import { useCameraContext } from './context/camera-context'
 import { useSpotifyContext } from './context/spotify-context'
 import { SpotifyCard } from './components/spotify-card'
+import { CameraCard } from './components/camera-card'
 
 export const DependencyGate: Component<ParentProps> = ({ children }) => {
 
@@ -23,6 +24,7 @@ export const DependencyGate: Component<ParentProps> = ({ children }) => {
 
 		return <div>
 			<SpotifyCard />
+			<CameraCard />
 
 			<p>&nbsp;</p>
 			<button disabled={!cameraContext.canPrompt()} onClick={() => cameraContext.requestPermission()}>request cam</button>

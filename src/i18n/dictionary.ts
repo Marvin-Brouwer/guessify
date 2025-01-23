@@ -1,5 +1,5 @@
 import * as i18n from "@solid-primitives/i18n"
-import { Accessor, createMemo, createSignal } from 'solid-js'
+import { Accessor, createMemo, createSignal, JSX } from 'solid-js'
 import { default_dictionary } from './dictionaries/_default'
 import { nl_dictionary } from './dictionaries/nl'
 
@@ -16,7 +16,7 @@ const [locale, setLocale] = createSignal<Locale>("nl")
 export type Dictionaries = {
 	locale: Accessor<Locale>
 	dictionary: Dictionary
-	template: i18n.Translator<Dictionary>
+	template: i18n.TemplateResolver<string | NonNullable<JSX.Element>>
 }
 export const useDictionaries: Accessor<Dictionaries> = () => {
 
@@ -25,6 +25,6 @@ export const useDictionaries: Accessor<Dictionaries> = () => {
 	return {
 		locale,
 		dictionary: dict(),
-		template: i18n.translator(dict)
+		template: i18n.resolveTemplate
 	}
 }

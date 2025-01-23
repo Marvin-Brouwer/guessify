@@ -9,10 +9,16 @@ import loginIcon from '../assets/login_24dp_E8EAED.svg'
 
 import { useSpotifyContext } from '../context/spotify-context'
 import { useDictionaries } from '../i18n/dictionary'
+import { useCameraContext } from '../context/camera-context'
 
 export const SpotifyCard: Component = () => {
 
 	const spotifyContext = useSpotifyContext()
+	const { hasMediaSupport } = useCameraContext()
+
+	// No use logging in if we don't have a camera
+	if (!hasMediaSupport()) return null
+
 	const { dictionary } = useDictionaries()
 
 	const activeCard = createMemo(() => {

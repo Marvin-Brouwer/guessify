@@ -36,7 +36,8 @@ h1 {
 }
 
 button,
-.card {
+.card,
+dialog {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
@@ -59,4 +60,15 @@ button:focus-visible {
 
 .card {
   background-color: rgb(32, 32, 32);
+}
+
+dialog {
+	padding: 0;
+	min-width: 320px;
+	max-width: 60ex;
+	background-color: rgb(32, 32, 32);
+}
+
+::backdrop {
+	background: rgba(0,0,0,.7)
 }

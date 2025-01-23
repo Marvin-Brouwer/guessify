@@ -1,6 +1,9 @@
 import { Dictionary } from '../dictionary'
 
 export const nl_dictionary: Dictionary = {
+	common: {
+		close: 'Sluiten'
+	},
 	spotify: {
 		title: 'Spotify',
 		explainer: [
@@ -25,6 +28,19 @@ export const nl_dictionary: Dictionary = {
 		details: {
 			hasPremium: 'Spotify premium gebruiker.',
 			noPremium: "Gebruiker heeft geen premium account!"
+		}
+	},
+	camera: {
+		title: 'Video camera',
+		permissions: {
+			title: 'Browser toestemming herstellen',
+			permissionLink: 'uw browser toestemming herstellen',
+			explainer: `Wij konden geen uitleg vinden voor jouw browser, probeer a.u.b. in uw instellingen te zoeken hoe u de camera toestemming kunt herstellen.`,
+			cta: [
+				'Wilt u a.u.b. ook ',
+				'een verzoek indienen',
+				' om uw eigen browser toe te voegen aan onze instructies?'
+			]
 		}
 	}
 }

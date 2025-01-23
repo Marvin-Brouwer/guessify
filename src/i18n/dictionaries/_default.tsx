@@ -1,4 +1,7 @@
 export const default_dictionary = {
+	common: {
+		close: 'Close'
+	},
 	spotify: {
 		title: 'Spotify',
 		explainer: [
@@ -23,6 +26,19 @@ export const default_dictionary = {
 		details: {
 			hasPremium: 'Spotify premium user.',
 			noPremium: "User doesn't have premium account!"
+		}
+	},
+	camera: {
+		title: 'Camera',
+		permissions: {
+			title: 'Reset browser permissions',
+			permissionLink: 'reset your browser permissions',
+			explainer: `We couldn't find a page for your browser, please look in your settings to reset the browser permissions.`,
+			cta: [
+				'If you like, you can ',
+				'file a request',
+				' to add your browser to our instructions.'
+			]
 		}
 	}
 }
