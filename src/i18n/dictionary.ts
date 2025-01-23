@@ -11,7 +11,7 @@ const dictionaries = {
 }
 export type Locale = keyof typeof dictionaries
 
-const [locale, setLocale] = createSignal<Locale>("nl")
+const [locale] = createSignal<Locale>("nl")
 
 export type Dictionaries = {
 	locale: Accessor<Locale>

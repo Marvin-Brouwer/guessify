@@ -24,10 +24,10 @@ export const DependencyGate: Component<ParentProps> = ({ children }) => {
 	return <>{createMemo(() => {
 		if (dependenciesMet()) return children
 
-		return <div class="dependency-gate">
+		return (<div class="dependency-gate">
 			<h1 class="logo"><img src={logo} /> Guessify</h1>
 			<SpotifyCard />
 			<CameraCard />
-		</div>
+		</div>)
 	}, dependenciesMet)()}</>
 }

@@ -1,4 +1,4 @@
-import { Accessor, Component, createContext, createMemo, createSignal, onCleanup, onMount, Signal, useContext } from 'solid-js'
+import { Accessor, Component, createContext, createMemo, createSignal, onCleanup, onMount, useContext } from 'solid-js'
 
 import {
 	MediaPermissionsError,
