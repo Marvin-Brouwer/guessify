@@ -7,9 +7,12 @@ import eslint from 'vite-plugin-eslint';
 import solid from 'vite-plugin-solid'
 import topLevelAwait from 'vite-plugin-top-level-await'
 import htmlConfig from 'vite-plugin-html-config'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 
 // We'd like to display this in the settings menu
 process.env.VITE_APP_VERSION = packageJson.version;
+
+const devHostEnabled = process.argv.includes('--host')
 
 export default defineConfig({
 	appType: 'spa',
@@ -26,6 +29,7 @@ export default defineConfig({
 		}
 	},
 	plugins: [
+		devHostEnabled? basicSsl() : undefined,
 		topLevelAwait(),
 		{
 			...eslint({

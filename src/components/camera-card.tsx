@@ -89,19 +89,25 @@ const CameraAcceptedCard: Component = () => {
 	const { dictionary, template } = useDictionaries()
 
 	const [camera, setCamera] = createSignal<Camera>();
-	const cameraStream = createMemo(() => camera()?.stream ?? new MediaStream(), camera);
+	const cameraStream = createMemo(() => camera()?.stream ?? null, camera);
 
 	const videoDom = <video></video>;
+	const videoPlayerElement = videoDom as HTMLVideoElement
 
 	const videoPlayer = createMemo(() => {
-		const videoPlayerElement = videoDom as HTMLVideoElement
-
 		videoPlayerElement.srcObject = cameraStream();
-		videoPlayerElement.onloadedmetadata = () => {
-			videoPlayerElement.play();
-		};
-
-		return videoDom
+		if (videoPlayerElement.srcObject) {
+			videoPlayerElement.removeAttribute('src');
+			videoPlayerElement.onloadedmetadata = () => {
+				videoPlayerElement.play();
+			};
+			return videoDom
+		} else {
+			videoPlayerElement.src = "";
+			videoPlayerElement.srcObject = null;
+			videoPlayerElement.pause();
+			return <div>Nothing</div>
+		}
 	}, [cameraStream])
 
 	onMount(() => {
@@ -128,9 +134,14 @@ const CameraAcceptedCard: Component = () => {
 			</div>
 			<div class="controls">
 				<select data-value={camera()?.id} onchange={async (e) => {
-					if(e.target.value === camera()?.id) return;
+					const activeCamera = camera();
+					if(e.target.value === activeCamera?.id) return;
+					videoPlayerElement.pause();
+					videoPlayerElement.srcObject = null;
+					const newValue = e.target.value;
+					setCamera(undefined)
 
-					const selectedCamera = await cameraContext.getCamera(e.target.value);
+					const selectedCamera = await cameraContext.getCamera(newValue);
 					setCamera(selectedCamera);
 				}}>
 					{cameraOptions()}

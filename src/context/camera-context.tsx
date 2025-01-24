@@ -6,10 +6,23 @@ import {
 	requestMediaPermissions
 } from 'mic-check'
 
+function getCameraConstraints(deviceId?: string | undefined): MediaStreamConstraints {
+	return {
+		...cameraConstraints,
+		video: {
+			...cameraConstraints.video as MediaTrackConstraints,
+			deviceId: {
+				exact: deviceId
+			}
+		}
+	}
+}
 const cameraConstraints: MediaStreamConstraints = {
 	audio: false,
 	video: {
-		facingMode: "environment",
+		facingMode: {
+			ideal: "environment"
+		},
 		frameRate: {
 			ideal: 60,
 			min: 30
@@ -39,14 +52,15 @@ export type CameraContext = {
 	canPrompt: Accessor<boolean>
 	hasMediaSupport: Accessor<boolean>
 	getCamera: (id?: string) => Promise<Camera>
+	stopCameraStream: () => Promise<void>
 	devices: Accessor<MediaDeviceInfo[]>
 	requestPermission: () => Promise<CameraPermission>
 }
 
 async function getDevices() {
-	const devices = await navigator.mediaDevices?.enumerateDevices();
-	if (import.meta.env.DEV) console.debug('available media devices', devices);
-	if (import.meta.env.DEV) console.debug('available video devices', devices.filter(device => device.kind === 'videoinput'));
+	const devices = await navigator.mediaDevices?.enumerateDevices()
+	if (import.meta.env.DEV) console.debug('available media devices', devices)
+	if (import.meta.env.DEV) console.debug('available video devices', devices.filter(device => device.kind === 'videoinput'))
 	setKnownDevices(devices.filter(device => device.kind === 'videoinput'))
 }
 
@@ -64,15 +78,39 @@ function queryInitialCameraPermissions() {
 
 		})
 		.catch((error) => {
-			console.error(error);
+			console.error(error)
 		})
 		.finally(async () => {
-			if(!!navigator.mediaDevices?.enumerateDevices && knownDevices().length === 0)
-				await getDevices();
+			if (!!navigator.mediaDevices?.enumerateDevices && knownDevices().length === 0)
+				await getDevices()
 		})
 }
 const [cameraPermission, setCameraPermission] = createSignal<CameraPermission>('unknown')
 queryInitialCameraPermissions()
+
+// For mobile devices we need to stop the active stream before switching
+const [activeCamera, setActiveCamera] = createSignal<string>()
+async function stopCameraStream() {
+	const activeId = activeCamera();
+	if (!activeId) return
+	const activeStream = await navigator.mediaDevices.getUserMedia(
+		{ video: { deviceId: activeId } }
+	)
+
+	if (activeStream.active) {
+		activeStream.getTracks().forEach(track => {
+			if(track.readyState === 'ended') return
+			track.stop();
+			track.enabled = false;
+		})
+		try {
+			if ((activeStream as any).stop) (activeStream as any).stop()
+		} catch {
+			//
+		}
+		setActiveCamera(undefined)
+	}
+}
 
 const cameraContext = createContext<CameraContext>({
 	permission: cameraPermission,
@@ -80,6 +118,7 @@ const cameraContext = createContext<CameraContext>({
 	canPrompt: () => cameraPermission() === 'unknown' || cameraPermission() === 'error:inuse',
 	hasMediaSupport: () => cameraPermission() !== 'error:nosupport',
 	getCamera,
+	stopCameraStream,
 	requestPermission,
 	devices: knownDevices
 })
@@ -87,10 +126,12 @@ export const useCameraContext = () => useContext(cameraContext)
 
 async function requestPermission() {
 	setCameraPermission('pending')
-	return await requestMediaPermissions(cameraConstraints)
+
+	const storedCamera = localStorage.getItem('camera') ?? undefined;
+	return await requestMediaPermissions(getCameraConstraints(storedCamera))
 		.then(async () => {
 			if (!!navigator.mediaDevices?.enumerateDevices) {
-				await getDevices();
+				await getDevices()
 			}
 			return setCameraPermission('granted')
 		})
@@ -119,16 +160,37 @@ async function requestPermission() {
 
 // TODO locally store selected camera
 async function getCamera(id?: string): Promise<Camera> {
-	if (cameraPermission() !== 'granted') throw new Error(`Call 'requestPermission' before 'getStream'`);
+	if (cameraPermission() !== 'granted') throw new Error(`Call 'requestPermission' before 'getStream'`)
 
-	const mediaStream = await navigator.mediaDevices.getUserMedia(
-		id ? {video:{ deviceId: id }} : cameraConstraints
-	);
+	const storedCamera = localStorage.getItem('camera');
+	const requestedCamera = id ?? storedCamera ?? undefined
+	if (activeCamera() !== requestedCamera) await stopCameraStream();
 
-	// TODO when does this happen?
-	if(!mediaStream.active) throw new Error('mediastream died');
+	const mediaStream = await navigator.mediaDevices
+		.getUserMedia(getCameraConstraints(requestedCamera))
+		.catch(error => {
+			if ((error as Error).name !== 'NotReadableError') throw error
+			return new MediaStream()
+		})
+
+	if (!mediaStream.active) {
+		localStorage.setItem('camera', requestedCamera!)
+		window.location.reload();
+
+		return {
+			id: requestedCamera!,
+			label: '',
+			name: '',
+			stream: mediaStream
+		}
+	}
+	const deviceId = mediaStream.getTracks()[0].getSettings().deviceId!
+
+	setActiveCamera(deviceId)
+	localStorage.setItem('camera', deviceId)
+
 	return {
-		id: mediaStream.getTracks()[0].getSettings().deviceId!,
+		id: deviceId,
 		name: mediaStream.getTracks()[0].label,
 		label: mediaStream.getTracks()[0].label.split('(')[0].trim(),
 		stream: mediaStream
