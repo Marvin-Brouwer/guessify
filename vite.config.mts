@@ -21,12 +21,7 @@ export default defineConfig({
 		port: 5173
 	},
 	build: {
-		target: 'esnext',
-		rollupOptions: {
-			output: {
-				intro: 'Intro'
-			}
-		}
+		target: 'esnext'
 	},
 	plugins: [
 		devHostEnabled? basicSsl() : undefined,
