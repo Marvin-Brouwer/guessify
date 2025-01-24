@@ -6,10 +6,18 @@ import {
 	requestMediaPermissions
 } from 'mic-check'
 
-const cameraConstraints = {
+const cameraConstraints: MediaStreamConstraints = {
 	audio: false,
 	video: {
 		facingMode: "environment",
+		frameRate: {
+			ideal: 60,
+			min: 30
+		},
+		sampleRate: {
+			ideal: 60,
+			min: 30
+		}
 	}
 }
 
@@ -37,6 +45,8 @@ export type CameraContext = {
 
 async function getDevices() {
 	const devices = await navigator.mediaDevices?.enumerateDevices();
+	if (import.meta.env.DEV) console.debug('available media devices', devices);
+	if (import.meta.env.DEV) console.debug('available video devices', devices.filter(device => device.kind === 'videoinput'));
 	setKnownDevices(devices.filter(device => device.kind === 'videoinput'))
 }
 
@@ -52,11 +62,13 @@ function queryInitialCameraPermissions() {
 			if (permissionObj.state === 'granted') setCameraPermission('granted')
 			if (permissionObj.state === 'denied') setCameraPermission('denied')
 
-			if(permissionObj.state === 'granted' && !!navigator.mediaDevices?.enumerateDevices)
-				getDevices();
 		})
-		.catch((_) => {
-			//  console.log('Got error :', error);
+		.catch((error) => {
+			console.error(error);
+		})
+		.finally(async () => {
+			if(!!navigator.mediaDevices?.enumerateDevices && knownDevices().length === 0)
+				await getDevices();
 		})
 }
 const [cameraPermission, setCameraPermission] = createSignal<CameraPermission>('unknown')

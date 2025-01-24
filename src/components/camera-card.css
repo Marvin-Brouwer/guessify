@@ -114,11 +114,12 @@
 }
 .camera-request-card .video-blur {
 	background-color: rgb(255 255 255 / 20%);
-	backdrop-filter: blur(2px);
+	backdrop-filter: blur(8px);
 	display: block;
 	position:absolute;
 	margin: -4ex 0 0 0;
 	width: 100%;
+    height: calc(15ex + 1px);
 }
 .camera-card .controls select {
 	-webkit-appearance: none;
