@@ -153,6 +153,7 @@
 	font-size: 1ex;
 	white-space: pre;
 	line-height: 1.2ex;
+	color: rgb(32, 32, 32);
 }
 
 .camera-card .controls select {
