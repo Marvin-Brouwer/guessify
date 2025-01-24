@@ -1,5 +1,5 @@
 import * as i18n from "@solid-primitives/i18n"
-import { Accessor, createMemo, createSignal, JSX } from 'solid-js'
+import { Accessor, createMemo, JSX } from 'solid-js'
 import { default_dictionary } from './dictionaries/_default'
 import { nl_dictionary } from './dictionaries/nl'
 import { useParams } from '@solidjs/router'

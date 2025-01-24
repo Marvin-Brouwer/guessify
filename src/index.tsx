@@ -7,7 +7,7 @@ import {LandingPage, MainApp} from './app.tsx'
 
 const root = document.getElementById('root')
 
-render(() => <Router>
-	<Route path={`${import.meta.env.BASE_URL}:locale`} component={MainApp} />
+render(() => <Router base={import.meta.env.BASE_URL}>
+	<Route path="/:locale" component={MainApp} />
 	<Route path="*" component={LandingPage} />
 </Router>, root!)
