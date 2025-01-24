@@ -30,6 +30,7 @@ export const default_dictionary = {
 	},
 	camera: {
 		title: 'Camera',
+		openingCam: 'Connecting...',
 		explainer: [
 			`To be able to scan the codes, we need access to your device's camera.`,
 			`Please, give your browser permission to access the camera.`

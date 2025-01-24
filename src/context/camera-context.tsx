@@ -5,6 +5,7 @@ import {
 	MediaPermissionsErrorType,
 	requestMediaPermissions
 } from 'mic-check'
+import { useDictionaries } from '../i18n/dictionary'
 
 function getCameraConstraints(deviceId?: string | undefined): MediaStreamConstraints {
 	return {
@@ -173,14 +174,18 @@ async function getCamera(id?: string): Promise<Camera> {
 			return new MediaStream()
 		})
 
+	// Sometimes the browser doesn't close the stream on mobile devices
+	// To solve this we store and redirect.
 	if (!mediaStream.active) {
 		localStorage.setItem('camera', requestedCamera!)
 		window.location.reload();
 
+		const {dictionary} = useDictionaries();
+
 		return {
 			id: requestedCamera!,
-			label: '',
-			name: '',
+			label: '?',
+			name: dictionary.camera.openingCam,
 			stream: mediaStream
 		}
 	}

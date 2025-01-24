@@ -97,6 +97,9 @@
 	background-color: #1a1a1a;
 	text-align: center;
 }
+.camera-card .controls .fake-button.disabled span {
+	color: gray;
+}
 .camera-card .controls button img ,
 	.camera-card .controls .fake-button img {
   grid-area: icon;

@@ -106,7 +106,7 @@ const CameraAcceptedCard: Component = () => {
 			videoPlayerElement.src = "";
 			videoPlayerElement.srcObject = null;
 			videoPlayerElement.pause();
-			return <div>Nothing</div>
+			return <video></video>
 		}
 	}, [cameraStream])
 
@@ -133,12 +133,13 @@ const CameraAcceptedCard: Component = () => {
 				<p><i>{dictionary.camera.switchBanner}</i></p>
 			</div>
 			<div class="controls">
-				<select data-value={camera()?.id} onchange={async (e) => {
+				<select data-value={camera()?.id} disabled={!camera()} onchange={async (e) => {
 					const activeCamera = camera();
 					if(e.target.value === activeCamera?.id) return;
 					videoPlayerElement.pause();
 					videoPlayerElement.srcObject = null;
 					const newValue = e.target.value;
+					// Temporarily disable camera to make the chance of disposing the camera bigger
 					setCamera(undefined)
 
 					const selectedCamera = await cameraContext.getCamera(newValue);
@@ -146,8 +147,8 @@ const CameraAcceptedCard: Component = () => {
 				}}>
 					{cameraOptions()}
 				</select>
-				<div class="fake-button">
-					<span>{camera()?.name}</span>
+				<div class={camera() ? "fake-button" : "fake-button disabled"}>
+					<span>{camera()?.name ?? dictionary.camera.openingCam}</span>
 					<img src={cameraSelectIcon} />
 				</div>
 			</div>

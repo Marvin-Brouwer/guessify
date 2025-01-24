@@ -32,6 +32,7 @@ export const nl_dictionary: Dictionary = {
 	},
 	camera: {
 		title: 'Video camera',
+		openingCam: 'Verbinden...',
 		explainer: [
 			`Om de codes te kunnen scannen hebben wij toegang nodig tot uw camera.`,
 			`Verleen uw browser a.u.b. toegang tot de camera.`
