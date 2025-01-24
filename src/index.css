@@ -76,10 +76,14 @@ select:focus-visible {
 }
 
 dialog {
-  padding: 0;
+  padding: 2ex 6ex;
+  background: none;
   min-width: 320px;
   max-width: 60ex;
-  background-color: rgb(32, 32, 32);
+}
+
+details > summary {
+	cursor: pointer;
 }
 
 ::backdrop {

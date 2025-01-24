@@ -50,6 +50,7 @@ export const default_dictionary = {
 		permissions: {
 			title: 'Reset browser permissions',
 			permissionLink: 'reset your browser permissions',
+			deviceDetails: 'Device details',
 			explainer: `We couldn't find a page for your browser, please look in your settings to reset the browser permissions.`,
 			cta: [
 				'If you like, you can ',

@@ -51,6 +51,7 @@ export const nl_dictionary: Dictionary = {
 		requestingPermission: 'Toestemming vragen...',
 		permissions: {
 			title: 'Browser toestemming herstellen',
+			deviceDetails: 'Apparaat details',
 			permissionLink: 'uw browser toestemming herstellen',
 			explainer: `Wij konden geen uitleg vinden voor jouw browser, probeer a.u.b. in uw instellingen te zoeken hoe u de camera toestemming kunt herstellen.`,
 			cta: [

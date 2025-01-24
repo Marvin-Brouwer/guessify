@@ -1,4 +1,4 @@
-import { Component, onCleanup, onMount } from 'solid-js'
+import { Component, createSignal, onCleanup, onMount } from 'solid-js'
 import type { Parser } from 'bowser'
 import { Locale, useDictionaries } from '../i18n/dictionary'
 
@@ -13,9 +13,10 @@ async function parseBrowser(): Promise<Parser.ParsedResult> {
 export const ResetPermissionModal: Component = () => {
 
 	const { locale, dictionary } = useDictionaries()
+	const [browserInfo, setBrowserInfo] = createSignal<Parser.ParsedResult>()
 
 	const modal = <dialog>
-		<div class="reset-permissions-modal">
+		<div class="reset-permissions-modal card">
 			<div class="details">
 				<h2>{dictionary.camera.permissions.title}</h2>
 				<p>{dictionary.camera.permissions.explainer}</p>
@@ -26,6 +27,13 @@ export const ResetPermissionModal: Component = () => {
 					<a href="#todo" target='_blank'>{dictionary.camera.permissions.cta[1]}</a>
 					{dictionary.camera.permissions.cta[2]}
 				</p>
+				{browserInfo() && <details>
+					<summary>{dictionary.camera.permissions.deviceDetails}</summary>
+					<pre>
+{JSON.stringify(browserInfo(), null, 4)}
+					</pre>
+				</details>}
+				<p></p>
 			</div>
 			<div class="controls">
 				<button onClick={() => modalElement.close()}>
@@ -58,7 +66,8 @@ export const ResetPermissionModal: Component = () => {
 	})
 
 	const requestInfo = async () => {
-		const browserDetails = await parseBrowser()
+		const browserDetails = browserInfo() ?? await parseBrowser()
+		setBrowserInfo(browserDetails)
 
 		const instructionUrl = getUrl(browserDetails, locale())
 		if (!instructionUrl) return modalElement.showModal()
