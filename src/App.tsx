@@ -5,6 +5,8 @@ import { CameraContext } from './context/camera-context'
 import { SpotifyContext } from './context/spotify-context'
 
 function App() {
+
+	console.log(import.meta.env)
 	return (
 		<>
 			<SpotifyContext />

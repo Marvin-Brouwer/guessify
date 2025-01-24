@@ -1,9 +1,15 @@
 import { defineConfig } from 'vite'
 
+import packageJson from './package.json' with { type: 'json' }
+
 // @ts-expect-error
 import eslint from 'vite-plugin-eslint';
 import solid from 'vite-plugin-solid'
 import topLevelAwait from 'vite-plugin-top-level-await'
+import htmlConfig from 'vite-plugin-html-config'
+
+// We'd like to display this in the settings menu
+process.env.VITE_APP_VERSION = packageJson.version;
 
 export default defineConfig({
 	appType: 'spa',
@@ -12,7 +18,12 @@ export default defineConfig({
 		port: 5173
 	},
 	build: {
-		target: 'esnext'
+		target: 'esnext',
+		rollupOptions: {
+			output: {
+				intro: 'Intro'
+			}
+		}
 	},
 	plugins: [
 		topLevelAwait(),
@@ -27,6 +38,15 @@ export default defineConfig({
 			}),
 			enforce: 'post'
 		},
-		solid()
+		solid(),
+		htmlConfig({
+			metas: [
+				// This is mainly to check whether deploy was successful
+				{
+					name: 'version',
+					content: packageJson.version
+				}
+			]
+		})
 	]
 })
