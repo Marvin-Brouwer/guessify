@@ -6,6 +6,7 @@ import {
 	requestMediaPermissions
 } from 'mic-check'
 import { useDictionaries } from '../i18n/dictionary'
+import { getBrowserMetadata } from '../helpers/browser-metadata'
 
 function getCameraConstraints(deviceId?: string | undefined): MediaStreamConstraints {
 	return {
@@ -41,6 +42,7 @@ export type Camera = {
 	id: string
 	label: string
 	name: string
+	facing: 'user' | 'environment' | 'desktop' | 'loading' | undefined
 	stream: MediaStream
 }
 
@@ -59,6 +61,8 @@ export type CameraContext = {
 }
 
 async function getDevices() {
+	if(!navigator.mediaDevices?.enumerateDevices) return;
+
 	const devices = await navigator.mediaDevices?.enumerateDevices()
 	if (import.meta.env.DEV) console.debug('available media devices', devices)
 	if (import.meta.env.DEV) console.debug('available video devices', devices.filter(device => device.kind === 'videoinput'))
@@ -81,10 +85,7 @@ function queryInitialCameraPermissions() {
 		.catch((error) => {
 			console.error(error)
 		})
-		.finally(async () => {
-			if (!!navigator.mediaDevices?.enumerateDevices && knownDevices().length === 0)
-				await getDevices()
-		})
+		.finally(async () => getDevices())
 }
 const [cameraPermission, setCameraPermission] = createSignal<CameraPermission>('unknown')
 queryInitialCameraPermissions()
@@ -131,9 +132,7 @@ async function requestPermission() {
 	const storedCamera = localStorage.getItem('camera') ?? undefined;
 	return await requestMediaPermissions(getCameraConstraints(storedCamera))
 		.then(async () => {
-			if (!!navigator.mediaDevices?.enumerateDevices) {
-				await getDevices()
-			}
+			await getDevices()
 			return setCameraPermission('granted')
 		})
 		.catch((err: MediaPermissionsError) => {
@@ -172,7 +171,10 @@ async function getCamera(id?: string): Promise<Camera> {
 		.catch(error => {
 			if ((error as Error).name !== 'NotReadableError') throw error
 			return new MediaStream()
-		})
+		});
+
+	// Re-query devices just to be sure
+	await getDevices();
 
 	// Sometimes the browser doesn't close the stream on mobile devices
 	// To solve this we store and redirect.
@@ -185,6 +187,7 @@ async function getCamera(id?: string): Promise<Camera> {
 		return {
 			id: requestedCamera!,
 			label: '?',
+			facing: 'loading',
 			name: dictionary.camera.openingCam,
 			stream: mediaStream
 		}
@@ -197,14 +200,19 @@ async function getCamera(id?: string): Promise<Camera> {
 	return {
 		id: deviceId,
 		name: mediaStream.getTracks()[0].label,
-		label: mediaStream.getTracks()[0].label.split('(')[0].trim(),
+		label: mediaStream.getTracks()[0].label.split('(')[0].split(',')[0].trim(),
+		facing: getBrowserMetadata().platform.type === 'desktop'
+			? 'desktop' :
+			mediaStream.getTracks()[0].getSettings().facingMode as 'user' | 'environment',
 		stream: mediaStream
 	}
 }
 
 export const CameraContext: Component = () => {
 
-	const onPermissionChanged = (permissionStatus: PermissionStatus) => (_event: Event) => {
+	const onPermissionChanged = (permissionStatus: PermissionStatus) => async (_event: Event) => {
+
+		await getDevices();
 
 		if (permissionStatus.state === 'granted') setCameraPermission('granted')
 		if (permissionStatus.state === 'denied') setCameraPermission('denied')

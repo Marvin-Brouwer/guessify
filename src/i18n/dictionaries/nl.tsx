@@ -32,6 +32,13 @@ export const nl_dictionary: Dictionary = {
 	},
 	camera: {
 		title: 'Video camera',
+		type: {
+			'desktop': 'Desktop\ncamera',
+			'user': 'Selfie\ncamera',
+			'environment': 'Achterkant\ncamera',
+			'unknown': 'Camera',
+			'loading': ''
+		},
 		openingCam: 'Verbinden...',
 		explainer: [
 			`Om de codes te kunnen scannen hebben wij toegang nodig tot uw camera.`,

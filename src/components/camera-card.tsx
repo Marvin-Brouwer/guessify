@@ -1,8 +1,12 @@
 import { Component, createMemo, createSignal, onMount } from 'solid-js'
 
 import './camera-card.css'
-import cameraIcon from '../assets/add_a_photo_24dp_E8EAED.svg'
-import cameraSelectIcon from '../assets/photo_camera_24dp_E8EAED.svg'
+import camera_unknown from '../assets/camera_24dp_E8EAED.svg'
+import camera_desktop from '../assets/photo_camera_24dp_E8EAED.svg'
+import camera_user from '../assets/person_24dp_E8EAED.svg'
+import camera_environment from '../assets/image_24dp_E8EAED.svg'
+import changeCameraIcon from '../assets/add_a_photo_24dp_E8EAED.svg'
+import cameraSelectIcon from '../assets/cameraswitch_24dp_E8EAED.svg'
 
 import { Camera, useCameraContext } from '../context/camera-context'
 import { useDictionaries } from '../i18n/dictionary'
@@ -77,7 +81,7 @@ const CameraRequestCard: Component = () => {
 						? <span>{dictionary.camera.requestingPermission}</span>
 						: <span>{dictionary.camera.requestPermission}</span>
 					}
-					<img src={cameraIcon} />
+					<img src={changeCameraIcon} />
 				</button>
 			</div>
 		</div>
@@ -114,7 +118,6 @@ const CameraAcceptedCard: Component = () => {
 		cameraContext
 			.getCamera()
 			.then(setCamera)
-			// TODO handle error
 			.catch(console.error);
 	});
 
@@ -122,10 +125,26 @@ const CameraAcceptedCard: Component = () => {
 		.map(device => <option value={device.deviceId} selected={device.deviceId === camera()?.id}>{device.label}</option>
 	), [cameraContext.devices, camera])
 
+	const cameraIcon = createMemo(() => {
+		const cameraFacing = camera()?.facing
+
+		if (cameraFacing === 'loading') return null;
+
+		if (cameraFacing === 'desktop') return <img src={camera_desktop} />
+		if (cameraFacing === 'user') return <img src={camera_user} />
+		if (cameraFacing === 'environment') return <img src={camera_environment} />
+
+		return <img src={camera_unknown} />
+	}, camera)
 	return <>
 		<div class='camera-request-card card'>
 			{videoPlayer()}
-			<div class="video-blur" />
+			<div class="video-overlay">
+				{camera() && <div class="stats">
+					{cameraIcon()}
+					<span>{dictionary.camera.type[camera()?.facing ?? 'unknown']}</span>
+				</div>}
+			</div>
 			<div class="details">
 				<p>{template(dictionary.camera.selectedCamera, {
 					label: camera()?.label ?? '?'
@@ -142,8 +161,13 @@ const CameraAcceptedCard: Component = () => {
 					// Temporarily disable camera to make the chance of disposing the camera bigger
 					setCamera(undefined)
 
-					const selectedCamera = await cameraContext.getCamera(newValue);
-					setCamera(selectedCamera);
+					await cameraContext
+						.getCamera(newValue)
+						.then(setCamera)
+						.catch((err) => {
+							setCamera(activeCamera)
+							console.error(err)
+						});;
 				}}>
 					{cameraOptions()}
 				</select>

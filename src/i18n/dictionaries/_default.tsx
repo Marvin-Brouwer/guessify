@@ -30,6 +30,13 @@ export const default_dictionary = {
 	},
 	camera: {
 		title: 'Camera',
+		type: {
+			'desktop': 'Desktop\ncamera',
+			'user': 'Selfie\ncamera',
+			'environment': 'Environment\ncamera',
+			'unknown': 'Camera',
+			'loading': ''
+		},
 		openingCam: 'Connecting...',
 		explainer: [
 			`To be able to scan the codes, we need access to your device's camera.`,

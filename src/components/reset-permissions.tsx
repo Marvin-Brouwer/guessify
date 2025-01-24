@@ -1,19 +1,13 @@
-import { Component, createSignal, onCleanup, onMount } from 'solid-js'
-import type { Parser } from 'bowser'
+import { Component, onCleanup, onMount } from 'solid-js'
 import { Locale, useDictionaries } from '../i18n/dictionary'
 
 import './reset-permissions.css'
 import closeIcon from '../assets/close_24dp_E8EAED.svg'
-
-async function parseBrowser(): Promise<Parser.ParsedResult> {
-	const { default: bowser } = await import('bowser')
-	return bowser.parse(window.navigator.userAgent)
-}
+import { BrowserMetadata, getBrowserMetadata } from '../helpers/browser-metadata'
 
 export const ResetPermissionModal: Component = () => {
 
-	const { locale, dictionary } = useDictionaries()
-	const [browserInfo, setBrowserInfo] = createSignal<Parser.ParsedResult>()
+	const { locale, dictionary } = useDictionaries();
 
 	const modal = <dialog>
 		<div class="reset-permissions-modal card">
@@ -27,12 +21,12 @@ export const ResetPermissionModal: Component = () => {
 					<a href="#todo" target='_blank'>{dictionary.camera.permissions.cta[1]}</a>
 					{dictionary.camera.permissions.cta[2]}
 				</p>
-				{browserInfo() && <details>
+				<details>
 					<summary>{dictionary.camera.permissions.deviceDetails}</summary>
 					<pre>
-{JSON.stringify(browserInfo(), null, 4)}
+{JSON.stringify(getBrowserMetadata(), null, 4)}
 					</pre>
-				</details>}
+				</details>
 				<p></p>
 			</div>
 			<div class="controls">
@@ -66,10 +60,9 @@ export const ResetPermissionModal: Component = () => {
 	})
 
 	const requestInfo = async () => {
-		const browserDetails = browserInfo() ?? await parseBrowser()
-		setBrowserInfo(browserDetails)
+		const browserMetadata = getBrowserMetadata()
 
-		const instructionUrl = getUrl(browserDetails, locale())
+		const instructionUrl = getUrl(browserMetadata, locale())
 		if (!instructionUrl) return modalElement.showModal()
 
 		window.open(instructionUrl, '_blank')
@@ -81,11 +74,7 @@ export const ResetPermissionModal: Component = () => {
 	</>
 }
 
-function getUrl(browserDetails: Parser.ParsedResult, locale: Locale): string | undefined {
-
-	if (import.meta.env.DEV) {
-		console.debug('browser meta', browserDetails)
-	}
+function getUrl(browserDetails: BrowserMetadata, locale: Locale): string | undefined {
 
 	if (browserDetails.browser.name === 'Chrome') {
 		if (browserDetails.platform.type === 'desktop') return `https://support.google.com/chrome/answer/114662?hl=${locale}&co=GENIE.Platform%3DDesktop`

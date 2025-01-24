@@ -105,7 +105,7 @@
   grid-area: icon;
 }
 .camera-request-card video,
-.camera-request-card .video-blur {
+.camera-request-card .video-overlay {
     display: block;
     width: calc(100% + 8ex);
     height: 15ex;
@@ -115,7 +115,7 @@
 	object-align: center center; /* default, anchor to center of video */
 	margin: -4ex -4ex 0 -4ex;
 }
-.camera-request-card .video-blur {
+.camera-request-card .video-overlay {
 	background-color: rgb(255 255 255 / 20%);
 	backdrop-filter: blur(8px);
 	display: block;
@@ -123,7 +123,38 @@
 	margin: -4ex 0 0 0;
 	width: 100%;
     height: calc(15ex + 1px);
+	display: grid;
+	grid-auto-flow: column;
+	grid-template-columns: 1fr 8ex;
+	grid-template-rows: 8ex 1fr;
+	gap: 2ex 2ex;
+	grid-template-areas:
+	  ". stats"
+	  ". ."
 }
+
+.camera-request-card .video-overlay .stats {
+	grid-area: stats;
+	width: 8ex;
+	height: 8ex;
+	display: flex;
+	margin-top:1ex;
+    flex-direction: column;
+    align-content: center;
+    justify-content: flex-start;
+    align-items: center;
+}
+.camera-request-card .video-overlay img {
+	width: 5ex;
+	height: 5ex;
+}
+.camera-request-card .video-overlay span {
+	text-align:center;
+	font-size: 1ex;
+	white-space: pre;
+	line-height: 1.2ex;
+}
+
 .camera-card .controls select {
 	-webkit-appearance: none;
     -moz-appearance: none;
