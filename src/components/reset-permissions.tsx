@@ -89,8 +89,8 @@ function getUrl(browserDetails: Parser.ParsedResult, locale: Locale): string | u
 
 	if (browserDetails.browser.name === 'Chrome') {
 		if (browserDetails.platform.type === 'desktop') return `https://support.google.com/chrome/answer/114662?hl=${locale}&co=GENIE.Platform%3DDesktop`
-		if (browserDetails.os.name === 'android') return `https://support.google.com/chrome/answer/114662?hl=${locale}&co=GENIE.Platform%3DAndroid`
-		if (browserDetails.os.name === 'ios') return `https://support.google.com/chrome/answer/114662?hl=${locale}&co=GENIE.Platform%3DiOS`
+		if (browserDetails.os.name === 'Android') return `https://support.google.com/chrome/answer/114662?hl=${locale}&co=GENIE.Platform%3DAndroid`
+		if (browserDetails.os.name === 'IOS') return `https://support.google.com/chrome/answer/114662?hl=${locale}&co=GENIE.Platform%3DiOS`
 	}
 
 	return undefined
