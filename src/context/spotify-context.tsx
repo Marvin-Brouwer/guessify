@@ -1,6 +1,6 @@
 import { Accessor, children, createContext, createMemo, createSignal, onMount, ParentComponent, useContext } from 'solid-js'
 import { UserProfile } from '@spotify/web-api-ts-sdk';
-import { locale, useDictionaries } from '../i18n/dictionary'
+import { storeLocale, useDictionaries } from '../i18n/dictionary'
 import { SpotifyStatus, useSpotifyApi } from './spotify-api-context'
 
 const isAuthenticated = (status: Accessor<SpotifyStatus>) => status() === 'success'
@@ -20,10 +20,12 @@ function logOut() {
 async function logIn() {
 
 	const { api, status } = useSpotifyApi();
+	const { locale } = useDictionaries();
+
 	if (isAuthenticated(status)) {
 		setIsAuthenticating(false);
 	}
-	localStorage.setItem('stored-locale', locale());
+	storeLocale(locale());
 	setIsAuthenticating(true)
 	const response = await api.authenticate();
 

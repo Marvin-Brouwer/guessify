@@ -11,10 +11,18 @@ const dictionaries = {
 	nl: nl_dictionary
 }
 export type Locale = keyof typeof dictionaries
-// Using signal so we can access this everywhere
-const storedLocale = localStorage.getItem('stored-locale') as Locale | undefined
-const [getLocale, setLocale] = createSignal<Locale>(storedLocale ?? 'en');
-export const locale = getLocale;
+
+export const getStoredLocale = () => localStorage.getItem('stored-locale') as Locale | undefined
+export const storeLocale = (locale: Locale) => localStorage.setItem('stored-locale', locale)
+export const rawDictionary = (locale: Locale) => {
+	const supportedLocale = (locale && Object.keys(dictionaries).includes(locale))
+		? locale
+		: 'en'
+
+	return dictionaries[supportedLocale];
+}
+
+const [locale, setLocale] = createSignal<Locale>(getStoredLocale() ?? 'en');
 
 export type Dictionaries = {
 	locale: Accessor<Locale>
@@ -29,8 +37,8 @@ function parseLocale(){
 		? routeParams.locale as Locale
 		: undefined
 
-	setLocale(routeLocale ?? storedLocale ?? 'en')
-	if(routeLocale) localStorage.setItem('stored-locale', routeLocale)
+	setLocale(routeLocale ?? getStoredLocale() ?? 'en')
+	if(routeLocale) storeLocale(routeLocale)
 }
 export const useDictionaries: Accessor<Dictionaries> = () => {
 

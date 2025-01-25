@@ -1,6 +1,6 @@
 import { Accessor, createContext, createSignal, onMount, useContext, children, ParentComponent } from 'solid-js';
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
-import { Locale } from '../i18n/dictionary'
+import { getStoredLocale } from '../i18n/dictionary'
 
 const clientId = import.meta.env['VITE_SPOTIFY_CLIENT'];
 const hostName = import.meta.env['VITE_SPOTIFY_HOST'];
@@ -28,8 +28,7 @@ export type SpotifyApiContext = {
 
 async function handleAuthReturn() {
 
-	const storedLocale = localStorage.getItem('stored-locale') as Locale | undefined
-	const newUrl = `../${storedLocale}/`
+	const newUrl = `../${getStoredLocale()}/`
 
 	// Something doesn't work correctly with the sdk,
 	// however, just retrying when 'code' is in the querystring fixes that.
