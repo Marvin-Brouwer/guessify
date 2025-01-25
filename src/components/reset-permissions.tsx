@@ -12,17 +12,17 @@ export const ResetPermissionModal: Component = () => {
 	const modal = <dialog>
 		<div class="reset-permissions-modal card">
 			<div class="details">
-				<h2>{dictionary.camera.permissions.title}</h2>
-				<p>{dictionary.camera.permissions.explainer}</p>
+				<h2>{dictionary().camera.permissions.title}</h2>
+				<p>{dictionary().camera.permissions.explainer}</p>
 				{/* // todo github issue link */}
 				{/* Template didn't work with links */}
 				<p>
-					{dictionary.camera.permissions.cta[0]}
-					<a href="#todo" target='_blank'>{dictionary.camera.permissions.cta[1]}</a>
-					{dictionary.camera.permissions.cta[2]}
+					{dictionary().camera.permissions.cta[0]}
+					<a href="#todo" target='_blank'>{dictionary().camera.permissions.cta[1]}</a>
+					{dictionary().camera.permissions.cta[2]}
 				</p>
 				<details>
-					<summary>{dictionary.camera.permissions.deviceDetails}</summary>
+					<summary>{dictionary().camera.permissions.deviceDetails}</summary>
 					<pre>
 {JSON.stringify(getBrowserMetadata(), null, 4)}
 					</pre>
@@ -31,7 +31,7 @@ export const ResetPermissionModal: Component = () => {
 			</div>
 			<div class="controls">
 				<button onClick={() => modalElement.close()}>
-					<span>{dictionary.common.close}</span>
+					<span>{dictionary().common.close}</span>
 					<img src={closeIcon} />
 				</button>
 			</div>
@@ -69,7 +69,7 @@ export const ResetPermissionModal: Component = () => {
 	}
 
 	return <>
-		<a onClick={requestInfo} href='#instructions'>{dictionary.camera.permissions.permissionLink}</a>
+		<a onClick={requestInfo} href='#instructions'>{dictionary().camera.permissions.permissionLink}</a>
 		{modal}
 	</>
 }

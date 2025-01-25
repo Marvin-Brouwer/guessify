@@ -1,10 +1,10 @@
 import { Component, createMemo, ParentProps } from 'solid-js'
-import { useCameraContext } from './context/camera-context'
-import { useSpotifyContext } from './context/spotify-context'
-import { SpotifyCard } from './components/spotify-card'
-import { CameraCard } from './components/camera-card'
+import { useCameraContext } from '../context/camera-context'
+import { useSpotifyContext } from '../context/spotify-context'
+import { SpotifyCard } from './spotify-card'
+import { CameraCard } from './camera-card'
 
-import logo from '../public/guessify-logo.svg'
+import logo from '../../public/guessify-logo.svg'
 
 export const DependencyGate: Component<ParentProps> = ({ children }) => {
 

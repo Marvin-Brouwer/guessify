@@ -29,7 +29,7 @@ export const SpotifyCard: Component = () => {
 	}, [spotifyContext.isAuthenticated, spotifyContext.isAuthenticating])
 
 	return <div class='spotify-card'>
-		<h2>{dictionary.spotify.title}</h2>
+		<h2>{dictionary().spotify.title}</h2>
 		{activeCard()}
 	</div>
 }
@@ -41,8 +41,8 @@ const SpotifyLoginCard: Component = () => {
 	return <>
 		<div class='spotify-login-card card'>
 			<div class="details">
-				<p>{dictionary.spotify.explainer[0]}</p>
-				<p>{dictionary.spotify.explainer[1]}</p>
+				<p>{dictionary().spotify.explainer[0]}</p>
+				<p>{dictionary().spotify.explainer[1]}</p>
 				{spotifyContext.errorMessage() && <p class='error'>
 					{spotifyContext.errorMessage()}
 				</p>}
@@ -52,8 +52,8 @@ const SpotifyLoginCard: Component = () => {
 					spotifyContext.logIn()
 				}}>
 					{spotifyContext.isAuthenticating()
-						? <span>{dictionary.spotify.signingIn}</span>
-						: <span>{dictionary.spotify.signIn}</span>
+						? <span>{dictionary().spotify.signingIn}</span>
+						: <span>{dictionary().spotify.signIn}</span>
 					}
 					{!spotifyContext.isAuthenticating() && <img src={loginIcon} />}
 				</button>
@@ -90,15 +90,15 @@ const SpotifyProfileCard: Component = () => {
 	return <div class='spotify-profile-card card'>
 		<div class="thumbnail">{image()}</div>
 		<p class="stats">
-			<b>{dictionary.spotify.stats.country}</b>
+			<b>{dictionary().spotify.stats.country}</b>
 			<i>{profile.country}</i>
 		</p>
 		<p class="stats">
-			<b>{dictionary.spotify.stats.followers}</b>
+			<b>{dictionary().spotify.stats.followers}</b>
 			<i>{profile.followers.total}</i>
 		</p>
 		<p class="stats">
-			<b>{dictionary.spotify.stats.premium}</b>
+			<b>{dictionary().spotify.stats.premium}</b>
 			<i>
 				<img src={hasPremium ? premiumIcon : noPremiumIcon} />
 			</i>
@@ -107,16 +107,16 @@ const SpotifyProfileCard: Component = () => {
 		<div class="details">
 			<h3>{profile.display_name}</h3>
 			{hasPremium
-				? <p>{dictionary.spotify.details.hasPremium}</p>
+				? <p>{dictionary().spotify.details.hasPremium}</p>
 				: <>
-					<p class="no-premium">{dictionary.spotify.details.noPremium}</p>
-					<p>{dictionary.spotify.explainer[1]}</p>
+					<p class="no-premium">{dictionary().spotify.details.noPremium}</p>
+					<p>{dictionary().spotify.explainer[1]}</p>
 				</>
 			}
 		</div>
 		<div class="controls">
 			<button onclick={() => spotifyContext.logOut()}>
-				<span>{dictionary.spotify.signOut}</span>
+				<span>{dictionary().spotify.signOut}</span>
 				<img src={logoutIcon} />
 			</button>
 		</div>

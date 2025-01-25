@@ -1,59 +1,40 @@
-import { Accessor, Component, createContext, createMemo, createSignal, onMount, useContext } from 'solid-js'
-import { SpotifyApi, UserProfile } from '@spotify/web-api-ts-sdk';
-import { useDictionaries } from '../i18n/dictionary'
+import { Accessor, children, createContext, createMemo, createSignal, onMount, ParentComponent, useContext } from 'solid-js'
+import { UserProfile } from '@spotify/web-api-ts-sdk';
+import { locale, useDictionaries } from '../i18n/dictionary'
+import { SpotifyStatus, useSpotifyApi } from './spotify-api-context'
 
-const clientId = import.meta.env['VITE_SPOTIFY_CLIENT'];
-const hostName = import.meta.env['VITE_SPOTIFY_HOST'];
-
-const sdk = SpotifyApi.withUserAuthorization(clientId, hostName, [
-		// Enable in app playback
-		"streaming",
-		// We need to check fot premium users to enable playback
-		"user-read-private",
-		// Get access to profile information (TODO Check)
-		'user-read-email'
-	]);
-
-// Something doesn't work correctly with the sdk,
-// however, just retrying when 'code' is in the querystring fixes that.
-const initialLocation = new URL(window.location.href);
-if(initialLocation.searchParams.has('code')) {
-	await sdk.authenticate();
-}
-
-if (import.meta.env.DEV) {
-	const authToken = await sdk.getAccessToken()
-	if (!authToken) {
-		console.debug('User not logged into spotify')
-	}
-	else {
-		const userName = await sdk.currentUser.profile().then(p => p.display_name)
-		console.debug(`User "${userName}" logged into spotify`, authToken)
-	}
-}
+const isAuthenticated = (status: Accessor<SpotifyStatus>) => status() === 'success'
 
 function logOut() {
 
-	sdk.logOut();
-	setAuthenticated(false);
+	const { api, status } = useSpotifyApi();
+
+	if (!isAuthenticated(status)) {
+		setIsAuthenticating(false)
+		return;
+	}
+
+	api.logOut();
 	setIsAuthenticating(false)
 }
 async function logIn() {
 
+	const { api, status } = useSpotifyApi();
+	if (isAuthenticated(status)) {
+		setIsAuthenticating(false);
+	}
+	localStorage.setItem('stored-locale', locale());
 	setIsAuthenticating(true)
-	setErrorCode(undefined)
-	const response = await sdk.authenticate();
+	const response = await api.authenticate();
 
 	// This means the browser is redirected
 	if (response.accessToken.access_token === "emptyAccessToken") return
 
-	const currentProfile = await sdk.currentUser.profile();
+	const currentProfile = await api.currentUser.profile();
 	setProfile(currentProfile);
-	setAuthenticated(response.authenticated)
 	setIsAuthenticating(false)
 }
 
-type ErrorCode = 'access_denied' | string | undefined
 export type SpotifyContext = {
 	logOut: () => void
 	logIn: () => Promise<void>
@@ -61,61 +42,53 @@ export type SpotifyContext = {
 	isAuthenticated: Accessor<boolean>,
 	isValid: Accessor<boolean>,
 	errorMessage: Accessor<string | undefined>,
-	profile: Accessor<UserProfile | undefined>
+	profile: Accessor<UserProfile | undefined>,
 }
 
-const hasExistingToken = await sdk.getAccessToken().then(t => !!t)
-const [isAuthenticating, setIsAuthenticating] = createSignal(hasExistingToken);
-const [isAuthenticated, setAuthenticated] = createSignal(false);
-
-// Errors are put in the redirect url
-const [errorCode, setErrorCode] = createSignal<ErrorCode>()
-if(initialLocation.searchParams.has('error')) {
-	setErrorCode(initialLocation.searchParams.get('error')!)
-	// redirect to hide this from refresh
-	const newLocation = new URL(initialLocation)
-	newLocation.searchParams.delete('error');
-	history.replaceState(null, '', newLocation)
-}
-
-const errorMessage = () => {
-	if(!errorCode()) return undefined;
-
-	const { dictionary } = useDictionaries();
-	if (errorCode() === 'access_denied') return dictionary.spotify.errors.access_denied;
-
-	return dictionary.spotify.errors.unknown;
-}
-
+const [isAuthenticating, setIsAuthenticating] = createSignal(false);
 const [profile, setProfile] = createSignal<UserProfile>()
-const checkValid = () => isAuthenticated() && profile()?.product === 'premium'
 
 const spotifyContext = createContext<SpotifyContext>({
 	logIn,
 	logOut,
 	isAuthenticating,
-	isAuthenticated,
-	isValid: checkValid,
+	isAuthenticated: () => false,
+	isValid: () => false,
 	profile,
-	errorMessage
+	errorMessage: () => undefined
 })
 export const useSpotifyContext = () => useContext(spotifyContext);
 
-export const SpotifyContext: Component = () => {
+export const SpotifyContext: ParentComponent = ({ children: childrenInScope }) => {
 
-	onMount(() => {
+	const { api, status } = useSpotifyApi();
+	const { dictionary } = useDictionaries();
+
+	onMount(async () => {
+		const hasExistingToken = await api.getAccessToken().then(t => !!t);
 		if (hasExistingToken) {
-			logIn()
+			 setIsAuthenticating(true);
+			 await logIn();
 		}
 	})
 
-	const { dictionary, locale } = useDictionaries();
+	const isAuthenticatedMemo = createMemo(() => isAuthenticated(status), status)
+	const checkValid = () => isAuthenticatedMemo() && profile()?.product === 'premium'
+	const errorMessage = () => {
+		if(!status()) return undefined;
+		if(status() === 'success') return undefined;
+
+		if (status() === 'error.access_denied') return dictionary().spotify.errors.access_denied;
+
+		return dictionary().spotify.errors.unknown;
+	}
 
 	return <spotifyContext.Provider value={{
 		...spotifyContext.defaultValue,
 		isValid: createMemo(checkValid, isAuthenticated),
-		errorMessage: createMemo(errorMessage, [dictionary, locale, errorCode])
+		isAuthenticated: isAuthenticatedMemo,
+		errorMessage
 	}}>
-		<></>
+		{children(() => childrenInScope)()}
 	</spotifyContext.Provider>
 }

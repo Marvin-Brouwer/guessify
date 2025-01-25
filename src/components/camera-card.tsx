@@ -30,7 +30,7 @@ export const CameraCard: Component = () => {
 
 
 	return <div class='camera-card'>
-		<h2>{dictionary.camera.title}</h2>
+		<h2>{dictionary().camera.title}</h2>
 		{activeCard()}
 	</div>
 }
@@ -41,9 +41,9 @@ const CameraUnsupportedCard: Component = () => {
 	return <>
 		<div class='camera-request-card card no-controls'>
 			<div class="details">
-				<p>{dictionary.camera.explainer[0]}</p>
-				<p>{dictionary.camera.noSupport[0]} </p>
-				<p>{dictionary.camera.noSupport[1]} </p>
+				<p>{dictionary().camera.explainer[0]}</p>
+				<p>{dictionary().camera.noSupport[0]} </p>
+				<p>{dictionary().camera.noSupport[1]} </p>
 			</div>
 		</div>
 	</>
@@ -55,9 +55,9 @@ const CameraDeniedCard: Component = () => {
 	return <>
 		<div class='camera-request-card card no-controls'>
 			<div class="details">
-				<p>{dictionary.camera.explainer[0]}</p>
-				<p>{dictionary.camera.noPermission[0]}</p>
-				<p>{dictionary.camera.noPermission[1]} <ResetPermissionModal />.</p>
+				<p>{dictionary().camera.explainer[0]}</p>
+				<p>{dictionary().camera.noPermission[0]}</p>
+				<p>{dictionary().camera.noPermission[1]} <ResetPermissionModal />.</p>
 			</div>
 		</div>
 	</>
@@ -70,16 +70,16 @@ const CameraRequestCard: Component = () => {
 	return <>
 		<div class='camera-request-card card'>
 			<div class="details">
-				<p>{dictionary.camera.explainer[0]}</p>
-				<p>{dictionary.camera.explainer[1]}</p>
+				<p>{dictionary().camera.explainer[0]}</p>
+				<p>{dictionary().camera.explainer[1]}</p>
 			</div>
 			<div class="controls">
 				<button disabled={!cameraContext.canPrompt()} onclick={() => {
 					cameraContext.requestPermission()
 				}}>
 					{cameraContext.permission() === 'pending'
-						? <span>{dictionary.camera.requestingPermission}</span>
-						: <span>{dictionary.camera.requestPermission}</span>
+						? <span>{dictionary().camera.requestingPermission}</span>
+						: <span>{dictionary().camera.requestPermission}</span>
 					}
 					<img src={changeCameraIcon} />
 				</button>
@@ -142,14 +142,14 @@ const CameraAcceptedCard: Component = () => {
 			<div class="video-overlay">
 				{camera() && <div class="stats">
 					{cameraIcon()}
-					<span>{dictionary.camera.type[camera()?.facing ?? 'unknown']}</span>
+					<span>{dictionary().camera.type[camera()?.facing ?? 'unknown']}</span>
 				</div>}
 			</div>
 			<div class="details">
-				<p>{template(dictionary.camera.selectedCamera, {
+				<p>{template(dictionary().camera.selectedCamera, {
 					label: camera()?.label ?? '?'
 				})}</p>
-				<p><i>{dictionary.camera.switchBanner}</i></p>
+				<p><i>{dictionary().camera.switchBanner}</i></p>
 			</div>
 			<div class="controls">
 				<select data-value={camera()?.id} disabled={!camera()} onchange={async (e) => {
@@ -172,7 +172,7 @@ const CameraAcceptedCard: Component = () => {
 					{cameraOptions()}
 				</select>
 				<div class={camera() ? "fake-button" : "fake-button disabled"}>
-					<span>{camera()?.name ?? dictionary.camera.openingCam}</span>
+					<span>{camera()?.name ?? dictionary().camera.openingCam}</span>
 					<img src={cameraSelectIcon} />
 				</div>
 			</div>

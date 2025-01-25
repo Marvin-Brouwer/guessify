@@ -1,8 +1,8 @@
 import * as i18n from "@solid-primitives/i18n"
-import { Accessor, createMemo, JSX } from 'solid-js'
+import { Accessor, createMemo, createSignal, JSX, onMount } from 'solid-js';
 import { default_dictionary } from './dictionaries/_default'
 import { nl_dictionary } from './dictionaries/nl'
-import { useParams } from '@solidjs/router'
+import { useParams, useHref } from '@solidjs/router'
 
 export type Dictionary = typeof default_dictionary
 
@@ -11,27 +11,36 @@ const dictionaries = {
 	nl: nl_dictionary
 }
 export type Locale = keyof typeof dictionaries
+// Using signal so we can access this everywhere
+const storedLocale = localStorage.getItem('stored-locale') as Locale | undefined
+const [getLocale, setLocale] = createSignal<Locale>(storedLocale ?? 'en');
+export const locale = getLocale;
 
 export type Dictionaries = {
 	locale: Accessor<Locale>
-	dictionary: Dictionary
+	dictionary: Accessor<Dictionary>
 	template: i18n.TemplateResolver<string | NonNullable<JSX.Element>>
+}
+
+function parseLocale(){
+	const routeParams = useParams();
+
+	const routeLocale = (routeParams.locale && Object.keys(dictionaries).includes(routeParams.locale))
+		? routeParams.locale as Locale
+		: undefined
+
+	setLocale(routeLocale ?? storedLocale ?? 'en')
+	if(routeLocale) localStorage.setItem('stored-locale', routeLocale)
 }
 export const useDictionaries: Accessor<Dictionaries> = () => {
 
-	const locale = createMemo(() => {
-		const routeParams = useParams();
+	onMount(parseLocale)
 
-		return (routeParams.locale && Object.keys(dictionaries).includes(routeParams.locale))
-		? routeParams.locale as Locale
-		: 'en'
-	},useParams)
-
-	const dict = createMemo<Dictionary>(() => dictionaries[locale()])
+	const dictionary = createMemo(() => dictionaries[locale()], [useHref, locale])
 
 	return {
 		locale,
-		dictionary: dict(),
+		dictionary,
 		template: i18n.resolveTemplate
 	}
 }

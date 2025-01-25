@@ -188,7 +188,7 @@ async function getCamera(id?: string): Promise<Camera> {
 			id: requestedCamera!,
 			label: '?',
 			facing: 'loading',
-			name: dictionary.camera.openingCam,
+			name: dictionary().camera.openingCam,
 			stream: mediaStream
 		}
 	}
