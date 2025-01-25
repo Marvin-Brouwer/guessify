@@ -5,12 +5,13 @@ import { CameraContext } from './context/camera-context'
 import { SpotifyContext } from './context/spotify-context'
 import { Component } from 'solid-js'
 import { SpotifyAuthHandler } from './components/spotify-auth'
+import { CameraCanvas } from './components/camera-canvas'
 
 export const MainApp: Component = () => <>
 	<CameraContext>
 		<SpotifyContext>
 			<DependencyGate>
-				<p>TODO</p>
+				<CameraCanvas />
 			</DependencyGate>
 		</SpotifyContext>
 	</CameraContext>
