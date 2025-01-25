@@ -3,6 +3,7 @@ import { Component, createMemo, createSignal, onMount } from 'solid-js'
 import './camera-canvas.css'
 
 import { Camera, useCameraContext } from '../context/camera-context'
+import { CameraLens } from './camera-lens'
 
 export const CameraCanvas: Component = () => {
 
@@ -43,7 +44,7 @@ export const CameraCanvas: Component = () => {
 			{videoPlayer()}
 			<div class="video-overlay"></div>
 			<div class="video-lens">
-				<div class='lens'></div>
+				<CameraLens videoElement={videoPlayerElement} />
 			</div>
 		</div>
 	</>

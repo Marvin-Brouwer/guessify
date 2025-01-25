@@ -1,0 +1,22 @@
+.camera-lens {
+	border: 4px solid rgb(255 255 255 / 50%);
+	display: block;
+	position: absolute;
+	left:-1;
+	right: -1;
+	top: -1;
+	bottom: -1;
+	width: calc(100% + 2px);
+	height: calc(100% + 2px);
+	box-sizing: border-box;
+}
+
+.camera-lens.scanning {
+	border: 4px solid rgb(30 150 215 / 70%);
+}
+.camera-lens .canvas {
+	display:none;
+}
+.lens-feedback {
+	color: rgb(255 255 255 / 90%);
+}
