@@ -66,7 +66,7 @@ export const SpotifyApiContext: ParentComponent = (props) => {
 	if (import.meta.env.DEV) {
 		onMount(async () => {
 			const authToken = await spotifyApi().getAccessToken()
-			if (!authToken) {
+			if (!authToken || authToken.access_token === "emptyAccessToken") {
 				console.debug('User not logged into spotify')
 			}
 			else {

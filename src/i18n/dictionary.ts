@@ -42,7 +42,13 @@ function parseLocale(){
 }
 export const useDictionaries: Accessor<Dictionaries> = () => {
 
-	onMount(parseLocale)
+	try {
+		onMount(parseLocale)
+	}
+	catch (err) {
+		// The useParams error doesn't trace very well when used outside of context.
+		console.error(console.trace(), err)
+	}
 
 	const dictionary = createMemo(() => dictionaries[locale()], [useHref, locale])
 

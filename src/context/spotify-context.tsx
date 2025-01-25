@@ -1,6 +1,6 @@
 import { Accessor, children, createContext, createMemo, createSignal, onMount, ParentComponent, useContext } from 'solid-js'
 import { UserProfile } from '@spotify/web-api-ts-sdk';
-import { storeLocale, useDictionaries } from '../i18n/dictionary'
+import { Locale, storeLocale, useDictionaries } from '../i18n/dictionary'
 import { SpotifyStatus, useSpotifyApi } from './spotify-api-context'
 
 const isAuthenticated = (status: Accessor<SpotifyStatus>) => status() === 'success'
@@ -17,15 +17,14 @@ function logOut() {
 	api.logOut();
 	setIsAuthenticating(false)
 }
-async function logIn() {
+async function logIn(locale: Locale) {
 
 	const { api, status } = useSpotifyApi();
-	const { locale } = useDictionaries();
 
 	if (isAuthenticated(status)) {
 		setIsAuthenticating(false);
 	}
-	storeLocale(locale());
+	storeLocale(locale);
 	setIsAuthenticating(true)
 	const response = await api.authenticate();
 
@@ -51,8 +50,8 @@ const [isAuthenticating, setIsAuthenticating] = createSignal(false);
 const [profile, setProfile] = createSignal<UserProfile>()
 
 const spotifyContext = createContext<SpotifyContext>({
-	logIn,
-	logOut,
+	logIn: () => Promise.resolve(),
+	logOut: () => Promise.resolve(),
 	isAuthenticating,
 	isAuthenticated: () => false,
 	isValid: () => false,
@@ -64,13 +63,13 @@ export const useSpotifyContext = () => useContext(spotifyContext);
 export const SpotifyContext: ParentComponent = (props) => {
 
 	const { api, status } = useSpotifyApi();
-	const { dictionary } = useDictionaries();
+	const { dictionary, locale } = useDictionaries();
 
 	onMount(async () => {
 		const hasExistingToken = await api.getAccessToken().then(t => !!t);
 		if (hasExistingToken) {
 			 setIsAuthenticating(true);
-			 await logIn();
+			 await logIn(locale());
 		}
 	})
 
@@ -89,7 +88,7 @@ export const SpotifyContext: ParentComponent = (props) => {
 		isAuthenticated: createMemo(() => isAuthenticated(status), status),
 		errorMessage,
 		isAuthenticating,
-		logIn,
+		logIn: () => logIn(locale()),
 		logOut,
 		profile
 	}}>
