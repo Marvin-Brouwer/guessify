@@ -40,16 +40,9 @@ export const CameraCanvas: Component = () => {
 	return <>
 		<div class='camera-canvas'>
 			{videoPlayer()}
-			<div class="video-overlay">
-				<div class='fade'></div>
-				<div class='fade'></div>
-				<div class='fade'></div>
-				<div class='fade'></div>
+			<div class="video-overlay"></div>
+			<div class="video-lens">
 				<div class='lens'></div>
-				<div class='fade'></div>
-				<div class='fade'></div>
-				<div class='fade'></div>
-				<div class='fade'></div>
 			</div>
 		</div>
 	</>
