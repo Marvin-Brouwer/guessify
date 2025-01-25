@@ -64,9 +64,13 @@ async function getDevices() {
 	if(!navigator.mediaDevices?.enumerateDevices) return;
 
 	const devices = await navigator.mediaDevices?.enumerateDevices()
-	if (import.meta.env.DEV) console.debug('available media devices', devices)
-	if (import.meta.env.DEV) console.debug('available video devices', devices.filter(device => device.kind === 'videoinput'))
-	setKnownDevices(devices.filter(device => device.kind === 'videoinput'))
+
+	const videoDevices = devices.filter(device => device.kind === 'videoinput');
+	if (import.meta.env.DEV && knownDevices().length !== videoDevices.length)
+		console.debug('available media devices', devices)
+	if (import.meta.env.DEV && knownDevices().length !== videoDevices.length)
+		console.debug('available video devices', videoDevices)
+	setKnownDevices(videoDevices)
 }
 
 function queryInitialCameraPermissions() {
@@ -210,7 +214,7 @@ async function getCamera(id?: string): Promise<Camera> {
 
 export const CameraContext: Component = () => {
 
-	const onPermissionChanged = (permissionStatus: PermissionStatus) => async (_event: Event) => {
+	const onPermissionChanged = (permissionStatus: PermissionStatus) => async (_event?: Event) => {
 
 		await getDevices();
 
@@ -220,14 +224,25 @@ export const CameraContext: Component = () => {
 	}
 
 	onMount(() => {
+
+		// The browser doesn't properly update when video is on
+		const permissionFix = () => {
+			navigator.permissions
+				.query({ name: 'camera' } as any)
+				.then((permissionStatus) => {
+					onPermissionChanged(permissionStatus)()
+				})
+				.catch(() => {
+					// do nothing
+				})
+				.finally(() => requestAnimationFrame(permissionFix))
+		}
+
 		navigator.permissions
 			.query({ name: 'camera' } as any)
 			.then((permissionStatus) => {
-				const listener = onPermissionChanged(permissionStatus)
-				permissionStatus.addEventListener('change', listener)
-				onCleanup(() => {
-					permissionStatus.removeEventListener('change', listener)
-				})
+				permissionStatus.onchange = onPermissionChanged(permissionStatus)
+				requestAnimationFrame(permissionFix);
 			})
 			.catch(() => {
 				// do nothing
