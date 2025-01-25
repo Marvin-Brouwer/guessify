@@ -1,4 +1,4 @@
-import { Accessor, Component, createContext, createSignal, onMount, useContext } from 'solid-js'
+import { Accessor, createContext, createSignal, onMount, useContext, children, ParentComponent } from 'solid-js';
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 import { Locale } from '../i18n/dictionary'
 
@@ -62,7 +62,7 @@ const spotifyContext = createContext<SpotifyApiContext>({
 })
 export const useSpotifyApi = () => useContext(spotifyContext);
 
-export const SpotifyApiContext: Component = () => {
+export const SpotifyApiContext: ParentComponent = (props) => {
 
 	if (import.meta.env.DEV) {
 		onMount(async () => {
@@ -87,6 +87,6 @@ export const SpotifyApiContext: Component = () => {
 	})
 
 	return <spotifyContext.Provider value={spotifyContext.defaultValue}>
-		<></>
+		{children(() => props.children)()}
 	</spotifyContext.Provider>
 }

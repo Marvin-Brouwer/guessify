@@ -1,6 +1,7 @@
 export const default_dictionary = {
 	common: {
-		close: 'Close'
+		close: 'Close',
+		offline: 'You appear to be offline, please check your network connection'
 	},
 	spotify: {
 		title: 'Spotify',

@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal } from 'solid-js'
+import { Component, createEffect, createSignal } from 'solid-js'
 
 import './spotify-card.css'
 import profilePlaceHolder from '../assets/account_circle_24dp_E8EAED.svg'
@@ -21,12 +21,13 @@ export const SpotifyCard: Component = () => {
 
 	const { dictionary } = useDictionaries()
 
-	const activeCard = createMemo(() => {
-		if (!spotifyContext.isAuthenticating() && spotifyContext.isAuthenticated())
+	const activeCard = () => {
+		const deferredSpotifyContext = useSpotifyContext()
+		if (!deferredSpotifyContext.isAuthenticating() && spotifyContext.isAuthenticated())
 			return <SpotifyProfileCard />
 
 		return <SpotifyLoginCard />
-	}, [spotifyContext.isAuthenticated, spotifyContext.isAuthenticating])
+	}
 
 	return <div class='spotify-card'>
 		<h2>{dictionary().spotify.title}</h2>

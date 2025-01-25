@@ -7,12 +7,13 @@ import { Component } from 'solid-js'
 import { SpotifyAuthHandler } from './components/spotify-auth'
 
 export const MainApp: Component = () => <>
-	<SpotifyContext>
-		<CameraContext />
-		<DependencyGate>
-			<p>TODO</p>
-		</DependencyGate>
-	</SpotifyContext>
+	<CameraContext>
+		<SpotifyContext>
+			<DependencyGate>
+				<p>TODO</p>
+			</DependencyGate>
+		</SpotifyContext>
+	</CameraContext>
 </>
 
 export const LandingPage: Component = () => <>

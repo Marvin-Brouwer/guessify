@@ -1,4 +1,4 @@
-import { Accessor, Component, createContext, createMemo, createSignal, onCleanup, onMount, useContext } from 'solid-js'
+import { Accessor, children, createContext, createMemo, createSignal, onMount, ParentComponent, useContext } from 'solid-js'
 
 import {
 	MediaPermissionsError,
@@ -212,7 +212,7 @@ async function getCamera(id?: string): Promise<Camera> {
 	}
 }
 
-export const CameraContext: Component = () => {
+export const CameraContext: ParentComponent = (props) => {
 
 	const onPermissionChanged = (permissionStatus: PermissionStatus) => async (_event?: Event) => {
 
@@ -255,6 +255,6 @@ export const CameraContext: Component = () => {
 		canPrompt: createMemo(() => cameraPermission() === 'unknown' || cameraPermission() === 'error:inuse', cameraPermission),
 		hasMediaSupport: createMemo(() => cameraPermission() !== 'error:nosupport', cameraPermission),
 	}}>
-		<></>
+		{children(() => props.children)()}
 	</cameraContext.Provider>
 }

@@ -59,7 +59,7 @@ const spotifyContext = createContext<SpotifyContext>({
 })
 export const useSpotifyContext = () => useContext(spotifyContext);
 
-export const SpotifyContext: ParentComponent = ({ children: childrenInScope }) => {
+export const SpotifyContext: ParentComponent = (props) => {
 
 	const { api, status } = useSpotifyApi();
 	const { dictionary } = useDictionaries();
@@ -72,8 +72,7 @@ export const SpotifyContext: ParentComponent = ({ children: childrenInScope }) =
 		}
 	})
 
-	const isAuthenticatedMemo = createMemo(() => isAuthenticated(status), status)
-	const checkValid = () => isAuthenticatedMemo() && profile()?.product === 'premium'
+	const checkValid = () => isAuthenticated(status) && profile()?.product === 'premium'
 	const errorMessage = () => {
 		if(!status()) return undefined;
 		if(status() === 'success') return undefined;
@@ -84,11 +83,14 @@ export const SpotifyContext: ParentComponent = ({ children: childrenInScope }) =
 	}
 
 	return <spotifyContext.Provider value={{
-		...spotifyContext.defaultValue,
-		isValid: createMemo(checkValid, isAuthenticated),
-		isAuthenticated: isAuthenticatedMemo,
-		errorMessage
+		isValid: createMemo(checkValid, [status, profile]),
+		isAuthenticated: createMemo(() => isAuthenticated(status), status),
+		errorMessage,
+		isAuthenticating,
+		logIn,
+		logOut,
+		profile
 	}}>
-		{children(() => childrenInScope)()}
+		{children(() => props.children)()}
 	</spotifyContext.Provider>
 }

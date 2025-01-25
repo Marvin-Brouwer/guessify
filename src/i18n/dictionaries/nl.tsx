@@ -2,7 +2,8 @@ import { Dictionary } from '../dictionary'
 
 export const nl_dictionary: Dictionary = {
 	common: {
-		close: 'Sluiten'
+		close: 'Sluiten',
+		offline: 'U bent offline, controleer a.u.b. uw verbinding'
 	},
 	spotify: {
 		title: 'Spotify',
