@@ -31,10 +31,11 @@ export const CameraCanvas: Component = () => {
 	}, [cameraStream])
 
 	onMount(() => {
-		cameraContext
-			.getCamera()
-			.then(setCamera)
-			.catch(console.error);
+		if(cameraContext.hasPermission())
+			cameraContext
+				.getCamera()
+				.then(setCamera)
+				.catch(console.error);
 	});
 
 	return <>

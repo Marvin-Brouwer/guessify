@@ -1,20 +1,17 @@
 import './app.css'
 
 import { DependencyGate } from './components/dependency-gate'
-import { CameraContext } from './context/camera-context'
 import { SpotifyContext } from './context/spotify-context'
 import { Component } from 'solid-js'
 import { SpotifyAuthHandler } from './components/spotify-auth'
 import { CameraCanvas } from './components/camera-canvas'
 
 export const MainApp: Component = () => <>
-	<CameraContext>
-		<SpotifyContext>
-			<DependencyGate>
-				<CameraCanvas />
-			</DependencyGate>
-		</SpotifyContext>
-	</CameraContext>
+	<SpotifyContext>
+		<DependencyGate>
+			<CameraCanvas />
+		</DependencyGate>
+	</SpotifyContext>
 </>
 
 export const LandingPage: Component = () => <>
