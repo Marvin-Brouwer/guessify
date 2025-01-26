@@ -6,7 +6,8 @@ import { useCameraContext } from '../context/camera-context'
 
 // TODO if quagga nor barcodedetector work, just make it ourselves and uninstall
 import { BarcodeDetector } from "barcode-detector/pure";
-import { applyPixelFilter } from './camera-lens/pixel-filter'
+import { applyPixelFilter } from '../camera-utilities/pixel-filter'
+import { scanImage } from '../camera-utilities/scanner'
 
 const barcodeDetector: BarcodeDetector = new BarcodeDetector({
 	// formats: ["qr_code"],
@@ -49,10 +50,11 @@ export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
 	}
 
 	async function scanFrame() {
-		if(!await cameraContext.hasPermission()) {
+		if(!cameraContext.hasPermission()) {
 			window.location.reload();
 		}
-		const activeCamera = await cameraContext.getCamera();
+		const activeCamera = await cameraContext.getCamera()
+			.catch(() => window.location.reload());
 		if (!activeCamera) return undefined
 
 		const videoFrame = activeCamera.stream.getVideoTracks()[0];
@@ -92,8 +94,9 @@ export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
 		);
 
 		applyPixelFilter(image);
-
 		if(import.meta.env.DEV) canvasContext.putImageData(image, 0, 0);
+
+		scanImage(image, canvasContext);
 
 		const barcodeCandidate = await barcodeDetector.detect(image);
 		if(barcodeCandidate.length) {
