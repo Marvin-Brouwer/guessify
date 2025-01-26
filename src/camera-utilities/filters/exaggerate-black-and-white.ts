@@ -24,13 +24,13 @@ export function exaggerateBlackAndWhitePixels([red, green, blue]: Pixel): Pixel 
 	const whiteThreshold = 100
 	const offWhiteThreshold = 180
 	const whitePixel: Pixel = [255, 255, 255, 255]
-	const offWhitePixel: Pixel = [220, 220, 220, 255]
+	const offWhitePixel: Pixel = [220, 220, 220, 100]
 
 	const blackDifferenceThreshold = 40
 	const blackThreshold = 50
 	const offBlackThreshold = 120
 	const blackPixel: Pixel = [0, 0, 0, 255]
-	const offBlackPixel: Pixel = [80, 80, 80, 255]
+	const offBlackPixel: Pixel = [80, 80, 80, 100]
 
 	if (distance < whiteDifferenceThreshold) {
 		if (red > whiteThreshold && green > whiteThreshold && blue > whiteThreshold) {
@@ -45,6 +45,8 @@ export function exaggerateBlackAndWhitePixels([red, green, blue]: Pixel): Pixel 
 	if (red > offWhiteThreshold && green > offWhiteThreshold && blue > offWhiteThreshold) {
 		return offWhitePixel
 	}
+
+	// if (import.meta.env.DEV)
 	if (red < offBlackThreshold && green < offBlackThreshold && blue < offBlackThreshold) {
 		return offBlackPixel
 	}

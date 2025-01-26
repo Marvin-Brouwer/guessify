@@ -3,16 +3,10 @@ import { Component, createMemo, createSignal, onCleanup, onMount } from 'solid-j
 import './camera-lens.css'
 
 import { useCameraContext } from '../context/camera-context'
-
-// TODO if quagga nor barcodedetector work, just make it ourselves and uninstall
-import { BarcodeDetector } from "barcode-detector/pure";
 import { applyPixelFilter } from '../camera-utilities/pixel-filter'
 import { scanImage } from '../camera-utilities/scanner'
 
-const barcodeDetector: BarcodeDetector = new BarcodeDetector({
-	// formats: ["qr_code"],
-});
-
+// TODO https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
 const hideFrame = false; // import.meta.env.PROD;
 
 // This is just as an example:
@@ -41,6 +35,7 @@ export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
 		height={boundingBox().height}
 	/>, boundingBox);
 	const canvasElement = () => canvas() as HTMLCanvasElement
+	const temp = <div class="temp"></div>
 
 	let interval: NodeJS.Timeout | undefined;
 
@@ -101,14 +96,11 @@ export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
 		await applyPixelFilter(image);
 		if(!hideFrame) canvasContext.putImageData(image, 0, 0);
 
-		scanImage(image, canvasContext);
+		const [result, codeValue] = await scanImage(image, canvasContext);
 
-		const barcodeCandidate = await barcodeDetector.detect(image);
-		if(barcodeCandidate.length) {
-
-			setCodeDetected(true);
-			setCode(barcodeCandidate[0].rawValue);
-			console.log(barcodeCandidate);
+		if(result === 'code-detected') {
+				setCodeDetected(true);
+				setCode(codeValue.toString());
 		}
 		else {
 			setCodeDetected(false);
@@ -137,6 +129,7 @@ export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
 	return <>
 		<div ref={setCameraBox} class={codeDetected() ? 'camera-lens scanning' : 'camera-lens'}>
 			{canvas()}
+			{temp}
 		</div>
 		<div class="lens-feedback">{codeExample()}</div>
 	</>

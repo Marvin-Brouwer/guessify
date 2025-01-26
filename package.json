@@ -1,6 +1,6 @@
 {
 	"name": "Guessify",
-	"version": "1.0.0-alpha.20",
+	"version": "1.0.0-alpha.21",
 	"description": "A spotify code scanner for playing songs blind",
 	"type": "module",
 	"homepage": "https://marvin.brouwer.github.io/guessify/",
@@ -32,11 +32,9 @@
 		"vite-plugin-top-level-await": "^1.4.4"
 	},
 	"dependencies": {
-		"@ericblade/quagga2": "^1.8.4",
 		"@solid-primitives/i18n": "^2.1.1",
 		"@solidjs/router": "^0.15.3",
 		"@spotify/web-api-ts-sdk": "^1.2.0",
-		"barcode-detector": "^2.3.1",
 		"bowser": "^2.11.0",
 		"mic-check": "^1.1.0",
 		"solid-js": "^1.9.4"
