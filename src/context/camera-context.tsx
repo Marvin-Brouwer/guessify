@@ -140,7 +140,7 @@ async function requestPermission() {
 			return setCameraPermission('granted')
 		})
 		.catch((err: MediaPermissionsError) => {
-			const { type, message } = err
+			const { type, message, name } = err
 			if (type === MediaPermissionsErrorType.SystemPermissionDenied) {
 				// browser does not have permission to access camera or microphone
 				return setCameraPermission('denied:system')
@@ -154,6 +154,14 @@ async function requestPermission() {
 			} else if (type === MediaPermissionsErrorType.Generic && message === "Permission dismissed") {
 				// prompt dismissed by user
 				return setCameraPermission('unknown')
+			} else if (type === MediaPermissionsErrorType.Generic
+				&& name === "OverconstrainedError" && message === ""
+				&& storedCamera) {
+				// This seems to happen when the browser stores a camera that doesn't exist (perhaps the ideas change on software update)
+				// Erase storage and reload
+				localStorage.removeItem('camera');
+				window.location.reload();
+				return setCameraPermission('denied:system')
 			} else {
 				console.error(err)
 				// not all error types are handled by this library
