@@ -21,7 +21,12 @@ We did some digging into edge detection, but, most examples are either detecting
 Our approach is going to be simple, we're going to start sampling from the corners, divide into squares.  
 We can safely do this because we oversample black and white and ignore other colors.  
 
-![A bad example of the oversampling, using a black card](./images/oversampling.png)  
+For example, when scanning a random black card, the app shows this when dev mode is on:  
+![An example of the viewfinder with a black card (with dev mode on)](./images/oversampling-screenshot.png)  
+For reference, the video feed coming in looks like this:  
+![A slightly moved example of the original camera feed, using a black card](./images/oversampling-camera-feed.png)  
+And the processed image looks like this (mind the transparency):  
+![A slightly moved example of the processed camera feed, using a black card](./images/oversampling-camera-processed.png)  
 
 The process of checking corners will be a recursive edge-detection,  
 loosely based on this approach <https://github.com/jankovicsandras/imagetracerjs/blob/master/process_overview.md>:  
