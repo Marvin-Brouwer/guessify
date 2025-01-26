@@ -13,6 +13,8 @@ const barcodeDetector: BarcodeDetector = new BarcodeDetector({
 	// formats: ["qr_code"],
 });
 
+const hideFrame = false; // import.meta.env.PROD;
+
 // This is just as an example:
 const [codeExample, setCode] = createSignal('');
 
@@ -43,7 +45,7 @@ export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
 	let interval: NodeJS.Timeout | undefined;
 
 	// Show this when debugging
-	if (import.meta.env.DEV) {
+	if (!hideFrame) {
 		canvasElement().style.display = 'block';
 		canvasElement().style.marginLeft = '-4px';
 		canvasElement().style.marginTop = '-4px';
@@ -75,7 +77,7 @@ export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
 
 		const canvasContext = canvasElement().getContext('2d', {
 			willReadFrequently: true,
-			desynchronized: import.meta.env.PROD
+			desynchronized: hideFrame
 		})!
 
 		// Draw video to canvas
@@ -97,7 +99,7 @@ export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
 		);
 
 		await applyPixelFilter(image);
-		/* if(import.meta.env.DEV) */ canvasContext.putImageData(image, 0, 0);
+		if(!hideFrame) canvasContext.putImageData(image, 0, 0);
 
 		scanImage(image, canvasContext);
 
