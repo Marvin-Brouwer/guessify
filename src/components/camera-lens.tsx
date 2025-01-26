@@ -63,6 +63,9 @@ export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
 			window.location.reload();
 		}
 		const frameSettings = videoFrame.getSettings();
+		// TODO this seems to be caused by the video not matching the screen
+		// It's way worse on desktop, we'll have to calculate the difference if we want to make it perfect.
+		// It seems to be good enough on mobile though
 		const sourceLeft = frameSettings.width! * .15;
 		const sourceWidth = frameSettings.width! * .7;
 		// No idea why this is 355 instead of 45,
@@ -93,8 +96,8 @@ export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
 			boundingBox().width, boundingBox().height
 		);
 
-		applyPixelFilter(image);
-		if(import.meta.env.DEV) canvasContext.putImageData(image, 0, 0);
+		await applyPixelFilter(image);
+		/* if(import.meta.env.DEV) */ canvasContext.putImageData(image, 0, 0);
 
 		scanImage(image, canvasContext);
 

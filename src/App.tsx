@@ -15,7 +15,7 @@ export const MainApp: Component = () => <>
 </>
 
 export const LandingPage: Component = () => <>
-	<p>TODO, language selector <a href="/guessify/en">English</a> / <a href="/guessify/nl">Nederlands</a></p>
+	<p>TODO, language selector <a href="/guessify/en/">English</a> / <a href="/guessify/nl/">Nederlands</a></p>
 </>
 
 export const SpotifyLoginRedirect: Component = () => <>

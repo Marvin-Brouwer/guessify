@@ -7,7 +7,7 @@ export type ScanResult = [
 	'code-detected',
 	number
 ]
-export function scanImage(scanImageData: ImageData, canvasContext: CanvasRenderingContext2D): ScanResult {
+export function scanImage(_scanImageData: ImageData, _canvasContext: CanvasRenderingContext2D): ScanResult {
 
 	return [
 		'none',
