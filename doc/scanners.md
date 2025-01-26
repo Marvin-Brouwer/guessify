@@ -11,59 +11,55 @@ Since we we're planning to use the article and [it's repo](https://github.com/bo
 ## Finding the code
 
 Normally, barcode scanners that use video support all kinds of orientations.  
-We're planning on scanning inside of a rectangular lens, so only close to horizontal will be supported by our app,
-making it quite a bit simpler to find it.
+We're planning on scanning inside of a rectangular lens, so only close to horizontal will be supported by our app, making it quite a bit simpler to find it.
 
-### Checking for a black rectangle
+### Sampling corners
 
-We'll need to find where the code is, but before we start scanning every frame for a Spotify code or trying to detect whether there even is a rectangle, we're going to scan an offset rectangle to detect if the center is mostly black.  
-If no black, no scan. This should save some unnecessary scans.
+We'll need to find where the code is, but before we start scanning every frame for a Spotify code or trying to detect whether there even is a rectangle.
+We did some digging into edge detection, but, most examples are either detecting all edges in the image, or written in Python using python libraries for the heavy lifting.
 
-![checking-the-average.drawio](./images/checking-the-average.drawio)  
+Our approach is going to be simple, we're going to start sampling from the corners, divide into squares.  
+We can safely do this because we oversample black and white and ignore other colors.  
 
-As illustrated in `checking-the-average.drawio`, we'll divide the initial scan into 5 steps:
+![A bad example of the oversampling, using a black card](./images/oversampling.png)  
 
-1. Check if the middle square (#1) is pimarily black, if no `end`  
-1. Check if the first vertical section (#2) is primarily black, if yes `mark section black`, if no `go to 3`  
-1. Check if the last vertical section (#3) is primarily black, if yes `end` (this means the whole screen is black)  
-   Check if the section is somewhere in the gray, if yes `mark as gray` `go to 3`, if no `mark as empty` `go to 3`  
-1. Check if the first horizontal section (#4) is primarily black, if yes `mark section black`, if no `go to 3`  
-1. Check if the last horizontal section (#5) is primarily black, if yes `end` (this means the whole screen is black)  
-   Check if the section is somewhere in the gray, if yes `mark as gray` `go to 3`, if no `mark as empty` `go to 3`  
+The process of checking corners will be a recursive edge-detection,  
+loosely based on this approach <https://github.com/jankovicsandras/imagetracerjs/blob/master/process_overview.md>:  
+  
+![checking-the-corner.drawio](./images/checking-the-corner.drawio.svg)  
 
-We now have a rough estimate of where the screen is black and where it might be.  
+As illustrated in `checking-the-corner.drawio`, for the right-top corner, we will start by sampling a square of about a third of the lens's height.
+The sample will be divided into 4 sections. 
+This sample needs to have black in the left bottom section, and none in the others (not accounting for noise).
+If true, we'll take the left-bottom, then the right-top, section and repeat recursively until failure.  
 
-Valid arrangements are:
+Now we roughly know where the corner is with increasing resolution.  
 
-`Small`
+If we don't get a valid result from 4 corners, we bail out of the check and ignore the scan.
+If we have 4 corners, we have a square in the viewfinder, and, we move on to the next step.
 
-1. ⬛ black
-1. 🔲 gray
-1. ⬜ _empty_
-1. 🔲 gray
-1. ⬜ _empty_
-
-![small-example](./images/checking-the-average.small.png)
-
-`Large`
-
-1. ⬛ black
-1. ⬛ black
-1. ⬛ black
-1. 🔲 gray
-1. 🔲 gray
-
-![large-example](./images/checking-the-average.large.png)  
-
-Now, this is not a very forgiving approach. If the small version exists in the left bottom, for example, the scanner won't fire.  
-For the initial version, this is fine.  
-We can always add passes later if we find this doesn't work very well.  
-Because some of the areas overlap we can skip checking the overlap. There's probably more optimizations we can make, but, since we might be breaking these passes up into individual squares later, we'll ignore that for v1.
-
-### Finding the corners
+### Tracing a prism
 
 `TODO`
 
-### Scanning the code
+Possible resources: 
+
+- <https://stackoverflow.com/questions/70934872/get-the-points-for-the-corners-of-a-rectangle>  
+  Has a nice example of drawing a shape
+- <https://stackoverflow.com/questions/60062044/finding-the-corners-of-a-rectangle>
+
+### Permutate
 
 `TODO`
+
+We'll need to find the middle line if it's not perfectly rectangular in the viewfinder.  
+
+### Scan the code!
+
+`TODO`  
+
+- <https://boonepeter.github.io/posts/2020-11-10-spotify-codes/>
+- <https://boonepeter.github.io/posts/spotify-codes-part-2/>
+- <https://github.com/boonepeter/boonepeter.github.io-code/tree/main/spotify-codes-part-2>
+- <https://en.wikipedia.org/wiki/Intelligent_Mail_barcode>
+- <https://github.com/Sec-ant/zxing-wasm#notes>
