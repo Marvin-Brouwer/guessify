@@ -3,7 +3,7 @@ import { Component, createMemo, createSignal, onMount } from 'solid-js'
 import './camera-canvas.css'
 
 import { Camera, useCameraContext } from '../context/camera-context'
-import { CameraLens } from './camera-lens'
+import { CameraLens } from './camera-viewfinder'
 
 export const CameraCanvas: Component = () => {
 

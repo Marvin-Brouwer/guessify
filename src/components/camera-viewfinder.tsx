@@ -1,6 +1,6 @@
 import { Component, createMemo, createSignal, onCleanup, onMount } from 'solid-js'
 
-import './camera-lens.css'
+import './camera-viewfinder.css'
 
 import { useCameraContext } from '../context/camera-context'
 import { applyPixelFilter } from '../camera-utilities/pixel-filter'
@@ -44,6 +44,37 @@ export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
 		canvasElement().style.display = 'block';
 		canvasElement().style.marginLeft = '-4px';
 		canvasElement().style.marginTop = '-4px';
+		//
+		canvasElement().onclick = async () => {
+			const activeCamera = await cameraContext.getCamera()
+			if (!activeCamera) return;
+			const link = document.createElement('a');
+
+			const videoFrame = activeCamera.stream.getVideoTracks()[0];
+			const frameSettings = videoFrame.getSettings();
+
+			const tempCanvas = document.createElement('canvas');
+			tempCanvas.width = frameSettings.width!;
+			tempCanvas.height = frameSettings.height!;
+			const canvasContext = tempCanvas.getContext('2d')!
+
+			// Draw video to canvas
+			canvasContext.drawImage(
+				videoElement,
+				0,0,
+				frameSettings.width!, frameSettings.height!
+			);
+
+			const date = Date.now()
+
+			link.download = `camera-feed-${date}.png`;
+			link.href = tempCanvas.toDataURL();
+			link.click();
+
+			link.download = `processed${date}.png`;
+			link.href = canvasElement().toDataURL()
+			link.click();
+		}
 	}
 
 	async function scanFrame() {
