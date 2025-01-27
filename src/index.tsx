@@ -14,10 +14,10 @@ render(() => <>
 		<SpotifyApiContext >
 			<Router base={import.meta.env.BASE_URL}>
 				<Route path="/spotify-auth" component={SpotifyLoginRedirect} />
-				<Route path="/:locale" component={MainApp} />
+				<Route path="/:locale/" component={MainApp} />
 				<Route path="/" component={LandingPage} />
 				{/* TODO 404 */}
-				<Route path="/*" component={LandingPage} />
+				<Route path="*404" component={LandingPage} />
 			</Router>
 		</SpotifyApiContext>
 	</NetworkStatusContext>
