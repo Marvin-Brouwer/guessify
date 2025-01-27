@@ -6,12 +6,16 @@
 }
 
 .logo {
-	padding-right: .5em;
-	margin-bottom: 2.5ex;
-    width: 100%;
+  padding-right: 0.5em;
+  margin-bottom: 2.5ex;
+  width: 100%;
 }
-.logo img{
-    display: inline-block;
-    height: 1.5em;
-    margin-bottom: -.3em;
+.logo img {
+  display: inline-block;
+  height: 1.5em;
+  margin-bottom: -0.3em;
+}
+video {
+  object-fit: cover;
+  object-position: center;
 }

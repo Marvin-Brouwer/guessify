@@ -1,3 +1,5 @@
+import { CanvasContext } from './canvas'
+
 export type ScanResult = [
 	'none' | 'square-detected',
 	undefined
@@ -6,7 +8,7 @@ export type ScanResult = [
 	number
 ]
 
-export function scanImage(_imageData: ImageData, _canvasContext: CanvasRenderingContext2D): ScanResult {
+export function scanImage(_imageData: ImageData, _canvasContext: CanvasContext): ScanResult {
 
 	return [
 		'none',

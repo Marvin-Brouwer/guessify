@@ -1,27 +1,67 @@
-import { Component, createMemo, createSignal, onCleanup, onMount } from 'solid-js'
+import { Component, createSignal, onCleanup, onMount } from 'solid-js'
 
 import './camera-viewfinder.css'
 
 import { useCameraContext } from '../context/camera-context'
-import { applyPixelFilter } from '../camera-utilities/pixel-filter'
-import { scanImage } from '../camera-utilities/scanner'
+import { canvasConfiguration } from '../camera-utilities/canvas'
+import { scaleupVideo } from '../camera-utilities/scale-video'
+import { readViewFinder } from '../camera-utilities/video-viewfinder'
 
-// TODO https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
-const hideFrame = false; // import.meta.env.PROD;
+if (canvasConfiguration.debugEnabled()) await import('./camera-viewfinder.debug.css')
 
 // This is just as an example:
-const [codeExample, setCode] = createSignal('');
+const [codeExample, _setCode] = createSignal('')
 
-const [codeDetected, setCodeDetected] = createSignal(false);
-const [cameraBox, setCameraBox] = createSignal<HTMLDivElement>();
-const [boundingBox, setCameraBoundingBox] = createSignal<DOMRect>(new DOMRect());
+const [codeDetected, _setCodeDetected] = createSignal(false)
+const [viewFinder, setViewFinder] = createSignal<HTMLDivElement>()
 
-function updateBoundingBox() {
-	if (!cameraBox()) return;
+function debugCanvas(visible: boolean, canvas: HTMLCanvasElement | OffscreenCanvas) {
+	if (!visible) return
+	const element = canvas as HTMLCanvasElement
+	const existing = document.getElementById(element.id)
+	existing?.remove()
+	viewFinder()?.appendChild(element)
+}
 
-	setCameraBoundingBox(cameraBox()!.getBoundingClientRect())
+function addDebugDownloads(
+	videoFrame: MediaStreamTrack, videoElement: HTMLVideoElement,
+	scaledUpCanvas: HTMLCanvasElement | OffscreenCanvas, viewFinderCanvas: HTMLCanvasElement | OffscreenCanvas
+) {
+	if (canvasConfiguration.showGrayscaleImage) {
+		const viewFinderCanvasElement = (viewFinderCanvas as HTMLCanvasElement)
+		viewFinderCanvasElement.onclick = async () => {
+			const link = document.createElement('a')
 
-	console.log(boundingBox())
+			const frameSettings = videoFrame.getSettings()
+
+			const tempCanvas = document.createElement('canvas')
+			tempCanvas.width = frameSettings.width!
+			tempCanvas.height = frameSettings.height!
+			const canvasContext = tempCanvas.getContext('2d')!
+
+			// Draw video to canvas
+			canvasContext.drawImage(
+				videoElement,
+				0, 0
+			)
+
+			const date = Date.now()
+
+			link.download = `camera-feed-${date}-raw.png`
+			link.href = tempCanvas.toDataURL()
+			link.click()
+
+			if(scaledUpCanvas instanceof HTMLCanvasElement) {
+				link.download = `camera-feed-${date}-scaled.png`
+				link.href = scaledUpCanvas.toDataURL()
+				link.click()
+			}
+
+			link.download = `camera-feed-${date}-viewfinder.png`
+			link.href = viewFinderCanvasElement.toDataURL()
+			link.click()
+		}
+	}
 }
 
 export type CameraLensProps = {
@@ -30,137 +70,81 @@ export type CameraLensProps = {
 export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
 
 	const cameraContext = useCameraContext()
-	const canvas = createMemo(() => <canvas
-		width={boundingBox().width}
-		height={boundingBox().height}
-	/>, boundingBox);
-	const canvasElement = () => canvas() as HTMLCanvasElement
-	const temp = <div class="temp"></div>
 
-	let interval: NodeJS.Timeout | undefined;
-
-	// Show this when debugging
-	if (!hideFrame) {
-		canvasElement().style.display = 'block';
-		canvasElement().style.marginLeft = '-4px';
-		canvasElement().style.marginTop = '-4px';
-		//
-		canvasElement().onclick = async () => {
-			const activeCamera = await cameraContext.getCamera()
-			if (!activeCamera) return;
-			const link = document.createElement('a');
-
-			const videoFrame = activeCamera.stream.getVideoTracks()[0];
-			const frameSettings = videoFrame.getSettings();
-
-			const tempCanvas = document.createElement('canvas');
-			tempCanvas.width = frameSettings.width!;
-			tempCanvas.height = frameSettings.height!;
-			const canvasContext = tempCanvas.getContext('2d')!
-
-			// Draw video to canvas
-			canvasContext.drawImage(
-				videoElement,
-				0,0,
-				frameSettings.width!, frameSettings.height!
-			);
-
-			const date = Date.now()
-
-			link.download = `camera-feed-${date}.png`;
-			link.href = tempCanvas.toDataURL();
-			link.click();
-
-			link.download = `processed${date}.png`;
-			link.href = canvasElement().toDataURL()
-			link.click();
-		}
-	}
+	let interval: NodeJS.Timeout | undefined
 
 	async function scanFrame() {
-		if(!cameraContext.hasPermission()) {
-			window.location.reload();
+		if (!cameraContext.hasPermission()) {
+			window.location.reload()
+			return
 		}
-		const activeCamera = await cameraContext.getCamera()
-			.catch(() => window.location.reload());
-		if (!activeCamera) return undefined
+		const activeCamera = await cameraContext
+			.getCamera()
+			.catch(() => undefined)
 
-		const videoFrame = activeCamera.stream.getVideoTracks()[0];
+		if (!activeCamera) {
+			window.location.reload()
+			return
+		}
+
+		if (!viewFinder()) return
+		const viewFinderRect = viewFinder()!.getBoundingClientRect()
+		if (viewFinderRect.width === 0) return
+		// Sometimes this seems to happen and cause issues
+		if (videoElement.getBoundingClientRect().width === 0) return
+
+		const videoFrame = activeCamera.stream.getVideoTracks()[0]
 		// Check if feed is still alive, this tends to happen when phone lock
-		if(!activeCamera.stream.active || !videoFrame.enabled) {
-			window.location.reload();
+		if (!activeCamera.stream.active || !videoFrame.enabled) {
+			window.location.reload()
 		}
-		const frameSettings = videoFrame.getSettings();
-		// TODO this seems to be caused by the video not matching the screen
-		// It's way worse on desktop, we'll have to calculate the difference if we want to make it perfect.
-		// It seems to be good enough on mobile though
-		const sourceLeft = frameSettings.width! * .15;
-		const sourceWidth = frameSettings.width! * .7;
-		// No idea why this is 355 instead of 45,
-		// perhaps it has something to do with device UI, TODO figure out later, it's close enough
-		const sourceTop = frameSettings.height! * .355;
-		const sourceHeight = frameSettings.height! * .3;
 
-		const canvasContext = canvasElement().getContext('2d', {
-			willReadFrequently: true,
-			desynchronized: hideFrame
-		})!
+		const scaledUpCanvas = await scaleupVideo(videoElement, videoFrame)
+		debugCanvas(canvasConfiguration.showScaleCanvas, scaledUpCanvas)
 
-		// Draw video to canvas
-		canvasContext.drawImage(
-			videoElement,
-			sourceLeft, sourceTop,
-			sourceWidth, sourceHeight,
-			0, 0,
-			boundingBox().width, boundingBox().height,
-		);
+		const viewFinderCanvas = await readViewFinder(viewFinderRect, scaledUpCanvas)
+		addDebugDownloads(videoFrame, videoElement, scaledUpCanvas, viewFinderCanvas)
+		debugCanvas(canvasConfiguration.showGrayscaleImage, viewFinderCanvas)
 
-		// Fiddle with the image to make black more clear and glare less obvious
-		canvasContext.filter = 'brightness(1) contrast(2)'
+		// // Get image back from canvas
+		// const image = canvasContext.getImageData(
+		// 	0, 0,
+		// 	viewFinderBoundingBox.width, viewFinderBoundingBox.height
+		// );
 
-		// Get image back from canvas
-		const image = canvasContext.getImageData(
-			0, 0,
-			boundingBox().width, boundingBox().height
-		);
+		// const [result, codeValue] = await scanImage(image, canvasContext);
 
-		await applyPixelFilter(image);
-		if(!hideFrame) canvasContext.putImageData(image, 0, 0);
-
-		const [result, codeValue] = await scanImage(image, canvasContext);
-
-		if(result === 'code-detected') {
-				setCodeDetected(true);
-				setCode(codeValue.toString());
-		}
-		else {
-			setCodeDetected(false);
-			setCode('');
-		}
+		// if(result === 'code-detected') {
+		// 	setCodeDetected(true);
+		// 	setCode(codeValue.toString());
+		// }
+		// else {
+		// 	setCodeDetected(false);
+		// 	setCode('');
+		// }
 	}
 
 	onMount(async () => {
-		if(!cameraContext.hasPermission()) return
+		if (!cameraContext.hasPermission()) {
+			return
+		}
 
 		const camera = await cameraContext.getCamera()
-		if (!camera) return;
+		if (!camera) {
+			return
+		}
 
-
-		window.addEventListener('resize', updateBoundingBox)
-		updateBoundingBox()
-
-		interval = setInterval(() => requestAnimationFrame(scanFrame), 200);
-	});
+		// TODO check if we can move this to a requestAnimationFrame without interval looping back on itself
+		interval = setInterval(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
+	})
 
 	onCleanup(() => {
-		window.removeEventListener('resize', updateBoundingBox)
-		clearInterval(interval);
+		clearInterval(interval)
 	})
 
 	return <>
-		<div ref={setCameraBox} class={codeDetected() ? 'camera-lens scanning' : 'camera-lens'}>
-			{canvas()}
-			{temp}
+		<div ref={setViewFinder} class={codeDetected() ? 'camera-lens scanning' : 'camera-lens'}>
+
 		</div>
 		<div class="lens-feedback">{codeExample()}</div>
 	</>

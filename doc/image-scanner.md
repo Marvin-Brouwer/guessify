@@ -11,7 +11,7 @@ Since we we're planning to use the article and [its repo](https://github.com/boo
 ## Finding the code
 
 Because the Spotify codes rely on height of bars, it's not a simple vertical pixel sampler.  
-Just as an illustration we've overlayed a code with itself offset to all 4 axes, and, rotated a bit both ways.  
+Just as an illustration, we've overlayed a code with itself offset to all 4 axes, and, rotated a bit both ways.  
 Even without taking perspective into account, this already looks like this:  
 ![Spotify code with multiple orientations overlapped](./images/multiple-orientations.drawio.svg)  
 
