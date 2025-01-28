@@ -139,50 +139,55 @@ async function requestPermission() {
 			await getDevices()
 			return setCameraPermission('granted')
 		})
-		.catch((err: MediaPermissionsError) => {
-			const { type, message, name } = err
-			if (type === MediaPermissionsErrorType.SystemPermissionDenied) {
-				// browser does not have permission to access camera or microphone
-				return setCameraPermission('denied:system')
-			} else if (type === MediaPermissionsErrorType.UserPermissionDenied) {
-				// user didn't allow app to access camera or microphone
-				return setCameraPermission('denied')
-			} else if (type === MediaPermissionsErrorType.CouldNotStartVideoSource) {
-				// camera is in use by another application (Zoom, Skype) or browser tab (Google Meet, Messenger Video)
-				// (mostly Windows specific problem)
-				return setCameraPermission('error:inuse')
-			} else if (type === MediaPermissionsErrorType.Generic && message === "Permission dismissed") {
-				// prompt dismissed by user
-				return setCameraPermission('unknown')
-			} else if (type === MediaPermissionsErrorType.Generic
-				&& name === "OverconstrainedError" && message === ""
-				&& storedCamera) {
-				// This seems to happen when the browser stores a camera that doesn't exist (perhaps the ideas change on software update)
-				// Erase storage and reload
-				localStorage.removeItem('camera');
-				window.location.reload();
-				return setCameraPermission('denied:system')
-			} else {
-				console.error(err)
-				// not all error types are handled by this library
-				return setCameraPermission('error')
-			}
-		})
+		.catch((err: MediaPermissionsError) => handleMediaPermissionsError(err, storedCamera))
+}
+
+function handleMediaPermissionsError(err: MediaPermissionsError, storedCamera: string | undefined) {
+	const { type, message, name } = err
+	if (type === MediaPermissionsErrorType.SystemPermissionDenied) {
+		// browser does not have permission to access camera or microphone
+		return setCameraPermission('denied:system')
+	} else if (type === MediaPermissionsErrorType.UserPermissionDenied) {
+		// user didn't allow app to access camera or microphone
+		return setCameraPermission('denied')
+	} else if (type === MediaPermissionsErrorType.CouldNotStartVideoSource) {
+		// camera is in use by another application (Zoom, Skype) or browser tab (Google Meet, Messenger Video)
+		// (mostly Windows specific problem)
+		return setCameraPermission('error:inuse')
+	} else if (type === MediaPermissionsErrorType.Generic && message === "Permission dismissed") {
+		// prompt dismissed by user
+		return setCameraPermission('unknown')
+	} else if (type === MediaPermissionsErrorType.Generic
+		&& name === "OverconstrainedError" && message === ""
+		&& storedCamera) {
+		setCameraPermission('denied:system')
+		// This seems to happen when the browser stores a camera that doesn't exist (perhaps the ideas change on software update)
+		// Erase storage and reload
+		localStorage.removeItem('camera');
+		window.location.reload();
+		return setCameraPermission('denied:system')
+	} else {
+		console.error(err)
+		// not all error types are handled by this library
+		return setCameraPermission('error')
+	}
 }
 
 // TODO locally store selected camera
 async function getCamera(id?: string): Promise<Camera> {
 	if (cameraPermission() !== 'granted') throw new Error(`Call 'requestPermission' before 'getStream'`)
 
-	const storedCamera = localStorage.getItem('camera');
+	const storedCamera = localStorage.getItem('camera') ?? undefined;
 	const requestedCamera = id ?? storedCamera ?? undefined
 	if (activeCamera() !== requestedCamera) await stopCameraStream();
 
 	const mediaStream = await navigator.mediaDevices
 		.getUserMedia(getCameraConstraints(requestedCamera))
 		.catch(error => {
-			if ((error as Error).name !== 'NotReadableError') throw error
-			return new MediaStream()
+			if ((error as Error).name === 'NotReadableError') return new MediaStream();
+			const result = handleMediaPermissionsError(error as MediaPermissionsError, storedCamera);
+			if (result === 'error') throw error
+			return new MediaStream();
 		});
 
 	// Re-query devices just to be sure
