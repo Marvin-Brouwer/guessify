@@ -5,6 +5,8 @@
   .viewfinder {
     canvas {
       display: unset !important;
+	  touch-action: none;
+	  pointer-events: none;
 
       &#scale {
         opacity: 0.6;
@@ -18,7 +20,7 @@
       }
     }
     &:hover canvas#grayscale,
-    &:focus canvas#grayscale {
+    &:active canvas#grayscale {
       opacity: 1;
     }
   }

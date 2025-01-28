@@ -1,4 +1,4 @@
-import { Component, createSignal, onCleanup, onMount } from 'solid-js'
+import { Accessor, Component, createSignal, onCleanup, onMount } from 'solid-js'
 
 import './camera-viewfinder.pcss'
 
@@ -25,11 +25,12 @@ function debugCanvas(visible: boolean, canvas: HTMLCanvasElement | OffscreenCanv
 
 function addDebugDownloads(
 	videoFrame: MediaStreamTrack, videoElement: HTMLVideoElement,
-	scaledUpCanvas: HTMLCanvasElement | OffscreenCanvas, viewFinderCanvas: HTMLCanvasElement | OffscreenCanvas
+	scaledUpCanvas: HTMLCanvasElement | OffscreenCanvas, viewFinderCanvas: HTMLCanvasElement | OffscreenCanvas,
+	viewfinder: Accessor<HTMLDivElement | undefined>
 ) {
 	if (canvasConfiguration.showGrayscaleImage) {
 		const viewFinderCanvasElement = (viewFinderCanvas as HTMLCanvasElement)
-		viewFinderCanvasElement.onclick = async () => {
+		const viewfinderDownload = async () => {
 			const link = document.createElement('a')
 
 			const frameSettings = videoFrame.getSettings()
@@ -60,6 +61,17 @@ function addDebugDownloads(
 			link.download = `camera-feed-${date}-viewfinder.png`
 			link.href = viewFinderCanvasElement.toDataURL()
 			link.click()
+		}
+
+		viewfinder()!.ondblclick = viewfinderDownload;
+		let touchTimeout: NodeJS.Timeout | undefined;
+		let touched = false;
+
+		viewfinder()!.ontouchend = () => {
+			if(touched ===  true) viewfinderDownload();
+			clearTimeout(touchTimeout)
+			touched = true;
+			touchTimeout = setTimeout(() => touched = false, 500);
 		}
 	}
 }
@@ -103,7 +115,7 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		debugCanvas(canvasConfiguration.showScaleCanvas, scaledUpCanvas)
 
 		const viewFinderCanvas = await readViewFinder(viewFinderRect, scaledUpCanvas)
-		addDebugDownloads(videoFrame, videoElement, scaledUpCanvas, viewFinderCanvas)
+		addDebugDownloads(videoFrame, videoElement, scaledUpCanvas, viewFinderCanvas, viewFinder)
 		debugCanvas(canvasConfiguration.showGrayscaleImage, viewFinderCanvas)
 
 		// // Get image back from canvas
@@ -146,7 +158,6 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		<div
 			ref={setViewFinder}
 			class={codeDetected() ? 'viewfinder scanning' : 'viewfinder'}
-			tabIndex={canvasConfiguration.debugEnabled() ? 99 : undefined}
 		/>
 		<div class="feedback">{codeExample()}</div>
 	</>
