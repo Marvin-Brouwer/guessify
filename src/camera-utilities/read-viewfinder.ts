@@ -18,7 +18,7 @@ export function readViewFinder(viewFinderRect: DOMRectReadOnly, videoInput: Canv
 			desynchronized: !canvasConfiguration.showGrayscaleImage
 		})
 		// Fiddle with the image to make black more clear and glare less obvious
-		grayscaleContext.filter = 'grayscale() brightness(2) contrast(3)'
+		grayscaleContext.filter = 'grayscale() brightness(2) contrast(3) blur(1px)'
 		grayscaleContext.drawImage(
 			videoInput,
 			viewFinderRect.x, viewFinderRect.y,

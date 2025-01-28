@@ -5,7 +5,7 @@ import './camera-viewfinder.pcss'
 import { useCameraContext } from '../context/camera-context'
 import { canvasConfiguration } from '../camera-utilities/canvas';
 import { scaleupVideo } from '../camera-utilities/scale-video'
-import { readViewFinder } from '../camera-utilities/video-viewfinder'
+import { readViewFinder } from '../camera-utilities/read-viewfinder'
 
 if (canvasConfiguration.debugEnabled()) await import('./camera-viewfinder.debug.pcss')
 
