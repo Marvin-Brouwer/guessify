@@ -6,7 +6,7 @@ export const canvasConfiguration = {
 
 	showScaleCanvas: false,
 	showGrayscaleImage: true, // import.meta.env.DEV,
-	showOrientationLines: false,
+	showOrientationLines: true,
 	sampleRate: import.meta.env.PROD ? 200 : 1000,
 
 	debugEnabled() {

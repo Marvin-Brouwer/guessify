@@ -3,9 +3,10 @@ import { Accessor, Component, createSignal, onCleanup, onMount } from 'solid-js'
 import './camera-viewfinder.pcss'
 
 import { useCameraContext } from '../context/camera-context'
-import { canvasConfiguration } from '../camera-utilities/canvas';
+import { canvasConfiguration, getContext, makeCanvas } from '../camera-utilities/canvas';
 import { scaleupVideo } from '../camera-utilities/scale-video'
-import { readViewFinder } from '../camera-utilities/read-viewfinder'
+import { blurViewFinder, readViewFinder } from '../camera-utilities/read-viewfinder'
+import { convertToPixelGrid, PixelGrid } from '../camera-utilities/pixel-grid';
 
 if (canvasConfiguration.debugEnabled()) await import('./camera-viewfinder.debug.pcss')
 
@@ -22,11 +23,22 @@ function debugCanvas(visible: boolean, canvas: HTMLCanvasElement | OffscreenCanv
 	existing?.remove()
 	viewFinder()?.appendChild(element)
 }
+function debugEdges(visible: boolean, viewFinder: HTMLDivElement, grid: PixelGrid) {
+	if (!visible || !grid.width) return
+	const canvas = makeCanvas('edge', visible, grid.width, grid.height);
+	const element = canvas as HTMLCanvasElement
+	const existing = document.getElementById(element.id)
+	existing?.remove()
+	viewFinder.appendChild(element)
+	return canvas;
+}
 
 function addDebugDownloads(
 	videoFrame: MediaStreamTrack, videoElement: HTMLVideoElement,
-	scaledUpCanvas: HTMLCanvasElement | OffscreenCanvas, viewFinderCanvas: HTMLCanvasElement | OffscreenCanvas,
-	viewfinder: Accessor<HTMLDivElement | undefined>
+	viewfinder: Accessor<HTMLDivElement | undefined>,
+	scaledUpCanvas: HTMLCanvasElement | OffscreenCanvas,
+	viewFinderCanvas: HTMLCanvasElement | OffscreenCanvas,
+	blurryViewFinderCanvas: HTMLCanvasElement | OffscreenCanvas
 ) {
 	if (canvasConfiguration.showGrayscaleImage) {
 		const viewFinderCanvasElement = (viewFinderCanvas as HTMLCanvasElement)
@@ -58,9 +70,16 @@ function addDebugDownloads(
 				link.click()
 			}
 
-			link.download = `camera-feed-${date}-viewfinder.png`
-			link.href = viewFinderCanvasElement.toDataURL()
-			link.click()
+			if(viewFinderCanvasElement instanceof HTMLCanvasElement) {
+				link.download = `camera-feed-${date}-viewfinder.png`
+				link.href = viewFinderCanvasElement.toDataURL()
+				link.click()
+			}
+			if(blurryViewFinderCanvas instanceof HTMLCanvasElement) {
+				link.download = `camera-feed-${date}-viewfinder-blurry.png`
+				link.href = blurryViewFinderCanvas.toDataURL()
+				link.click()
+			}
 		}
 
 		viewfinder()!.ondblclick = viewfinderDownload;
@@ -114,10 +133,26 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		const scaledUpCanvas = await scaleupVideo(videoElement, videoFrame)
 		debugCanvas(canvasConfiguration.showScaleCanvas, scaledUpCanvas)
 
-		const viewFinderCanvas = await readViewFinder(viewFinderRect, scaledUpCanvas)
-		addDebugDownloads(videoFrame, videoElement, scaledUpCanvas, viewFinderCanvas, viewFinder)
-		debugCanvas(canvasConfiguration.showGrayscaleImage, viewFinderCanvas)
+		const viewFinderCanvas = await readViewFinder(viewFinderRect, scaledUpCanvas);
+		debugCanvas(canvasConfiguration.showGrayscaleImage, viewFinderCanvas);
+		const blurryViewFinderCanvas = await blurViewFinder(viewFinderCanvas);
+		debugCanvas(canvasConfiguration.showGrayscaleImage, blurryViewFinderCanvas);
 
+		const pixelGrid = await convertToPixelGrid(blurryViewFinderCanvas);
+
+		const edgeCanvas = debugEdges(canvasConfiguration.showOrientationLines, viewFinder()!, pixelGrid)!;
+
+		getContext(edgeCanvas).clearRect(0, 0, edgeCanvas.width, edgeCanvas.height);
+		const uintPixels = pixelGrid.flatMap(r => r.flatMap(p => p[6] ? [0, 255, 0, 255] : [0,0,0,0]))
+		getContext(edgeCanvas).putImageData(new ImageData(
+			new Uint8ClampedArray(uintPixels),
+			pixelGrid.width, pixelGrid.length), 0,0)
+
+		addDebugDownloads(
+			videoFrame, videoElement, viewFinder,
+			scaledUpCanvas, viewFinderCanvas,
+			blurryViewFinderCanvas
+		);
 		// // Get image back from canvas
 		// const image = canvasContext.getImageData(
 		// 	0, 0,
@@ -134,6 +169,9 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		// 	setCodeDetected(false);
 		// 	setCode('');
 		// }
+
+		// TODO check if we can move this to a requestAnimationFrame without interval looping back on itself
+		interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
 	}
 
 	onMount(async () => {
@@ -147,11 +185,11 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		}
 
 		// TODO check if we can move this to a requestAnimationFrame without interval looping back on itself
-		interval = setInterval(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
+		interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
 	})
 
 	onCleanup(() => {
-		clearInterval(interval)
+		clearTimeout(interval)
 	})
 
 	return <>

@@ -7,17 +7,25 @@
       display: unset !important;
 	  touch-action: none;
 	  pointer-events: none;
+	  position: absolute;
+	  left: 0;
+	  top: 0;
+	  margin: -4px 0 0 -4px;
 
       &#scale {
         opacity: 0.6;
         position: fixed;
-        left: 0;
-        top: 0;
+        margin: 0;
       }
       &#grayscale {
         opacity: 0.3;
-        margin: -4px 0 0 -4px;
       }
+	  &#blur {
+		display:none !important;
+	  }
+	  &#edge {
+        opacity: 0.7;
+	  }
     }
     &:hover canvas#grayscale,
     &:active canvas#grayscale {
