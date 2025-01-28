@@ -1,4 +1,4 @@
 export const viewfinderConstants = {
-	width: 70,
-	height: 30
+	width: 60,
+	height: 20
 } as const
