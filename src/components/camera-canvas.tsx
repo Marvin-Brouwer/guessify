@@ -1,51 +1,58 @@
 import { Component, createMemo, createSignal, onMount } from 'solid-js'
 
-import './camera-canvas.css'
+import './camera-canvas.pcss'
 
 import { Camera, useCameraContext } from '../context/camera-context'
-import { CameraLens } from './camera-viewfinder'
+import { ViewFinder } from './camera-viewfinder'
+import { canvasConfiguration } from '../camera-utilities/canvas'
 
 export const CameraCanvas: Component = () => {
 
 	const cameraContext = useCameraContext()
 
-	const [camera, setCamera] = createSignal<Camera>();
-	const cameraStream = createMemo(() => camera()?.stream ?? null, camera);
+	const [camera, setCamera] = createSignal<Camera>()
+	const cameraStream = createMemo(() => camera()?.stream ?? null, camera)
 
-	const videoDom = <video></video>;
+	const videoDom = <video></video>
 	const videoPlayerElement = videoDom as HTMLVideoElement
 
 	const videoPlayer = createMemo(() => {
-		videoPlayerElement.srcObject = cameraStream();
+		videoPlayerElement.srcObject = cameraStream()
 		if (videoPlayerElement.srcObject) {
-			videoPlayerElement.removeAttribute('src');
+			videoPlayerElement.removeAttribute('src')
 			videoPlayerElement.onloadedmetadata = () => {
-				videoPlayerElement.play();
-			};
+				videoPlayerElement.play()
+			}
 			return videoDom
 		} else {
-			videoPlayerElement.src = "";
-			videoPlayerElement.srcObject = null;
-			videoPlayerElement.pause();
+			videoPlayerElement.src = ""
+			videoPlayerElement.srcObject = null
+			videoPlayerElement.pause()
 			return <video></video>
 		}
 	}, [cameraStream])
 
 	onMount(() => {
-		if(cameraContext.hasPermission())
+		if (cameraContext.hasPermission())
 			cameraContext
 				.getCamera()
 				.then(setCamera)
-				.catch(console.error);
-	});
+				.catch(console.error)
+	})
 
 	return <>
 		<div class='camera-canvas'>
 			{videoPlayer()}
-			<div class="video-overlay"></div>
-			<div class="video-lens">
-				<CameraLens videoElement={videoPlayerElement} />
-			</div>
+			{canvasConfiguration.debugEnabled() ? <>
+				<div class="video-overlay" />
+				<div class="video-overlay debug">
+					<ViewFinder videoElement={videoPlayerElement} />
+				</div>
+			</> :
+				<div class="video-overlay">
+					<ViewFinder videoElement={videoPlayerElement} />
+				</div>
+			}
 		</div>
 	</>
 }

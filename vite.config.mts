@@ -10,6 +10,15 @@ import htmlConfig from 'vite-plugin-html-config'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 
+import postcssNesting from 'postcss-nesting';
+// @ts-expect-error
+import postcssDesignTokens from 'postcss-design-tokens';
+import { viewfinderConstants } from './src/constants/viewfinder-constants';
+
+const designTokens = {
+	viewfinderConstants
+}
+
 // We'd like to display this in the settings menu
 process.env.VITE_APP_VERSION = packageJson.version
 
@@ -17,7 +26,7 @@ const devHostEnabled = process.argv.includes('--host')
 
 export default defineConfig({
 	appType: 'spa',
-	base: '/guessify/',
+	base: '/guessify',
 	server: {
 		port: 5173
 	},
@@ -56,5 +65,13 @@ export default defineConfig({
 				}
 			]
 		})
-	]
+	],
+	css: {
+		postcss: {
+			plugins: [
+				postcssNesting,
+				postcssDesignTokens({ tokens: designTokens })
+			]
+		}
+	}
 })

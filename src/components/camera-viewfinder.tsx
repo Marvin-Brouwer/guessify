@@ -1,13 +1,13 @@
 import { Component, createSignal, onCleanup, onMount } from 'solid-js'
 
-import './camera-viewfinder.css'
+import './camera-viewfinder.pcss'
 
 import { useCameraContext } from '../context/camera-context'
-import { canvasConfiguration } from '../camera-utilities/canvas'
+import { canvasConfiguration } from '../camera-utilities/canvas';
 import { scaleupVideo } from '../camera-utilities/scale-video'
 import { readViewFinder } from '../camera-utilities/video-viewfinder'
 
-if (canvasConfiguration.debugEnabled()) await import('./camera-viewfinder.debug.css')
+if (canvasConfiguration.debugEnabled()) await import('./camera-viewfinder.debug.pcss')
 
 // This is just as an example:
 const [codeExample, _setCode] = createSignal('')
@@ -67,7 +67,7 @@ function addDebugDownloads(
 export type CameraLensProps = {
 	videoElement: HTMLVideoElement
 }
-export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
+export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 
 	const cameraContext = useCameraContext()
 
@@ -143,9 +143,11 @@ export const CameraLens: Component<CameraLensProps> = ({ videoElement }) => {
 	})
 
 	return <>
-		<div ref={setViewFinder} class={codeDetected() ? 'camera-lens scanning' : 'camera-lens'}>
-
-		</div>
-		<div class="lens-feedback">{codeExample()}</div>
+		<div
+			ref={setViewFinder}
+			class={codeDetected() ? 'viewfinder scanning' : 'viewfinder'}
+			tabIndex={canvasConfiguration.debugEnabled() ? 99 : undefined}
+		/>
+		<div class="feedback">{codeExample()}</div>
 	</>
 }

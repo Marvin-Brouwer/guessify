@@ -1,7 +1,7 @@
 import { Component, onCleanup, onMount } from 'solid-js'
 import { Locale, useDictionaries } from '../i18n/dictionary'
 
-import './reset-permissions.css'
+import './reset-permissions-modal.pcss'
 import closeIcon from '../assets/close_24dp_E8EAED.svg'
 import { BrowserMetadata, getBrowserMetadata } from '../helpers/browser-metadata'
 

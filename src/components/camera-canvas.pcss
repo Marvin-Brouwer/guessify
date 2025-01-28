@@ -1,0 +1,72 @@
+/* // TODO perhaps custom plugin?
+@import '../constants/viewfinder-constants.ts' viewfinderConstants;
+--width: viewfinderConstants('width');
+*/
+
+.camera-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+
+  --viewfinder-width: token("viewfinderConstants.width")vw;
+  --viewfinder-height: token("viewfinderConstants.height")vw;
+
+  video {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+
+  .video-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background-color: rgb(255 255 255 / 20%);
+    backdrop-filter: blur(10px);
+
+    /* https://bennettfeely.com/clippy/ */
+    --viewfinder-offset-width: calc(var(--viewfinder-width) / 2);
+    --viewfinder-offset-height: calc(var(--viewfinder-height) / 2);
+    --left-pos: calc(50% - var(--viewfinder-offset-width));
+    --right-pos: calc(50% + var(--viewfinder-offset-width));
+    --top-pos: calc(50% - var(--viewfinder-offset-height));
+    --bottom-pos: calc(50% + var(--viewfinder-offset-height));
+
+    clip-path: polygon(
+      /* canvas left-top */ -1px -1px,
+      /* canvas left-bottom */ -1px calc(100% + 1px),
+      /* viewfinder left-bottom */ var(--left-pos) var(--bottom-pos),
+      /* viewfinder left-top */ var(--left-pos) var(--top-pos),
+      /* viewfinder right-top */ var(--right-pos) var(--top-pos),
+      /* viewfinder right-bottom */ var(--right-pos) var(--bottom-pos),
+      /* viewfinder left-bottom 2 */ var(--left-pos) var(--bottom-pos),
+      /* canvas left-bottom 2 */ -1px calc(100% + 1px),
+      /* canvas right-bottom */ calc(100% + 1px) calc(100% + 1px),
+      /* canvas right-top */ calc(100% + 1px) -1px
+    );
+
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: 1fr var(--viewfinder-width) 1fr;
+    grid-template-rows: 1fr var(--viewfinder-height) 1fr;
+    gap: 0;
+    grid-template-areas:
+      ". . ."
+      ". viewfinder ."
+      ". feedback .";
+  }
+}

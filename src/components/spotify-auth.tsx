@@ -1,7 +1,7 @@
 import { Component, createEffect } from 'solid-js'
 import { useNavigate } from '@solidjs/router'
 
-import './spotify-auth.css'
+import './spotify-auth.pcss'
 
 import logo from '../../public/guessify-logo.svg'
 import loadingIcon from '../assets/timelapse_24dp_E8EAED.svg'

@@ -1,6 +1,6 @@
 import { Component, createMemo, createSignal, onMount } from 'solid-js'
 
-import './camera-card.css'
+import './camera-card.pcss'
 import camera_unknown from '../assets/camera_24dp_E8EAED.svg'
 import camera_desktop from '../assets/photo_camera_24dp_E8EAED.svg'
 import camera_user from '../assets/person_24dp_E8EAED.svg'
@@ -10,7 +10,7 @@ import cameraSelectIcon from '../assets/cameraswitch_24dp_E8EAED.svg'
 
 import { Camera, useCameraContext } from '../context/camera-context'
 import { useDictionaries } from '../i18n/dictionary'
-import { ResetPermissionModal } from './reset-permissions'
+import { ResetPermissionModal } from './reset-permissions-modal'
 
 export const CameraCard: Component = () => {
 

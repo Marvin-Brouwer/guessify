@@ -5,7 +5,7 @@ import { getStoredLocale } from '../i18n/dictionary'
 const clientId = import.meta.env['VITE_SPOTIFY_CLIENT'];
 const hostName = import.meta.env['VITE_SPOTIFY_HOST'];
 
-export const spotifyApi = () => SpotifyApi.withUserAuthorization(clientId, `${hostName}${import.meta.env.BASE_URL}spotify-auth`, [
+export const spotifyApi = () => SpotifyApi.withUserAuthorization(clientId, `${hostName}${import.meta.env.BASE_URL}/spotify-auth`, [
 	// Enable in app playback
 	"streaming",
 	// We need to check fot premium users to enable playback

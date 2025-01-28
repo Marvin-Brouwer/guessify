@@ -1,6 +1,6 @@
 import { Component, createEffect, createSignal } from 'solid-js'
 
-import './spotify-card.css'
+import './spotify-card.pcss'
 import profilePlaceHolder from '../assets/account_circle_24dp_E8EAED.svg'
 import premiumIcon from '../assets/verified_24dp_E8EAED.svg'
 import noPremiumIcon from '../assets/warning_24dp_E8EAED.svg'

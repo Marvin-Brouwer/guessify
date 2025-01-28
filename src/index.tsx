@@ -11,8 +11,10 @@ const root = document.getElementById('root')
 
 render(() => <>
 	<NetworkStatusContext>
-		<SpotifyApiContext >
-			<Router base={import.meta.env.BASE_URL}>
+		<SpotifyApiContext>
+			{/* For some reason the solid navigation fails on the homepage */}
+			{/* So we turn on explicitLinks ans use normal anchors */}
+			<Router base={import.meta.env.BASE_URL} explicitLinks={true}>
 				<Route path="/spotify-auth" component={SpotifyLoginRedirect} />
 				<Route path="/:locale/" component={MainApp} />
 				<Route path="/" component={LandingPage} />
