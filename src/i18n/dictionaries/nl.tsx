@@ -3,7 +3,17 @@ import { Dictionary } from '../dictionary'
 export const nl_dictionary: Dictionary = {
 	common: {
 		close: 'Sluiten',
-		offline: 'U bent offline, controleer a.u.b. uw verbinding'
+		offline: 'U bent offline, controleer a.u.b. uw verbinding',
+		unhandledError: {
+			title: 'Er is iets mis gegaan.',
+			details: 'Foutgegevens',
+			explainer: [
+				'Er heeft zich een niet afgehandelde fout voorgedaan, probeer a.u.b. opniew.',
+				// TODO
+				'Als dit probleem aan blijft houden, verzoeken wij u vriendelijk een bug rapport in te schieten met de onderstaande gegevens.',
+				'Het sluiten van dit bericht zal de applicatie herstarten.'
+			]
+		}
 	},
 	spotify: {
 		title: 'Spotify',

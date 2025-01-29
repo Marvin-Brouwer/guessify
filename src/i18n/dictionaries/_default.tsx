@@ -1,7 +1,17 @@
 export const default_dictionary = {
 	common: {
 		close: 'Close',
-		offline: 'You appear to be offline, please check your network connection'
+		offline: 'You appear to be offline, please check your network connection',
+		unhandledError: {
+			title: 'Something went wrong.',
+			details: 'Details',
+			explainer: [
+				'The application has encountered an unhandled error, please try again.',
+				// TODO
+				'If this problem persists, please file a bug report, using the details below.',
+				'Closing this message will restart the application.'
+			]
+		}
 	},
 	spotify: {
 		title: 'Spotify',

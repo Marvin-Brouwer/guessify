@@ -1,0 +1,44 @@
+.modal {
+  width: 100%;
+  min-height: 10ex;
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 4ex 4ex 0 4ex;
+  box-sizing: border-box;
+
+  .details {
+	width: 100%;
+  }
+
+  .controls {
+    grid-area: controls;
+    margin: 0 -4ex 0 -4ex;
+    height: 8ex;
+    width: calc(100% + 8ex);
+
+    button {
+      width: 100%;
+      height: 8ex;
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-columns: 8ex 1fr 8ex;
+      grid-template-rows: 1fr;
+      gap: 0em 0em;
+      grid-template-areas: ". text icon";
+      align-content: center;
+      justify-content: center;
+      align-items: center;
+
+      span {
+        grid-area: text;
+      }
+
+      img {
+        grid-area: icon;
+      }
+    }
+  }
+}
