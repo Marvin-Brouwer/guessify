@@ -1,14 +1,18 @@
 import './reset-permission-modal.pcss'
 
-import { Component } from 'solid-js'
+import { Component, createMemo } from 'solid-js';
 
 import { Locale, useDictionaries } from '../../i18n/dictionary'
 import { BrowserMetadata, getBrowserMetadata } from '../../helpers/browser-metadata'
 import { Modal, ModalElement } from '../modal'
 
+const browserMetadata = getBrowserMetadata();
+
 export const ResetPermissionModal: Component = () => {
 
 	const { locale, dictionary } = useDictionaries()
+
+	const instructionUrl = createMemo(() => getUrl(browserMetadata, locale()), locale);
 
 	const modal = (<Modal class='reset-permission-modal'>
 		<h2>{dictionary().camera.permissions.title}</h2>
@@ -29,22 +33,20 @@ export const ResetPermissionModal: Component = () => {
 
 	const requestInfo = async (e: MouseEvent) => {
 		e.preventDefault();
+		e.stopPropagation();
 
-		const browserMetadata = getBrowserMetadata()
-
-		const instructionUrl = getUrl(browserMetadata, locale())
-		if (!instructionUrl) {
-			modal().showModal()
-			return false
-		}
-
-		window.open(instructionUrl, '_blank')
-
-		return false;
+		modal().showModal()
+		return false
 	}
 
+	const instructionLink = createMemo(() => {
+		if (!instructionUrl()) return <a onClick={requestInfo} href='#instructions'>{dictionary().camera.permissions.permissionLink}</a>
+
+		return <a href={instructionUrl()}>{dictionary().camera.permissions.permissionLink}</a>
+	}, instructionUrl)
+
 	return <>
-		<a onClick={requestInfo} href='#instructions'>{dictionary().camera.permissions.permissionLink}</a>
+		{instructionLink()}
 		{modal}
 	</>
 }
