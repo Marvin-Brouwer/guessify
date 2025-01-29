@@ -42,7 +42,7 @@ export const ResetPermissionModal: Component = () => {
 	const instructionLink = createMemo(() => {
 		if (!instructionUrl()) return <a onClick={requestInfo} href='#instructions'>{dictionary().camera.permissions.permissionLink}</a>
 
-		return <a href={instructionUrl()}>{dictionary().camera.permissions.permissionLink}</a>
+		return <a href={instructionUrl()} target='_blank'>{dictionary().camera.permissions.permissionLink}</a>
 	}, instructionUrl)
 
 	return <>
