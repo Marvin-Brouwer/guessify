@@ -46,7 +46,12 @@ export const UncaughtErrorBoundary: Component<ParentProps> = (props) => {
 		showModal(modal)
 	}
 
-	const handlePromiseRejection = (event: PromiseRejectionEvent) => onError(event.reason)
+	const handlePromiseRejection = (event: PromiseRejectionEvent) => {
+		const rejection = event.reason instanceof Error
+			? event.reason :
+			Object.assign(new Error(event.reason), { stack: (event.promise as any).__creationPoint });
+		onError(rejection)
+	}
 	const handleError = (event: ErrorEvent) => onError(event.error)
 	onMount(() => {
 		addEventListener("unhandledrejection", handlePromiseRejection)

@@ -147,8 +147,6 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 			new Uint8ClampedArray(uintPixels),
 			pixelGrid.width, pixelGrid.length), 0,0)
 
-			throw 'hj'
-
 		addDebugDownloads(
 			videoFrame, videoElement, viewFinder,
 			scaledUpCanvas,

@@ -77,7 +77,7 @@ select:focus-visible {
 }
 
 dialog {
-  padding: 2ex 6ex;
+  padding: 0;
   background: none;
   min-width: 320px;
   max-width: 60ex;

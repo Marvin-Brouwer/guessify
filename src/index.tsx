@@ -9,7 +9,16 @@ import { SpotifyAuthHandler } from './components/spotify-auth'
 const root = document.getElementById('root')
 
 const filterGhPagesUrl = (url: string) => url
-	.replace(import.meta.env.BASE_URL + '/?', import.meta.env.BASE_URL)
+	.replace(import.meta.env.BASE_URL + '/?', import.meta.env.BASE_URL);
+
+// @ts-expect-error
+globalThis.Promise = class TraceablePromise extends Promise {
+	constructor() {
+		super(...arguments);
+		// @ts-expect-error
+		this.__creationPoint = new Error().stack;
+	}
+};
 
 // For some reason the solid navigation fails on the homepage
 // So we turn on explicitLinks ans use normal anchors
