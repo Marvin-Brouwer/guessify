@@ -3,7 +3,7 @@ import { Accessor, Component, createSignal, onCleanup, onMount } from 'solid-js'
 import './camera-viewfinder.pcss'
 
 import { useCameraContext } from '../context/camera-context'
-import { canvasConfiguration, getContext, makeCanvas } from '../camera-utilities/canvas';
+import { Canvas, canvasConfiguration, getContext, makeCanvas } from '../camera-utilities/canvas';
 import { scaleupVideo } from '../camera-utilities/scale-video'
 import { blurViewFinder, readViewFinder } from '../camera-utilities/read-viewfinder'
 import { convertToPixelGrid, PixelGrid } from '../camera-utilities/pixel-grid';
@@ -16,12 +16,11 @@ const [codeExample, _setCode] = createSignal('')
 const [codeDetected, _setCodeDetected] = createSignal(false)
 const [viewFinder, setViewFinder] = createSignal<HTMLDivElement>()
 
-function debugCanvas(visible: boolean, canvas: HTMLCanvasElement | OffscreenCanvas) {
-	if (!visible) return
-	const element = canvas as HTMLCanvasElement
-	const existing = document.getElementById(element.id)
+function debugCanvas(visible: boolean, canvas: Canvas) {
+	if (!visible || canvas instanceof HTMLCanvasElement === false) return
+	const existing = document.getElementById(canvas.id)
 	existing?.remove()
-	viewFinder()?.appendChild(element)
+	viewFinder()?.appendChild(canvas)
 }
 function debugEdges(visible: boolean, viewFinder: HTMLDivElement, grid: PixelGrid) {
 	if (!visible || !grid.width) return
@@ -36,12 +35,9 @@ function debugEdges(visible: boolean, viewFinder: HTMLDivElement, grid: PixelGri
 function addDebugDownloads(
 	videoFrame: MediaStreamTrack, videoElement: HTMLVideoElement,
 	viewfinder: Accessor<HTMLDivElement | undefined>,
-	scaledUpCanvas: HTMLCanvasElement | OffscreenCanvas,
-	viewFinderCanvas: HTMLCanvasElement | OffscreenCanvas,
-	blurryViewFinderCanvas: HTMLCanvasElement | OffscreenCanvas
+	...canvasses: Array<Canvas>
 ) {
 	if (canvasConfiguration.showGrayscaleImage) {
-		const viewFinderCanvasElement = (viewFinderCanvas as HTMLCanvasElement)
 		const viewfinderDownload = async () => {
 			const link = document.createElement('a')
 
@@ -64,25 +60,13 @@ function addDebugDownloads(
 			link.href = tempCanvas.toDataURL()
 			link.click()
 
-			if(scaledUpCanvas instanceof HTMLCanvasElement) {
-				link.download = `camera-feed-${date}-scaled.png`
-				link.href = scaledUpCanvas.toDataURL()
-				link.click()
-			}
-
-			if(viewFinderCanvasElement instanceof HTMLCanvasElement) {
-				link.download = `camera-feed-${date}-viewfinder.png`
-				link.href = viewFinderCanvasElement.toDataURL()
-				link.click()
-			}
-			if(blurryViewFinderCanvas instanceof HTMLCanvasElement) {
-				link.download = `camera-feed-${date}-viewfinder-blurry.png`
-				link.href = blurryViewFinderCanvas.toDataURL()
-				link.click()
+			for(const canvas of canvasses) {
+				await canvas.writeOutput?.(date);
 			}
 		}
 
 		viewfinder()!.ondblclick = viewfinderDownload;
+		viewfinder()!.oncontextmenu = viewfinderDownload;
 		let touchTimeout: NodeJS.Timeout | undefined;
 		let touched = false;
 
@@ -133,25 +117,44 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		const scaledUpCanvas = await scaleupVideo(videoElement, videoFrame)
 		debugCanvas(canvasConfiguration.showScaleCanvas, scaledUpCanvas)
 
-		const viewFinderCanvas = await readViewFinder(viewFinderRect, scaledUpCanvas);
-		debugCanvas(canvasConfiguration.showGrayscaleImage, viewFinderCanvas);
-		const blurryViewFinderCanvas = await blurViewFinder(viewFinderCanvas);
-		debugCanvas(canvasConfiguration.showGrayscaleImage, blurryViewFinderCanvas);
+		const viewFinderCanvasses = await Promise.all([
+			readViewFinder(viewFinderRect, scaledUpCanvas, false),
+			readViewFinder(viewFinderRect, scaledUpCanvas, true)
+		]);
+		viewFinderCanvasses.forEach(viewFinderCanvas =>
+			debugCanvas(canvasConfiguration.showGrayscaleImage, viewFinderCanvas)
+		);
+		const blurryViewFinderCanvasses = await Promise.all(viewFinderCanvasses
+			.map(viewFinderCanvas => blurViewFinder(viewFinderCanvas, scaledUpCanvas.width))
+		);
+		blurryViewFinderCanvasses.forEach(blurryViewFinderCanvas =>
+			debugCanvas(canvasConfiguration.showGrayscaleImage, blurryViewFinderCanvas)
+		);
 
-		const pixelGrid = await convertToPixelGrid(blurryViewFinderCanvas);
+		const pixelGrid = await convertToPixelGrid(blurryViewFinderCanvasses[0], blurryViewFinderCanvasses[1]);
 
 		const edgeCanvas = debugEdges(canvasConfiguration.showOrientationLines, viewFinder()!, pixelGrid)!;
 
 		getContext(edgeCanvas).clearRect(0, 0, edgeCanvas.width, edgeCanvas.height);
-		const uintPixels = pixelGrid.flatMap(r => r.flatMap(p => p[6] ? [0, 255, 0, 255] : [0,0,0,0]))
+		const uintPixels = pixelGrid.flatMap(row => row.flatMap(pixel => {
+			const isEdgePixel = pixel[6];
+			if (isEdgePixel === 1) return [0,128,0,100];
+			if (isEdgePixel === 2) return [128,255,0,100];
+			if (isEdgePixel === 3) return [0,255,0,255];
+			return [0,0,0,0];
+		}))
 		getContext(edgeCanvas).putImageData(new ImageData(
 			new Uint8ClampedArray(uintPixels),
 			pixelGrid.width, pixelGrid.length), 0,0)
 
+			throw 'hj'
+
 		addDebugDownloads(
 			videoFrame, videoElement, viewFinder,
-			scaledUpCanvas, viewFinderCanvas,
-			blurryViewFinderCanvas
+			scaledUpCanvas,
+			...viewFinderCanvasses,
+			...blurryViewFinderCanvasses,
+			edgeCanvas
 		);
 		// // Get image back from canvas
 		// const image = canvasContext.getImageData(

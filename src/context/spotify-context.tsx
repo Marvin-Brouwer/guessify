@@ -2,7 +2,7 @@ import { Accessor, children, createContext, createMemo, createSignal, onMount, P
 import { UserProfile } from '@spotify/web-api-ts-sdk'
 import { Locale, storeLocale, useDictionaries } from '../i18n/dictionary'
 import { SpotifyStatus, useSpotifyApi } from './spotify-api-context'
-import { ErrorWithRestore } from '../components/uncaught-error-boundary'
+import { ensureRejectionStack, ErrorWithRestore } from '../error'
 
 const isAuthenticated = (status: Accessor<SpotifyStatus>) => status() === 'success'
 
@@ -29,12 +29,12 @@ async function logIn(locale: Locale) {
 	setIsAuthenticating(true)
 
 	try {
-		const response = await api.authenticate()
+		const response = await ensureRejectionStack(() => api.authenticate())
 
 		// This means the browser is redirected
 		if (response.accessToken.access_token === "emptyAccessToken") return
 
-		const currentProfile = await api.currentUser.profile()
+		const currentProfile = await ensureRejectionStack(() => api.currentUser.profile())
 		setProfile(currentProfile)
 	}
 	catch (err) {
@@ -80,7 +80,7 @@ export const SpotifyContext: ParentComponent = (props) => {
 	const { dictionary, locale } = useDictionaries()
 
 	onMount(async () => {
-		const hasExistingToken = await api.getAccessToken().then(t => !!t)
+		const hasExistingToken = await ensureRejectionStack(() => api.getAccessToken()).then(t => !!t)
 		if (hasExistingToken) {
 			setIsAuthenticating(true)
 			await logIn(locale())

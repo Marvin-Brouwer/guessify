@@ -1,6 +1,7 @@
 import { Accessor, createContext, createSignal, onMount, useContext, children, ParentComponent } from 'solid-js';
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 import { getStoredLocale } from '../i18n/dictionary'
+import { ensureRejectionStack } from '../error'
 
 const clientId = import.meta.env['VITE_SPOTIFY_CLIENT'];
 const hostName = import.meta.env['VITE_SPOTIFY_HOST'];
@@ -65,12 +66,12 @@ export const SpotifyApiContext: ParentComponent = (props) => {
 
 	if (import.meta.env.DEV) {
 		onMount(async () => {
-			const authToken = await spotifyApi().getAccessToken()
+			const authToken = await ensureRejectionStack(() => spotifyApi().getAccessToken())
 			if (!authToken || authToken.access_token === "emptyAccessToken") {
 				console.debug('User not logged into spotify')
 			}
 			else {
-				const userName = await spotifyApi().currentUser.profile().then(p => p.display_name)
+				const userName = await ensureRejectionStack(() => spotifyApi().currentUser.profile()).then(p => p.display_name)
 				console.debug(`User "${userName}" logged into spotify`, authToken)
 			}
 		})
@@ -78,9 +79,9 @@ export const SpotifyApiContext: ParentComponent = (props) => {
 
 	onMount(async () => {
 
-		const hasExistingToken = await spotifyApi().getAccessToken().then(t => !!t);
+		const hasExistingToken = await ensureRejectionStack(() => spotifyApi().getAccessToken()).then(t => !!t);
 		if (hasExistingToken) {
-			const response = await spotifyApi().authenticate();
+			const response = await ensureRejectionStack(() => spotifyApi().authenticate());
 			setSpotifyStatusCode(response.authenticated ? 'success' : 'error.auth_failed')
 		}
 	})

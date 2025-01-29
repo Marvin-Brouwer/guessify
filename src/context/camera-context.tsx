@@ -7,6 +7,7 @@ import {
 } from 'mic-check'
 import { useDictionaries } from '../i18n/dictionary'
 import { getBrowserMetadata } from '../helpers/browser-metadata'
+import { ensureRejectionStack } from '../error'
 
 function getCameraConstraints(deviceId?: string | undefined): MediaStreamConstraints {
 	return {
@@ -61,16 +62,23 @@ export type CameraContext = {
 }
 
 async function getDevices() {
-	if(!navigator.mediaDevices?.enumerateDevices) return;
+	if (!navigator.mediaDevices?.enumerateDevices) return
 
-	const devices = await navigator.mediaDevices?.enumerateDevices()
+	try {
+		const devices = await ensureRejectionStack(() => navigator.mediaDevices?.enumerateDevices())
 
-	const videoDevices = devices.filter(device => device.kind === 'videoinput');
-	if (import.meta.env.DEV && knownDevices().length !== videoDevices.length)
-		console.debug('available media devices', devices)
-	if (import.meta.env.DEV && knownDevices().length !== videoDevices.length)
-		console.debug('available video devices', videoDevices)
-	setKnownDevices(videoDevices)
+		const videoDevices = devices.filter(device => device.kind === 'videoinput')
+		if (import.meta.env.DEV && knownDevices().length !== videoDevices.length)
+			console.debug('available media devices', devices)
+		if (import.meta.env.DEV && knownDevices().length !== videoDevices.length)
+			console.debug('available video devices', videoDevices)
+		setKnownDevices(videoDevices)
+	} catch (err) {
+		// This may happen when the tab falls asleep and we try to list devices.
+		// The "user interaction" is no longer valid then.
+		if ((err as Error).message.includes('Illegal invocation')) return
+		throw err
+	}
 }
 
 function queryInitialCameraPermissions() {
@@ -97,7 +105,7 @@ queryInitialCameraPermissions()
 // For mobile devices we need to stop the active stream before switching
 const [activeCamera, setActiveCamera] = createSignal<string>()
 async function stopCameraStream() {
-	const activeId = activeCamera();
+	const activeId = activeCamera()
 	if (!activeId) return
 	const activeStream = await navigator.mediaDevices.getUserMedia(
 		{ video: { deviceId: activeId } }
@@ -105,9 +113,9 @@ async function stopCameraStream() {
 
 	if (activeStream.active) {
 		activeStream.getTracks().forEach(track => {
-			if(track.readyState === 'ended') return
-			track.stop();
-			track.enabled = false;
+			if (track.readyState === 'ended') return
+			track.stop()
+			track.enabled = false
 		})
 		try {
 			if ((activeStream as any).stop) (activeStream as any).stop()
@@ -133,7 +141,7 @@ export const useCameraContext = () => useContext(cameraContext)
 async function requestPermission() {
 	setCameraPermission('pending')
 
-	const storedCamera = localStorage.getItem('camera') ?? undefined;
+	const storedCamera = localStorage.getItem('camera') ?? undefined
 	return await requestMediaPermissions(getCameraConstraints(storedCamera))
 		.then(async () => {
 			await getDevices()
@@ -163,8 +171,8 @@ function handleMediaPermissionsError(err: MediaPermissionsError, storedCamera: s
 		setCameraPermission('denied:system')
 		// This seems to happen when the browser stores a camera that doesn't exist (perhaps the ideas change on software update)
 		// Erase storage and reload
-		localStorage.removeItem('camera');
-		window.location.reload();
+		localStorage.removeItem('camera')
+		window.location.reload()
 		return setCameraPermission('denied:system')
 	} else {
 		console.error(err)
@@ -177,29 +185,31 @@ function handleMediaPermissionsError(err: MediaPermissionsError, storedCamera: s
 async function getCamera(id?: string): Promise<Camera> {
 	if (cameraPermission() !== 'granted') throw new Error(`Call 'requestPermission' before 'getStream'`)
 
-	const storedCamera = localStorage.getItem('camera') ?? undefined;
+	const storedCamera = localStorage.getItem('camera') ?? undefined
 	const requestedCamera = id ?? storedCamera ?? undefined
-	if (activeCamera() !== requestedCamera) await stopCameraStream();
+	if (activeCamera() !== requestedCamera) await stopCameraStream()
 
-	const mediaStream = await navigator.mediaDevices
-		.getUserMedia(getCameraConstraints(requestedCamera))
+	const mediaStream = await ensureRejectionStack(
+		() => navigator.mediaDevices.getUserMedia(getCameraConstraints(requestedCamera)))
 		.catch(error => {
-			if ((error as Error).name === 'NotReadableError') return new MediaStream();
-			const result = handleMediaPermissionsError(error as MediaPermissionsError, storedCamera);
+			if ((error as Error).name === 'NotReadableError') return new MediaStream()
+			const result = handleMediaPermissionsError(error as MediaPermissionsError, storedCamera)
 			if (result === 'error') throw error
-			return new MediaStream();
-		});
+			return new MediaStream()
+		})
 
 	// Re-query devices just to be sure
-	await getDevices();
+	await getDevices()
 
 	// Sometimes the browser doesn't close the stream on mobile devices
 	// To solve this we store and redirect.
 	if (!mediaStream.active) {
+		setActiveCamera(undefined)
+		setCameraPermission('error:inuse')
 		localStorage.setItem('camera', requestedCamera!)
-		window.location.reload();
+		window.location.reload()
 
-		const {dictionary} = useDictionaries();
+		const { dictionary } = useDictionaries()
 
 		return {
 			id: requestedCamera!,
@@ -229,7 +239,7 @@ export const CameraContext: ParentComponent = (props) => {
 
 	const onPermissionChanged = (permissionStatus: PermissionStatus) => async (_event?: Event) => {
 
-		await getDevices();
+		await getDevices()
 
 		if (permissionStatus.state === 'granted') setCameraPermission('granted')
 		if (permissionStatus.state === 'denied') setCameraPermission('denied')
@@ -240,8 +250,8 @@ export const CameraContext: ParentComponent = (props) => {
 
 		// The browser doesn't properly update when video is on
 		const permissionFix = () => {
-			navigator.permissions
-				.query({ name: 'camera' } as any)
+			ensureRejectionStack(
+				() => navigator.permissions.query({ name: 'camera' } as any))
 				.then((permissionStatus) => {
 					onPermissionChanged(permissionStatus)()
 				})
@@ -251,11 +261,11 @@ export const CameraContext: ParentComponent = (props) => {
 				.finally(() => requestAnimationFrame(permissionFix))
 		}
 
-		navigator.permissions
-			.query({ name: 'camera' } as any)
+		ensureRejectionStack(
+			() => navigator.permissions.query({ name: 'camera' } as any))
 			.then((permissionStatus) => {
 				permissionStatus.onchange = onPermissionChanged(permissionStatus)
-				requestAnimationFrame(permissionFix);
+				requestAnimationFrame(permissionFix)
 			})
 			.catch(() => {
 				// do nothing

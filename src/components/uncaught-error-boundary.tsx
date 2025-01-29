@@ -3,12 +3,14 @@ import './uncaught-error-boundary.pcss';
 import { children, Component, createSignal, ErrorBoundary, onCleanup, onMount, ParentProps } from 'solid-js'
 import { Modal, ModalElement, showModal } from './modal'
 import { useDictionaries } from '../i18n/dictionary'
+import { ErrorWithRestore } from '../error'
 
-export type ErrorWithRestore<T extends Error = Error> = T & { restore?: () => void }
 export const UncaughtErrorBoundary: Component<ParentProps> = (props) => {
 
 	const { dictionary } = useDictionaries()
-	const [error, setError] = createSignal<ErrorWithRestore>()
+	const [error, setError] = createSignal<ErrorWithRestore>();
+	const versionDisplay = `Application Version: ${import.meta.env['VITE_APP_VERSION']}`;
+	const versionDivider = Array.from(versionDisplay).fill('-').join('');
 
 	const closeErrorModal = () => {
 		// If it has a restore func call it.
@@ -27,6 +29,7 @@ export const UncaughtErrorBoundary: Component<ParentProps> = (props) => {
 		{error() && <>
 			<details>
 				<summary>{dictionary().common.unhandledError.details}</summary>
+				<pre class="version">{versionDisplay} {'\n'}{versionDivider}</pre>
 				{/* This exposes the error's callstack, normally this is a security flaw. */}
 				{/* But also, normally this would be logged to a server, we don't have that. */}
 				<pre>{error()!.stack?.toString() ?? error()!.toString()}</pre>
@@ -56,7 +59,7 @@ export const UncaughtErrorBoundary: Component<ParentProps> = (props) => {
 
 	return <>
 		{modal}
-		<ErrorBoundary fallback={(_err, _reset) => null}>
+		<ErrorBoundary fallback={(_err, _reset) => <></>}>
 			{children(() => props.children)()}
 		</ErrorBoundary>
 	</>
