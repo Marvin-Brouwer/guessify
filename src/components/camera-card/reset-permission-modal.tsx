@@ -1,3 +1,5 @@
+import './reset-permission-modal.pcss'
+
 import { Component } from 'solid-js'
 
 import { Locale, useDictionaries } from '../../i18n/dictionary'
@@ -8,7 +10,7 @@ export const ResetPermissionModal: Component = () => {
 
 	const { locale, dictionary } = useDictionaries()
 
-	const modal = (<Modal>
+	const modal = (<Modal class='reset-permission-modal'>
 		<h2>{dictionary().camera.permissions.title}</h2>
 		<p>{dictionary().camera.permissions.explainer}</p>
 		{/* // todo github issue link */}
@@ -25,13 +27,20 @@ export const ResetPermissionModal: Component = () => {
 		<p></p>
 	</Modal>) as ModalElement
 
-	const requestInfo = async () => {
+	const requestInfo = async (e: MouseEvent) => {
+		e.preventDefault();
+
 		const browserMetadata = getBrowserMetadata()
 
 		const instructionUrl = getUrl(browserMetadata, locale())
-		if (!!instructionUrl) return modal().showModal()
+		if (!instructionUrl) {
+			modal().showModal()
+			return false
+		}
 
 		window.open(instructionUrl, '_blank')
+
+		return false;
 	}
 
 	return <>
