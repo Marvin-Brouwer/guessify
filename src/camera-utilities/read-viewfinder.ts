@@ -10,8 +10,8 @@ export function readViewFinder(viewFinderRect: DOMRectReadOnly, videoInput: Canv
 
 		const grayScaleCanvas = makeCanvas(
 			invert ? 'grayscale-inverted' : 'grayscale', !invert && canvasConfiguration.showGrayscaleImage,
-			viewFinderRect.width,
-			viewFinderRect.height
+			viewFinderRect.width * 2,
+			viewFinderRect.height * 2
 		)
 		const grayscaleContext = getContext(grayScaleCanvas, {
 			alpha: false,
@@ -46,10 +46,7 @@ export function blurViewFinder(viewFinderCanvas: Canvas) {
 			viewFinderCanvas.width,
 			viewFinderCanvas.height
 		)
-		const grayscaleContext = getContext(grayScaleCanvas, {
-			// Use the grayscale to synchronize to
-			desynchronized: !canvasConfiguration.showGrayscaleImage
-		})
+		const grayscaleContext = getContext(grayScaleCanvas)
 		// Blur and up the contrast so we can edge detect later
 		grayscaleContext.filter = `blur(${canvasConfiguration.blurAmount}px)`
 		grayscaleContext.drawImage(

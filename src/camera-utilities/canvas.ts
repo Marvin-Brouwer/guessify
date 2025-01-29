@@ -1,7 +1,8 @@
 
 export const canvasConfiguration = {
 	canvasContextOptions: {
-		willReadFrequently: true
+		willReadFrequently: true,
+		desynchronized: import.meta.env.PROD
 	} as CanvasRenderingContext2DSettings,
 
 	showScaleCanvas: false,

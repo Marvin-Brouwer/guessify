@@ -66,7 +66,6 @@ function addDebugDownloads(
 		}
 
 		viewfinder()!.ondblclick = viewfinderDownload;
-		viewfinder()!.oncontextmenu = viewfinderDownload;
 		let touchTimeout: NodeJS.Timeout | undefined;
 		let touched = false;
 
