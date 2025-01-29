@@ -1,7 +1,7 @@
 import './uncaught-error-boundary.pcss';
 
 import { children, Component, createSignal, ErrorBoundary, onCleanup, onMount, ParentProps } from 'solid-js'
-import { Modal, ModalElement } from './modal'
+import { Modal, ModalElement, showModal } from './modal'
 import { useDictionaries } from '../i18n/dictionary'
 
 export type ErrorWithRestore<T extends Error = Error> = T & { restore?: () => void }
@@ -38,7 +38,9 @@ export const UncaughtErrorBoundary: Component<ParentProps> = (props) => {
 
 	const onError = (err: any) => {
 		setError(err instanceof Error ? err : new Error(err))
-		modal().showModal()
+		console.error('Uncaught application error', err);
+		debugger;
+		showModal(modal)
 	}
 
 	const handlePromiseRejection = (event: PromiseRejectionEvent) => onError(event.reason)

@@ -8,9 +8,15 @@ export type ModalProps = {
 	class?: string | undefined,
 	beforeClose?: () => void | boolean
 }
-export type ModalElement = (NonNullable<JSXElement> & (() => HTMLDialogElement))
+export type ModalElement = NonNullable<JSXElement>
 export type ModalComponent = (props: ParentProps<ModalProps>) => NonNullable<ModalElement>;
 
+export const showModal = (modal: ModalElement) => {
+	// Solid behaves differently between production and dev mode.
+	// TODO perhaps making a modalContext is a better option
+	if (modal instanceof HTMLDialogElement === false) (modal as unknown as () => HTMLDialogElement)().showModal()
+	else (modal as unknown as HTMLDialogElement).showModal()
+}
 export const Modal: ModalComponent = ({ children, class: classname, beforeClose }) => {
 
 	const { dictionary } = useDictionaries();

@@ -4,7 +4,7 @@ import { Component, createMemo } from 'solid-js';
 
 import { Locale, useDictionaries } from '../../i18n/dictionary'
 import { BrowserMetadata, getBrowserMetadata } from '../../helpers/browser-metadata'
-import { Modal, ModalElement } from '../modal'
+import { Modal, ModalElement, showModal } from '../modal'
 
 const browserMetadata = getBrowserMetadata();
 
@@ -35,7 +35,7 @@ export const ResetPermissionModal: Component = () => {
 		e.preventDefault();
 		e.stopPropagation();
 
-		modal().showModal()
+		showModal(modal)
 		return false
 	}
 
