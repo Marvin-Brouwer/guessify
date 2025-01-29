@@ -19,7 +19,7 @@ export function readViewFinder(viewFinderRect: DOMRectReadOnly, videoInput: Canv
 		})
 		// Fiddle with the image to make black more clear and glare less obvious
 		// Todo dynamic lighting?
-		grayscaleContext.filter = `brightness(1.4) grayscale() ${invert ? 'invert()' : ''} contrast(4)`
+		grayscaleContext.filter = `grayscale() ${invert ? 'invert()' : ''} contrast(4.5)`
 		grayscaleContext.drawImage(
 			videoInput,
 			viewFinderRect.x, viewFinderRect.y,
@@ -36,7 +36,7 @@ export function readViewFinder(viewFinderRect: DOMRectReadOnly, videoInput: Canv
  * Blur viewfinder pixels after grayscale has been applied.
  * This is a separate step to get better results
  */
-export function blurViewFinder(viewFinderCanvas: Canvas, resolution: number) {
+export function blurViewFinder(viewFinderCanvas: Canvas) {
 
 	return awaitAnimationFrame(() => {
 
@@ -51,7 +51,7 @@ export function blurViewFinder(viewFinderCanvas: Canvas, resolution: number) {
 			desynchronized: !canvasConfiguration.showGrayscaleImage
 		})
 		// Blur and up the contrast so we can edge detect later
-		grayscaleContext.filter = `blur(${canvasConfiguration.blurAmount(resolution)}px) brightness(1.1) contrast(3.5)`
+		grayscaleContext.filter = `blur(${canvasConfiguration.blurAmount}px)`
 		grayscaleContext.drawImage(
 			viewFinderCanvas,
 			0, 0,

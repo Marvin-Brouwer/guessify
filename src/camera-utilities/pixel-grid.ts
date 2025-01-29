@@ -63,8 +63,8 @@ export async function convertToPixelGrid(imageCanvas: Canvas, invertedCanvas: Ca
 export function checkEdgeThreshold([red, green, blue]: Pixel) {
 
 	// TODO: These should be constants
-	const whiteThreshold = 180
-	const blackThreshold = 60
+	const whiteThreshold = 160
+	const blackThreshold = 50
 
 	if (red > whiteThreshold || red < blackThreshold) return false;
 	if (green > whiteThreshold || green < blackThreshold) return false;

@@ -9,9 +9,7 @@ export const canvasConfiguration = {
 	showOrientationLines: true,
 	sampleRate: import.meta.env.PROD ? 200 : 1000,
 
-	blurAmount: (resolution: number) => {
-		return Math.max(5, Math.min(resolution / 80, 2))
-	},
+	blurAmount: 1,
 	debugEnabled() {
 		return this.showScaleCanvas
 			|| this.showGrayscaleImage

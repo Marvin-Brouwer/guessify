@@ -125,7 +125,7 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 			debugCanvas(canvasConfiguration.showGrayscaleImage, viewFinderCanvas)
 		);
 		const blurryViewFinderCanvasses = await Promise.all(viewFinderCanvasses
-			.map(viewFinderCanvas => blurViewFinder(viewFinderCanvas, scaledUpCanvas.width))
+			.map(viewFinderCanvas => blurViewFinder(viewFinderCanvas))
 		);
 		blurryViewFinderCanvasses.forEach(blurryViewFinderCanvas =>
 			debugCanvas(canvasConfiguration.showGrayscaleImage, blurryViewFinderCanvas)
