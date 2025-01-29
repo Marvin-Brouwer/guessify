@@ -27,11 +27,9 @@ export const UncaughtErrorBoundary: Component<ParentProps> = (props) => {
 		{error() && <>
 			<details>
 				<summary>{dictionary().common.unhandledError.details}</summary>
-				<pre>
-					{/* This exposes the error's callstack, normally this is a security flaw. */}
-					{/* But also, normally this would be logged to a server, we don't have that. */}
-{error()!.stack?.toString() ?? error()!.toString()}
-				</pre>
+				{/* This exposes the error's callstack, normally this is a security flaw. */}
+				{/* But also, normally this would be logged to a server, we don't have that. */}
+				<pre>{error()!.stack?.toString() ?? error()!.toString()}</pre>
 			</details>
 			<p></p>
 		</>}

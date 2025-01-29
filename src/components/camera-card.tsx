@@ -10,7 +10,7 @@ import cameraSelectIcon from '../assets/cameraswitch_24dp_E8EAED.svg'
 
 import { Camera, useCameraContext } from '../context/camera-context'
 import { useDictionaries } from '../i18n/dictionary'
-import { ResetPermissionModal } from './reset-permissions-modal'
+import { ResetPermissionModal } from './camera-card/reset-permission-modal'
 
 export const CameraCard: Component = () => {
 
