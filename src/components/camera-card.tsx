@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal, onMount } from 'solid-js'
+import { Component, createMemo, createSignal, onMount, Show } from 'solid-js'
 
 import './camera-card.pcss'
 import camera_unknown from '../assets/camera_24dp_E8EAED.svg'
@@ -67,22 +67,39 @@ const CameraRequestCard: Component = () => {
 	const cameraContext = useCameraContext()
 	const { dictionary } = useDictionaries()
 
+	const permissionButton = createMemo(() => {
+
+		if (cameraContext.permission() === 'pending') return <button disabled>
+			<span>{dictionary().camera.requestingPermission}</span>
+			<img src={changeCameraIcon} />
+		</button>
+		if (cameraContext.permission() === 'error:inuse') return <button onClick={(e) => {
+			(e.target as HTMLButtonElement).disabled = true;
+			window.location.reload()
+		}}>
+			<span>{dictionary().common.refresh}</span>
+			<img src={changeCameraIcon} />
+		</button>
+
+		return <button disabled={!cameraContext.canPrompt()} onclick={() => {
+			cameraContext.requestPermission()
+		}}>
+			<span>{dictionary().camera.requestPermission}</span>
+			<img src={changeCameraIcon} />
+		</button>
+	}, [cameraContext.canPrompt, cameraContext.permission])
+
 	return <>
 		<div class='camera-request-card card'>
 			<div class="details">
 				<p>{dictionary().camera.explainer[0]}</p>
 				<p>{dictionary().camera.explainer[1]}</p>
+				<Show when={cameraContext.permission() === 'error:inuse'}>
+					<p class='error'>{dictionary().camera.inUse}</p>
+				</Show>
 			</div>
 			<div class="controls">
-				<button disabled={!cameraContext.canPrompt()} onclick={() => {
-					cameraContext.requestPermission()
-				}}>
-					{cameraContext.permission() === 'pending'
-						? <span>{dictionary().camera.requestingPermission}</span>
-						: <span>{dictionary().camera.requestPermission}</span>
-					}
-					<img src={changeCameraIcon} />
-				</button>
+				{permissionButton()}
 			</div>
 		</div>
 	</>
@@ -151,6 +168,7 @@ const CameraAcceptedCard: Component = () => {
 				})}</p>
 				<p><i>{dictionary().camera.switchBanner}</i></p>
 			</div>
+			{/* TODO: no dropdown if only one camera */}
 			<div class="controls">
 				<select data-value={camera()?.id} disabled={!camera()} onchange={async (e) => {
 					const activeCamera = camera();

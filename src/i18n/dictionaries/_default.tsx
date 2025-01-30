@@ -2,6 +2,7 @@ export const default_dictionary = {
 	common: {
 		close: 'Close',
 		offline: 'You appear to be offline, please check your network connection',
+		refresh: 'Refresh page',
 		unhandledError: {
 			title: 'Something went wrong.',
 			details: 'Details',
@@ -41,6 +42,7 @@ export const default_dictionary = {
 	},
 	camera: {
 		title: 'Camera',
+		inUse: 'Your camera is being used by another process, please close and try again.',
 		type: {
 			'desktop': 'Desktop\ncamera',
 			'user': 'Selfie\ncamera',

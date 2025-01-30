@@ -97,7 +97,7 @@ function queryInitialCameraPermissions() {
 		.catch((error) => {
 			console.error(error)
 		})
-		.finally(async () => getDevices())
+		.finally(getDevices)
 }
 const [cameraPermission, setCameraPermission] = createSignal<CameraPermission>('unknown')
 queryInitialCameraPermissions()
@@ -145,6 +145,9 @@ async function requestPermission() {
 	return await requestMediaPermissions(getCameraConstraints(storedCamera))
 		.then(async () => {
 			await getDevices()
+
+			// Just try this once to see if the stream starts
+			await getCameraInternal()
 			return setCameraPermission('granted')
 		})
 		.catch((err: MediaPermissionsError) => handleMediaPermissionsError(err, storedCamera))
@@ -162,28 +165,35 @@ function handleMediaPermissionsError(err: MediaPermissionsError, storedCamera: s
 		// camera is in use by another application (Zoom, Skype) or browser tab (Google Meet, Messenger Video)
 		// (mostly Windows specific problem)
 		return setCameraPermission('error:inuse')
+	} else if (name === 'AbortError' && message === "Starting videoinput failed") {
+		// prompt dismissed by user
+		return setCameraPermission('error:inuse')
+	} else if (name === 'NotReadableError') {
+		// prompt dismissed by user
+		return setCameraPermission('error:inuse')
 	} else if (type === MediaPermissionsErrorType.Generic && message === "Permission dismissed") {
 		// prompt dismissed by user
 		return setCameraPermission('unknown')
-	} else if (type === MediaPermissionsErrorType.Generic
-		&& name === "OverconstrainedError" && message === ""
+	} else if (name === "OverconstrainedError" && ((err as OverconstrainedError).constraint === "deviceId" || message === "")
 		&& storedCamera) {
-		setCameraPermission('denied:system')
 		// This seems to happen when the browser stores a camera that doesn't exist (perhaps the ideas change on software update)
 		// Erase storage and reload
 		localStorage.removeItem('camera')
-		window.location.reload()
-		return setCameraPermission('denied:system')
+		return setCameraPermission('error:inuse')
 	} else {
-		console.error(err)
+		console.error(err);
 		// not all error types are handled by this library
 		return setCameraPermission('error')
 	}
 }
 
-// TODO locally store selected camera
-async function getCamera(id?: string): Promise<Camera> {
+function getCamera(id?: string): Promise<Camera> {
 	if (cameraPermission() !== 'granted') throw new Error(`Call 'requestPermission' before 'getStream'`)
+
+	return getCameraInternal(id);
+}
+
+async function getCameraInternal(id?: string): Promise<Camera> {
 
 	const storedCamera = localStorage.getItem('camera') ?? undefined
 	const requestedCamera = id ?? storedCamera ?? undefined
@@ -192,7 +202,6 @@ async function getCamera(id?: string): Promise<Camera> {
 	const mediaStream = await ensureRejectionStack(
 		() => navigator.mediaDevices.getUserMedia(getCameraConstraints(requestedCamera)))
 		.catch(error => {
-			if ((error as Error).name === 'NotReadableError') return new MediaStream()
 			const result = handleMediaPermissionsError(error as MediaPermissionsError, storedCamera)
 			if (result === 'error') throw error
 			return new MediaStream()
@@ -203,10 +212,11 @@ async function getCamera(id?: string): Promise<Camera> {
 
 	// Sometimes the browser doesn't close the stream on mobile devices
 	// To solve this we store and redirect.
-	if (!mediaStream.active) {
+	if (!mediaStream.active && cameraPermission() !== 'error:inuse') {
 		setActiveCamera(undefined)
 		setCameraPermission('error:inuse')
 		localStorage.setItem('camera', requestedCamera!)
+		debugger;
 		window.location.reload()
 
 		const { dictionary } = useDictionaries()
@@ -241,7 +251,10 @@ export const CameraContext: ParentComponent = (props) => {
 
 		await getDevices()
 
-		if (permissionStatus.state === 'granted') setCameraPermission('granted')
+		if (permissionStatus.state === 'granted') {
+			await getCameraInternal()
+				.then(() => setCameraPermission('granted'))
+		}
 		if (permissionStatus.state === 'denied') setCameraPermission('denied')
 		if (permissionStatus.state === 'prompt') setCameraPermission('unknown')
 	}

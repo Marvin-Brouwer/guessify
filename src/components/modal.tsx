@@ -1,4 +1,4 @@
-import { children, JSXElement, onCleanup, onMount, ParentProps, createSignal, Component, Show } from 'solid-js';
+import { children, JSXElement, onCleanup, onMount, ParentProps, createSignal, Component } from 'solid-js';
 import { useDictionaries } from '../i18n/dictionary'
 
 import './modal.pcss'
@@ -32,7 +32,8 @@ export const createModal: CreateModal = () => {
 
 	const Modal: Component<ParentProps<ModalProps>> = (props) => {
 		const renderChildren = children(() => props.children);
-		setModalElement(<dialog>
+		setModalElement(
+			<dialog>
 				<div class={`modal card ${props.class}`}>
 					<div class="details">
 						{renderChildren()}
@@ -44,7 +45,8 @@ export const createModal: CreateModal = () => {
 						</button>
 					</div>
 				</div>
-			</dialog> as HTMLDialogElement)
+			</dialog> as HTMLDialogElement
+		)
 
 			function onCloseClick() {
 				if (!props.beforeClose) return modalElement()?.close()

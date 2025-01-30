@@ -35,9 +35,15 @@ async function handleAuthReturn() {
 	// however, just retrying when 'code' is in the querystring fixes that.
 	const initialLocation = new URL(window.location.href);
 	if(initialLocation.searchParams.has('code')) {
-		const response = await spotifyApi().authenticate();
-		setSpotifyStatusCode(response.authenticated ? 'success' : 'error.auth_failed')
-		return newUrl
+		try{
+			const response = await spotifyApi().authenticate();
+			setSpotifyStatusCode(response.authenticated ? 'success' : 'error.auth_failed')
+			return newUrl
+		}
+		catch (err) {
+			setSpotifyStatusCode(`error.auth_failed.${(err as Error).message}`)
+			return newUrl
+		}
 	}
 
 	if (initialLocation.searchParams.has('error')) {

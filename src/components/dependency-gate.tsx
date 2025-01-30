@@ -1,4 +1,4 @@
-import { Component, createMemo, ParentProps } from 'solid-js'
+import { Component, createMemo, ParentProps, Show } from 'solid-js'
 import { useCameraContext } from '../context/camera-context'
 import { useSpotifyContext } from '../context/spotify-context'
 import { SpotifyCard } from './spotify-card'
@@ -8,12 +8,12 @@ import logo from '../../public/guessify-logo.svg'
 import { useNetworkStatus } from '../context/network-context'
 import { useDictionaries } from '../i18n/dictionary'
 
-export const DependencyGate: Component<ParentProps> = ({ children }) => {
+export const DependencyGate: Component<ParentProps> = (props) => {
 
 	const spotifyContext = useSpotifyContext()
 	const cameraContext = useCameraContext()
 	const { online } = useNetworkStatus()
-	const { dictionary } = useDictionaries();
+	const { dictionary } = useDictionaries()
 
 	if (!online()) return (<div class="dependency-gate">
 		<h1 class="logo"><img src={logo} /> Guessify</h1>
@@ -29,14 +29,15 @@ export const DependencyGate: Component<ParentProps> = ({ children }) => {
 			cameraContext.permission
 		]
 	)
+	const fallback = <div class="dependency-gate">
+		<h1 class="logo"><img src={logo} /> Guessify</h1>
+		<SpotifyCard />
+		<CameraCard />
+	</div>
 
-	return <>{createMemo(() => {
-		if (dependenciesMet()) return children
-
-		return (<div class="dependency-gate">
-			<h1 class="logo"><img src={logo} /> Guessify</h1>
-			<SpotifyCard />
-			<CameraCard />
-		</div>)
-	}, dependenciesMet)()}</>
+	return <Show
+		when={dependenciesMet()}
+		children={props.children}
+		fallback={fallback}
+	/>
 }

@@ -4,6 +4,7 @@ export const nl_dictionary: Dictionary = {
 	common: {
 		close: 'Sluiten',
 		offline: 'U bent offline, controleer a.u.b. uw verbinding',
+		refresh: 'Pagina verniewen',
 		unhandledError: {
 			title: 'Er is iets mis gegaan.',
 			details: 'Foutgegevens',
@@ -43,6 +44,7 @@ export const nl_dictionary: Dictionary = {
 	},
 	camera: {
 		title: 'Video camera',
+		inUse: 'Uw camera wordt gebruikt door een ander process, sluit a.u.b. dit process en probeer opnieuw.',
 		type: {
 			'desktop': 'Desktop\ncamera',
 			'user': 'Selfie\ncamera',

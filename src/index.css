@@ -75,14 +75,6 @@ select:focus-visible {
 .card {
   background-color: rgb(32, 32, 32);
 }
-
-dialog {
-  padding: 0;
-  background: none;
-  min-width: 320px;
-  max-width: 60ex;
-}
-
 details > summary {
 	cursor: pointer;
 }
