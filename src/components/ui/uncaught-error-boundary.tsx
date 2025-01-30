@@ -2,8 +2,8 @@ import './uncaught-error-boundary.pcss'
 
 import { children, Component, createSignal, ErrorBoundary, onCleanup, onMount, ParentProps } from 'solid-js'
 import { createModal } from './modal'
-import { useDictionaries } from '../i18n/dictionary'
-import { ErrorWithRestore } from '../error'
+import { useDictionaries } from '../../i18n/dictionary'
+import { ErrorWithRestore } from '../../error'
 
 export const UncaughtErrorBoundary: Component<ParentProps> = (props) => {
 

@@ -6,9 +6,10 @@ import { children, Component } from 'solid-js'
 import { DependencyGate } from './components/dependency-gate'
 import { SpotifyContext } from './context/spotify-context'
 import { CameraCanvas } from './components/camera-canvas'
-import { UncaughtErrorBoundary } from './components/uncaught-error-boundary'
+import { UncaughtErrorBoundary } from './components/ui/uncaught-error-boundary'
 import { NetworkStatusContext } from './context/network-context'
 import { SpotifyApiContext } from './context/spotify-api-context'
+import { AppBar } from './components/ui/app-bar'
 
 export const AppRoot: Component<RouteSectionProps> = (props) => <UncaughtErrorBoundary>
 		<NetworkStatusContext>
@@ -21,6 +22,7 @@ export const AppRoot: Component<RouteSectionProps> = (props) => <UncaughtErrorBo
 
 export const MainApp: Component = () => <SpotifyContext>
 		<DependencyGate>
+			<AppBar />
 			<CameraCanvas />
 		</DependencyGate>
 	</SpotifyContext>

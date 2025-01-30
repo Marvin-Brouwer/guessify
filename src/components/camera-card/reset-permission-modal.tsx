@@ -4,7 +4,7 @@ import { Component, createMemo } from 'solid-js'
 
 import { Locale, useDictionaries } from '../../i18n/dictionary'
 import { BrowserMetadata, getBrowserMetadata } from '../../helpers/browser-metadata'
-import { createModal } from '../modal'
+import { createModal } from '../ui/modal'
 
 const browserMetadata = getBrowserMetadata()
 

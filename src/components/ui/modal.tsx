@@ -1,8 +1,8 @@
 import { children, JSXElement, onCleanup, onMount, ParentProps, createSignal, Component } from 'solid-js';
-import { useDictionaries } from '../i18n/dictionary'
+import { useDictionaries } from '../../i18n/dictionary'
 
 import './modal.pcss'
-import closeIcon from '../assets/close_24dp_E8EAED.svg'
+import closeIcon from '../../assets/close_24dp_E8EAED.svg'
 import { Portal } from 'solid-js/web'
 
 export type ModalProps = {
