@@ -55,7 +55,9 @@ export type CameraContext = {
 	hasPermission: Accessor<boolean>
 	canPrompt: Accessor<boolean>
 	hasMediaSupport: Accessor<boolean>
-	getCamera: (id?: string) => Promise<Camera>
+	requestCamera: (id?: string) => Promise<Camera>
+	camera: Accessor<Camera | undefined>
+	cameraStream: Accessor<MediaStream | undefined>
 	stopCameraStream: () => Promise<void>
 	devices: Accessor<MediaDeviceInfo[]>
 	requestPermission: () => Promise<CameraPermission>
@@ -102,10 +104,10 @@ function queryInitialCameraPermissions() {
 const [cameraPermission, setCameraPermission] = createSignal<CameraPermission>('unknown')
 queryInitialCameraPermissions()
 
-// For mobile devices we need to stop the active stream before switching
-const [activeCamera, setActiveCamera] = createSignal<string>()
+const [activeCamera, setActiveCamera] = createSignal<Camera>();
+
 async function stopCameraStream() {
-	const activeId = activeCamera()
+	const activeId = activeCamera()?.id
 	if (!activeId) return
 	const activeStream = await navigator.mediaDevices.getUserMedia(
 		{ video: { deviceId: activeId } }
@@ -126,19 +128,23 @@ async function stopCameraStream() {
 	}
 }
 
+const canPrompt = () => cameraPermission() === 'unknown' || cameraPermission() === 'error:inuse';
 const cameraContext = createContext<CameraContext>({
 	permission: cameraPermission,
 	hasPermission: () => cameraPermission() === 'granted',
-	canPrompt: () => cameraPermission() === 'unknown' || cameraPermission() === 'error:inuse',
+	canPrompt,
 	hasMediaSupport: () => cameraPermission() !== 'error:nosupport',
-	getCamera,
+	requestCamera,
 	stopCameraStream,
 	requestPermission,
-	devices: knownDevices
+	devices: knownDevices,
+	camera: activeCamera,
+	cameraStream: () => undefined
 })
 export const useCameraContext = () => useContext(cameraContext)
 
 async function requestPermission() {
+	if (!canPrompt()) return cameraPermission();
 	setCameraPermission('pending')
 
 	const storedCamera = localStorage.getItem('camera') ?? undefined
@@ -187,7 +193,7 @@ function handleMediaPermissionsError(err: MediaPermissionsError, storedCamera: s
 	}
 }
 
-function getCamera(id?: string): Promise<Camera> {
+function requestCamera(id?: string): Promise<Camera> {
 	if (cameraPermission() !== 'granted') throw new Error(`Call 'requestPermission' before 'getStream'`)
 
 	return getCameraInternal(id);
@@ -197,7 +203,7 @@ async function getCameraInternal(id?: string): Promise<Camera> {
 
 	const storedCamera = localStorage.getItem('camera') ?? undefined
 	const requestedCamera = id ?? storedCamera ?? undefined
-	if (activeCamera() !== requestedCamera) await stopCameraStream()
+	if (activeCamera()?.id !== requestedCamera) await stopCameraStream()
 
 	const mediaStream = await ensureRejectionStack(
 		() => navigator.mediaDevices.getUserMedia(getCameraConstraints(requestedCamera)))
@@ -231,10 +237,9 @@ async function getCameraInternal(id?: string): Promise<Camera> {
 	}
 	const deviceId = mediaStream.getTracks()[0].getSettings().deviceId!
 
-	setActiveCamera(deviceId)
 	localStorage.setItem('camera', deviceId)
 
-	return {
+	return setActiveCamera({
 		id: deviceId,
 		name: mediaStream.getTracks()[0].label,
 		label: mediaStream.getTracks()[0].label.split('(')[0].split(',')[0].trim(),
@@ -242,7 +247,7 @@ async function getCameraInternal(id?: string): Promise<Camera> {
 			? 'desktop' :
 			mediaStream.getTracks()[0].getSettings().facingMode as 'user' | 'environment',
 		stream: mediaStream
-	}
+	})
 }
 
 export const CameraContext: ParentComponent = (props) => {
@@ -251,7 +256,9 @@ export const CameraContext: ParentComponent = (props) => {
 
 		await getDevices()
 
-		if (permissionStatus.state === 'granted') {
+		// Don't getCameraInternal if already was granted
+		// This is necessary to prevent the video element from rerendering constantly
+		if (permissionStatus.state === 'granted' && cameraPermission() !== 'granted') {
 			await getCameraInternal()
 				.then(() => setCameraPermission('granted'))
 		}
@@ -263,6 +270,7 @@ export const CameraContext: ParentComponent = (props) => {
 
 		// The browser doesn't properly update when video is on
 		const permissionFix = () => {
+			if (cameraPermission() === 'pending') return
 			ensureRejectionStack(
 				() => navigator.permissions.query({ name: 'camera' } as any))
 				.then((permissionStatus) => {
@@ -271,7 +279,8 @@ export const CameraContext: ParentComponent = (props) => {
 				.catch(() => {
 					// do nothing
 				})
-				.finally(() => requestAnimationFrame(permissionFix))
+				// This timeout is necessary to prevent the video from chopping
+				.finally(() => window.setTimeout(() => requestAnimationFrame(permissionFix), 10))
 		}
 
 		ensureRejectionStack(
@@ -290,6 +299,7 @@ export const CameraContext: ParentComponent = (props) => {
 		hasPermission: createMemo(() => cameraPermission() === 'granted', cameraPermission),
 		canPrompt: createMemo(() => cameraPermission() === 'unknown' || cameraPermission() === 'error:inuse', cameraPermission),
 		hasMediaSupport: createMemo(() => cameraPermission() !== 'error:nosupport', cameraPermission),
+		cameraStream: createMemo(() => activeCamera()?.stream, [activeCamera])
 	}}>
 		{children(() => props.children)()}
 	</cameraContext.Provider>

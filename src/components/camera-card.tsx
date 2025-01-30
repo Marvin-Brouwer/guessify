@@ -1,16 +1,14 @@
-import { Component, createMemo, createSignal, onMount, Show } from 'solid-js'
+import { Component, createMemo, onMount, Show } from 'solid-js'
 
 import './camera-card.pcss'
-import camera_unknown from '../assets/camera_24dp_E8EAED.svg'
-import camera_desktop from '../assets/photo_camera_24dp_E8EAED.svg'
-import camera_user from '../assets/person_24dp_E8EAED.svg'
-import camera_environment from '../assets/image_24dp_E8EAED.svg'
 import changeCameraIcon from '../assets/add_a_photo_24dp_E8EAED.svg'
-import cameraSelectIcon from '../assets/cameraswitch_24dp_E8EAED.svg'
 
-import { Camera, useCameraContext } from '../context/camera-context'
+import { useCameraContext } from '../context/camera-context'
 import { useDictionaries } from '../i18n/dictionary'
 import { ResetPermissionModal } from './camera-card/reset-permission-modal'
+import { useCameraDisplayIcon } from './camera-card.icon'
+import { CameraSelectButton } from './camera-select-button'
+import { VideoPlayer } from '../context/camera-context.player'
 
 export const CameraCard: Component = () => {
 
@@ -69,12 +67,13 @@ const CameraRequestCard: Component = () => {
 
 	const permissionButton = createMemo(() => {
 
+		console.log(cameraContext.permission())
 		if (cameraContext.permission() === 'pending') return <button disabled>
 			<span>{dictionary().camera.requestingPermission}</span>
 			<img src={changeCameraIcon} />
 		</button>
 		if (cameraContext.permission() === 'error:inuse') return <button onClick={(e) => {
-			(e.target as HTMLButtonElement).disabled = true;
+			(e.target as HTMLButtonElement).disabled = true
 			window.location.reload()
 		}}>
 			<span>{dictionary().common.refresh}</span>
@@ -106,56 +105,18 @@ const CameraRequestCard: Component = () => {
 }
 const CameraAcceptedCard: Component = () => {
 
-	const cameraContext = useCameraContext()
+	const { camera, cameraStream, requestCamera } = useCameraContext()
 	const { dictionary, template } = useDictionaries()
 
-	const [camera, setCamera] = createSignal<Camera>();
-	const cameraStream = createMemo(() => camera()?.stream ?? null, camera);
-
-	const videoDom = <video></video>;
-	const videoPlayerElement = videoDom as HTMLVideoElement
-
-	const videoPlayer = createMemo(() => {
-		videoPlayerElement.srcObject = cameraStream();
-		if (videoPlayerElement.srcObject) {
-			videoPlayerElement.removeAttribute('src');
-			videoPlayerElement.onloadedmetadata = () => {
-				videoPlayerElement.play();
-			};
-			return videoDom
-		} else {
-			videoPlayerElement.src = "";
-			videoPlayerElement.srcObject = null;
-			videoPlayerElement.pause();
-			return <video></video>
-		}
-	}, [cameraStream])
+	const cameraIcon = useCameraDisplayIcon(camera)
 
 	onMount(() => {
-		cameraContext
-			.getCamera()
-			.then(setCamera)
-			.catch(console.error);
-	});
+		if (!camera()) requestCamera().catch(console.error)
+	})
 
-	const cameraOptions = createMemo(() => cameraContext.devices()
-		.map(device => <option value={device.deviceId} selected={device.deviceId === camera()?.id}>{device.label}</option>
-	), [cameraContext.devices, camera])
-
-	const cameraIcon = createMemo(() => {
-		const cameraFacing = camera()?.facing
-
-		if (cameraFacing === 'loading') return null;
-
-		if (cameraFacing === 'desktop') return <img src={camera_desktop} />
-		if (cameraFacing === 'user') return <img src={camera_user} />
-		if (cameraFacing === 'environment') return <img src={camera_environment} />
-
-		return <img src={camera_unknown} />
-	}, camera)
 	return <>
 		<div class='camera-request-card card'>
-			{videoPlayer()}
+			<VideoPlayer stream={cameraStream} />
 			<div class="video-overlay">
 				{camera() && <div class="stats">
 					{cameraIcon()}
@@ -168,31 +129,8 @@ const CameraAcceptedCard: Component = () => {
 				})}</p>
 				<p><i>{dictionary().camera.switchBanner}</i></p>
 			</div>
-			{/* TODO: no dropdown if only one camera */}
-			<div class="controls">
-				<select data-value={camera()?.id} disabled={!camera()} onchange={async (e) => {
-					const activeCamera = camera();
-					if(e.target.value === activeCamera?.id) return;
-					videoPlayerElement.pause();
-					videoPlayerElement.srcObject = null;
-					const newValue = e.target.value;
-					// Temporarily disable camera to make the chance of disposing the camera bigger
-					setCamera(undefined)
-
-					await cameraContext
-						.getCamera(newValue)
-						.then(setCamera)
-						.catch((err) => {
-							setCamera(activeCamera)
-							console.error(err)
-						});;
-				}}>
-					{cameraOptions()}
-				</select>
-				<div class={camera() ? "fake-button" : "fake-button disabled"}>
-					<span>{camera()?.name ?? dictionary().camera.openingCam}</span>
-					<img src={cameraSelectIcon} />
-				</div>
+			<div class='controls'>
+				<CameraSelectButton />
 			</div>
 		</div>
 	</>

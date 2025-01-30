@@ -92,9 +92,7 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 			window.location.reload()
 			return
 		}
-		const activeCamera = await cameraContext
-			.getCamera()
-			.catch(() => undefined)
+		const activeCamera = await cameraContext.camera()
 
 		if (!activeCamera) {
 			window.location.reload()
@@ -175,12 +173,12 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 	}
 
 	onMount(async () => {
-		if (!cameraContext.hasPermission()) {
-			return
-		}
+		if (!cameraContext.hasPermission()) return
 
-		const camera = await cameraContext.getCamera()
-		if (!camera) {
+		// TODO CameraContext.requestStreamStart()
+		const camera = cameraContext.camera()
+		// rename to cameraContext.requestNewCamera()
+		if (!camera && !await cameraContext.requestCamera()) {
 			return
 		}
 
