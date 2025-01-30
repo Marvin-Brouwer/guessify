@@ -1,41 +1,25 @@
 import './reset-permission-modal.pcss'
 
-import { Component, createMemo } from 'solid-js';
+import { Component, createMemo } from 'solid-js'
 
 import { Locale, useDictionaries } from '../../i18n/dictionary'
 import { BrowserMetadata, getBrowserMetadata } from '../../helpers/browser-metadata'
-import { Modal, ModalElement, showModal } from '../modal'
+import { createModal } from '../modal'
 
-const browserMetadata = getBrowserMetadata();
+const browserMetadata = getBrowserMetadata()
 
 export const ResetPermissionModal: Component = () => {
 
 	const { locale, dictionary } = useDictionaries()
+	const { Modal, showModal } = createModal()
 
-	const instructionUrl = createMemo(() => getUrl(browserMetadata, locale()), locale);
-
-	const modal = (<Modal class='reset-permission-modal'>
-		<h2>{dictionary().camera.permissions.title}</h2>
-		<p>{dictionary().camera.permissions.explainer}</p>
-		{/* // todo github issue link */}
-		{/* Template didn't work with links */}
-		<p>
-			{dictionary().camera.permissions.cta[0]}
-			<a href="#todo" target='_blank'>{dictionary().camera.permissions.cta[1]}</a>
-			{dictionary().camera.permissions.cta[2]}
-		</p>
-		<details>
-			<summary>{dictionary().camera.permissions.deviceDetails}</summary>
-			<pre>{JSON.stringify(getBrowserMetadata(), null, 4)}</pre>
-		</details>
-		<p></p>
-	</Modal>) as ModalElement
+	const instructionUrl = createMemo(() => getUrl(browserMetadata, locale()), locale)
 
 	const requestInfo = async (e: MouseEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
+		e.preventDefault()
+		e.stopPropagation()
 
-		showModal(modal)
+		showModal()
 		return false
 	}
 
@@ -47,7 +31,22 @@ export const ResetPermissionModal: Component = () => {
 
 	return <>
 		{instructionLink()}
-		{modal}
+		<Modal class='reset-permission-modal'>
+			<h2>{dictionary().camera.permissions.title}</h2>
+			<p>{dictionary().camera.permissions.explainer}</p>
+			{/* // todo github issue link */}
+			{/* Template didn't work with links */}
+			<p>
+				{dictionary().camera.permissions.cta[0]}
+				<a href="#todo" target='_blank'>{dictionary().camera.permissions.cta[1]}</a>
+				{dictionary().camera.permissions.cta[2]}
+			</p>
+			<details>
+				<summary>{dictionary().camera.permissions.deviceDetails}</summary>
+				<pre>{JSON.stringify(getBrowserMetadata(), null, 4)}</pre>
+			</details>
+			<p></p>
+		</Modal>
 	</>
 }
 
