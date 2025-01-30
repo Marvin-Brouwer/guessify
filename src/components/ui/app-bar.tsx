@@ -34,9 +34,9 @@ const Menu: Component = () => {
 
 	const { logOut } = useSpotifyContext();
 
-	return <div class='card menu'>
+	return <div class='menu'>
 		<div class='details'>
-		<h2 class="logo"><img src={logo} /> <span>Guessify</span> <i>{import.meta.env['VITE_APP_VERSION']}</i></h2>
+		<h2 class="logo"><img src={logo} /> <span>Guessify</span> <sub>{import.meta.env['VITE_APP_VERSION']}</sub></h2>
 		<p>TODO: This will be styled later</p>
 		<select disabled>
 			<option>English (en)</option>

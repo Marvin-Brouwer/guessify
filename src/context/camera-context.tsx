@@ -74,7 +74,9 @@ async function getDevices() {
 			console.debug('available media devices', devices)
 		if (import.meta.env.DEV && knownDevices().length !== videoDevices.length)
 			console.debug('available video devices', videoDevices)
-		setKnownDevices(videoDevices)
+		if (knownDevices().length !== videoDevices.length) {
+			setKnownDevices(videoDevices)
+		}
 	} catch (err) {
 		// This may happen when the tab falls asleep and we try to list devices.
 		// The "user interaction" is no longer valid then.

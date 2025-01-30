@@ -7,27 +7,26 @@ import './camera-select-button.pcss'
 
 export const CameraSelectButton: Component = () => {
 
-	const { camera, ...cameraContext} = useCameraContext()
+	const { camera, devices, requestCamera } = useCameraContext()
 	const { dictionary } = useDictionaries()
 
 	onMount(() => {
-		if(!camera()) cameraContext.requestCamera().catch(console.error);
+		if(!camera()) requestCamera().catch(console.error);
 	});
 
-	const cameraOptions = createMemo(() => cameraContext.devices()
+	const cameraOptions = createMemo(() => devices()
 		.map(device => <option value={device.deviceId} selected={device.deviceId === camera()?.id}>{device.label}</option>
-	), [cameraContext.devices, camera])
+	), [devices, camera])
 
 	return <div class="camera-select-button">
-		<select data-value={camera()?.id} disabled={!camera() || cameraOptions().length === 1} onchange={async (e) => {
+		<select disabled={!camera() || cameraOptions().length === 1} onchange={async (e) => {
 			const activeCamera = camera();
 			if(e.target.value === activeCamera?.id) return;
 			const newValue = e.target.value;
 
-			await cameraContext
-				.requestCamera(newValue)
+			await requestCamera(newValue)
 				.catch((err) => {
-					cameraContext.requestCamera(activeCamera?.id)
+					requestCamera(activeCamera?.id)
 					console.error(err)
 				});;
 		}}>
