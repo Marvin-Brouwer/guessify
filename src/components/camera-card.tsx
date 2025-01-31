@@ -1,4 +1,4 @@
-import { Component, createMemo, onMount, Show } from 'solid-js'
+import { Component, createMemo, Show } from 'solid-js'
 
 import './camera-card.pcss'
 import changeCameraIcon from '../assets/add_a_photo_24dp_E8EAED.svg'
@@ -105,18 +105,14 @@ const CameraRequestCard: Component = () => {
 }
 const CameraAcceptedCard: Component = () => {
 
-	const { camera, cameraStream, requestCamera } = useCameraContext()
+	const { camera } = useCameraContext()
 	const { dictionary, template } = useDictionaries()
 
-	const cameraIcon = useCameraDisplayIcon(camera)
-
-	onMount(() => {
-		if (!camera()) requestCamera().catch(console.error)
-	})
+	const cameraIcon = useCameraDisplayIcon(camera);
 
 	return <>
 		<div class='camera-request-card card'>
-			<VideoPlayer stream={cameraStream} />
+			<VideoPlayer />
 			<div class="video-overlay">
 				{camera() && <div class="stats">
 					{cameraIcon()}
@@ -125,7 +121,7 @@ const CameraAcceptedCard: Component = () => {
 			</div>
 			<div class="details">
 				<p>{template(dictionary().camera.selectedCamera, {
-					label: camera()?.label ?? '?'
+					label: camera()?.label ?? '...'
 				})}</p>
 				<p><i>{dictionary().camera.switchBanner}</i></p>
 			</div>

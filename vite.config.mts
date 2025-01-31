@@ -15,6 +15,8 @@ import postcssNesting from 'postcss-nesting';
 import postcssDesignTokens from 'postcss-design-tokens';
 import { viewfinderConstants } from './src/constants/viewfinder-constants';
 
+import { connectAdb } from './plugins/vite-plugin-adb-connect.mjs'
+
 const designTokens = {
 	viewfinderConstants
 }
@@ -64,7 +66,8 @@ export default defineConfig({
 					dest: ''
 				}
 			]
-		})
+		}),
+		connectAdb()
 	],
 	css: {
 		postcss: {

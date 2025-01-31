@@ -46,6 +46,7 @@ export function scaleupVideo(videoElement: HTMLVideoElement, videoFrame: MediaSt
 
 	const videoScale = calculateVideoScale(videoElement, videoFrame)
 	const { boxWidth, boxHeight, frameWidth, frameHeight, offsetX, offsetY } = videoScale
+	if (boxWidth === 0 || Number.isNaN(boxWidth)) return undefined
 
 	return awaitAnimationFrame(() => {
 		const scaleCanvas = makeCanvas(

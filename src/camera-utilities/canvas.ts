@@ -8,7 +8,7 @@ export const canvasConfiguration = {
 	showScaleCanvas: false,
 	showGrayscaleImage: true, // import.meta.env.DEV,
 	showOrientationLines: true,
-	sampleRate: import.meta.env.PROD ? 200 : 1000,
+	sampleRate: import.meta.env.PROD ? 500 : 1000,
 
 	blurAmount: 1,
 	debugEnabled() {
@@ -29,16 +29,16 @@ const writeOutput = !canvasConfiguration.debugEnabled() ? undefined : async (can
 	link.download = `camera-feed-${date}-${canvas.id}.png`
 	if (canvas instanceof HTMLCanvasElement) {
 		link.href = canvas.toDataURL()
-	} else{
+	} else {
 		const canvasBlob = await canvas.convertToBlob({
 			type: 'image/png'
-		});
-		var fileReader = new FileReader();
+		})
+		var fileReader = new FileReader()
 		link.href = await new Promise((r) => {
 			fileReader.onload = (e) => {
 				r(e.target!.result as string)
 			}
-			fileReader.readAsDataURL(canvasBlob);
+			fileReader.readAsDataURL(canvasBlob)
 		})
 	}
 	link.click()
@@ -46,13 +46,13 @@ const writeOutput = !canvasConfiguration.debugEnabled() ? undefined : async (can
 
 export const makeCanvas = (id: string, visible: boolean, width: number, height: number): Canvas => {
 	if (visible) {
-		const canvas = document.createElement('canvas');
+		const canvas = document.createElement('canvas')
 		return Object.assign(canvas, {
 			width, height, id, writeOutput: writeOutput && ((date: number) => writeOutput(canvas, date))
 		}) as Canvas
 	}
 
-	const canvas = new OffscreenCanvas(width, height);
+	const canvas = new OffscreenCanvas(width, height)
 	return Object.assign(canvas, {
 		id, writeOutput: writeOutput && ((date: number) => writeOutput(canvas as Canvas, date))
 	}) as Canvas

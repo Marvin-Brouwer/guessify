@@ -16,6 +16,17 @@ export const AppBar: Component = () => {
 	// TEMP
 	// onMount(() => showModal())
 
+	onMount(async () => {
+		if (import.meta.env.PROD) return
+		try {
+			await navigator.wakeLock.request("screen");
+			console.debug('wakelock on')
+		  } catch (err) {
+			// the wake lock request fails - usually system related, such being low on battery
+			console.log(err);
+		  }
+	})
+
 	return <header>
 		<h1 class="logo"><img src={logo} /><span>Guessify</span></h1>
 		<nav>
@@ -51,12 +62,8 @@ const Menu: Component = () => {
 
 const CameraSetting: Component = () => {
 
-	const { requestCamera, camera } = useCameraContext();
-	const { dictionary, template } = useDictionaries()
-
-	onMount(() => {
-		if (!camera()) requestCamera().catch(console.error)
-	});
+	const { camera } = useCameraContext();
+	const { dictionary, template } = useDictionaries();
 
 	return <>
 		<div class='camera-settings'>

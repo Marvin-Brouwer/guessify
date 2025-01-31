@@ -1,18 +1,17 @@
-import { Component, createMemo, onMount } from 'solid-js'
+import { Component, createMemo, Setter } from 'solid-js'
 import { useCameraContext } from '../context/camera-context'
 import { useDictionaries } from '../i18n/dictionary'
 import cameraSelectIcon from '../assets/cameraswitch_24dp_E8EAED.svg'
 
 import './camera-select-button.pcss'
 
-export const CameraSelectButton: Component = () => {
+export type CameraSelectButtonProps = {
+	nameRef?: Setter<string>
+}
+export const CameraSelectButton: Component<CameraSelectButtonProps> = ({ nameRef }) => {
 
-	const { camera, devices, requestCamera } = useCameraContext()
-	const { dictionary } = useDictionaries()
-
-	onMount(() => {
-		if(!camera()) requestCamera().catch(console.error);
-	});
+	const { camera, devices, requestCamera, stopCameraStream } = useCameraContext()
+	const { dictionary } = useDictionaries();
 
 	const cameraOptions = createMemo(() => devices()
 		.map(device => <option value={device.deviceId} selected={device.deviceId === camera()?.id}>{device.label}</option>
@@ -20,15 +19,13 @@ export const CameraSelectButton: Component = () => {
 
 	return <div class="camera-select-button">
 		<select disabled={!camera() || cameraOptions().length === 1} onchange={async (e) => {
-			const activeCamera = camera();
-			if(e.target.value === activeCamera?.id) return;
+			if(e.target.value === camera()?.id) return;
 			const newValue = e.target.value;
 
-			await requestCamera(newValue)
-				.catch((err) => {
-					requestCamera(activeCamera?.id)
-					console.error(err)
-				});;
+			console.log('i', e.target.innerText)
+			nameRef?.(e.target.innerText!)
+			await stopCameraStream();
+			await requestCamera(newValue);
 		}}>
 			{cameraOptions()}
 		</select>

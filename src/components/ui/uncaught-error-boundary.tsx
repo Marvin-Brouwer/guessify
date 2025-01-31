@@ -16,7 +16,6 @@ export const UncaughtErrorBoundary: Component<ParentProps> = (props) => {
 	const closeErrorModal = () => {
 		// If it has a restore func call it.
 		error()?.restore?.();
-		debugger;
 		window.location.reload()
 		return false
 	}

@@ -79,7 +79,7 @@ function addDebugDownloads(
 }
 
 export type CameraLensProps = {
-	videoElement: HTMLVideoElement
+	videoElement: HTMLVideoElement | undefined
 }
 export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 
@@ -88,6 +88,7 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 	let interval: NodeJS.Timeout | undefined
 
 	async function scanFrame() {
+		if (cameraContext.hasErrored()) return;
 		if (!cameraContext.hasPermission()){
 			if (import.meta.env.DEV) {
 				debugger
@@ -97,18 +98,20 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 				return requestAnimationFrame(scanFrame)
 			}
 		}
-		const activeCamera = await cameraContext.camera()
-		if (!activeCamera) return requestAnimationFrame(scanFrame)
+		const stream = await cameraContext.cameraStream()
+		if (!stream) return requestAnimationFrame(scanFrame)
 
 		if (!viewFinder()) return requestAnimationFrame(scanFrame)
 		const viewFinderRect = viewFinder()!.getBoundingClientRect()
 		if (viewFinderRect.width === 0) return requestAnimationFrame(scanFrame)
 		// Sometimes this seems to happen and cause issues
-		if (videoElement.getBoundingClientRect().width === 0) return requestAnimationFrame(scanFrame)
+		if (!videoElement || videoElement.getBoundingClientRect().width === 0) return requestAnimationFrame(scanFrame)
 
-		const videoFrame = activeCamera.stream.getVideoTracks()[0]
+		const videoFrame = stream.getVideoTracks()[0];
+		if (!videoFrame) return requestAnimationFrame(scanFrame)
 
 		const scaledUpCanvas = await scaleupVideo(videoElement, videoFrame)
+		if (!scaledUpCanvas) return requestAnimationFrame(scanFrame)
 		debugCanvas(canvasConfiguration.showScaleCanvas, scaledUpCanvas)
 
 		const viewFinderCanvasses = await Promise.all([

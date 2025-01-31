@@ -1,4 +1,4 @@
-import { children, JSXElement, onCleanup, onMount, ParentProps, createSignal, Component } from 'solid-js';
+import { children, JSXElement, onCleanup, ParentProps, createSignal, Component, onMount } from 'solid-js';
 import { useDictionaries } from '../../i18n/dictionary'
 
 import './modal.pcss'
@@ -31,9 +31,9 @@ export const createModal: CreateModal = () => {
 
 
 	const Modal: Component<ParentProps<ModalProps>> = (props) => {
-		const renderChildren = children(() => props.children);
+		const renderChildren = children(() => modalElement()?.hidden ? undefined : props.children);
 		setModalElement(
-			<dialog>
+			<dialog inert={modalElement()?.hidden}>
 				<div class={`modal card ${props.class}`}>
 					<div class="details">
 						{renderChildren()}
