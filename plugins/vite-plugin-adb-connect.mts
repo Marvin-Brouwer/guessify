@@ -1,19 +1,35 @@
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
-import { loadEnv, type Plugin } from 'vite';
+import { spawn } from 'node:child_process'
+import { loadEnv, ViteDevServer, type Plugin } from 'vite';
 import { getAndroidToolPath } from "android-tools-bin";
+import chalk from 'chalk'
 
-const terminationSignals = ['SIGINT', 'SIGTERM', 'SIGQUIT', 'SIGHUP',];
+const keys = {
+	ADB_CONNECT_DEVICES: 'ADB_CONNECT_DEVICES' as const
+}
 
 // TODO improve to where it warns and retries on starting daemon + store if connected and deconnect if no
 // + verbose
+/**
+ * ## `vite-plugin-connect-adb`
+ *
+ * Plugin to connect your android phone's chrome browser to your local chrome browser's remote debugging.
+ *
+ * To use, find your phone's local ip address and debug port by opening the "remote debugging" setting,
+ * in the developer settings. \
+ * This is both a toggle and a settings menu. \
+ * The port number may change as you toggle the setting on and off. \
+ * Next add all the device's you'd like to use to your `.env.local` file,
+ * named {@link keys.ADB_CONNECT_DEVICES | ADB_CONNECT_DEVICES} using the comma separated `{ipAddress}:{port}` port syntax.
+ *
+ * **NOTE** \
+ * You might need to connect your device via usb the first time, for it to accept remote debugging.
+ */
 export const connectAdb = (): Plugin => {
 
 	const pluginName = 'vite-plugin-connect-adb';
 
-	let ipAddress: string = process.env.ADB_ADDRESS!;
-	let port = process.env.ADB_PORT!;
-
-	let adbProcess: ChildProcessWithoutNullStreams | undefined = undefined;
+	let env_devices: string = process.env[keys.ADB_CONNECT_DEVICES]!;
+	const devices = () => env_devices?.split(',')?.map(d => d.trim()) ?? [];
 
 	const testAdb = (): boolean => {
 		try {
@@ -23,45 +39,17 @@ export const connectAdb = (): Plugin => {
 		}
 	}
 
-	const closeAdbSession = () => {
+	const formatLog = (message: string) => `${chalk.blueBright(`[${pluginName}]`)} ${message}`
+	const formatVerbose = (message: string) => formatLog(chalk.italic.gray(message));
+	const formatWarn = (message: string) => formatLog(chalk.bold.yellowBright(message));
+	const formatError = (message: string) => formatLog(chalk.bold.red(message));
 
-		try {
-			if (adbProcess) {
-				adbProcess.removeAllListeners();
-				adbProcess.stdin.destroy();
-				adbProcess.stdout.destroy();
-				adbProcess.stderr.destroy();
-				adbProcess.kill('SIGINT');
-				adbProcess.unref();
-				adbProcess = undefined;
-			}
-		} finally {
-			//
-		}
-	}
-	const close = () => {
+	const startAdb = (device: string, config: ViteDevServer['config']) => {
 
-		try {
-			process.stdin.pause();
-			process.stdout.pause();
-			process.stderr.pause();
-			terminationSignals.forEach((signal) => {
-				process.removeAllListeners(signal);
-			});
-			closeAdbSession();
-		} finally {
-			process.exit(0);
-		}
-	}
-
-	const startAdb = () => {
-
-		if (!!adbProcess) return;
-
-
+		config.logger.info(formatLog(`connecting '${device}'`));
 		// https://remysharp.com/2016/12/17/chrome-remote-debugging-over-wifi
-		adbProcess = spawn(getAndroidToolPath("adb", false), [
-			'connect', `${ipAddress}:${port}`
+		const adbProcess = spawn(getAndroidToolPath("adb", false), [
+			'connect', `${device}`
 		], {
 			cwd: process.cwd(),
 			detached: false,
@@ -70,27 +58,21 @@ export const connectAdb = (): Plugin => {
 			stdio: 'pipe'
 		});
 
-		let errorAggregate = '';
 		adbProcess.stderr.on('data', (e) => {
-			errorAggregate += '\n';
-			errorAggregate += e.toString();
+			config.logger.error(formatError(e.toString()))
 		})
 		adbProcess.stdout.on('data', (e) => {
-			console.info('    ' + e.toString())
-		})
-		adbProcess.on('close', () => {
-			if (errorAggregate.length === 0) return;
-			throw new Error(errorAggregate);
-		})
-		closeServerOnTermination();
-	}
+			const message = e.toString();
+			if (message.startsWith('already connected to'))
+				return config.logger.info(formatVerbose(message))
+			if (message.startsWith('cannot connect to '))
+				return config.logger.warn(formatWarn(message))
+			if (message.startsWith('failed to connect to'))
+				return config.logger.warn(formatWarn(message))
 
-	function closeServerOnTermination() {
-		return terminationSignals.forEach((signal) => {
-			process.on(signal, close);
-		});
+			config.logger.info(formatLog(message));
+		})
 	}
-
 	return ({
 		name: pluginName,
 		enforce: 'pre',
@@ -98,33 +80,24 @@ export const connectAdb = (): Plugin => {
 
 		async configResolved(config) {
 
-			console.log(getAndroidToolPath("adb", false), 'connect', `${ipAddress}:${port}`)
-			if (!testAdb()) {
-				// https://www.minitool.com/news/adb-install-windows-10-mac.html
-				throw new Error(
-					`ADB command was either not found or inaccessible. \n` +
-					'You need to install: "https://developer.android.com/tools/releases/platform-tools#downloads"'
-				);
-			}
+			if (!testAdb()) throw new Error(`'adb' command was either not found or inaccessible.`);
 
-			ipAddress ??= loadEnv(config.mode, process.cwd(), 'ADB')?.ADB_ADDRESS!
-			port ??= loadEnv(config.mode, process.cwd(), 'ADB')?.ADB_PORT ?? '5555'
-			if (!ipAddress) {
-				throw new Error(
-					'No ipAddress configured, please set "ADB_ADDRESS" in your local environment file'
-				);
-			}
+			env_devices ??= loadEnv(config.mode, process.cwd(), 'ADB')?.[keys.ADB_CONNECT_DEVICES]!;
+			// TODO validate devices format
+			if(!env_devices)  config.logger.warn(formatWarn(
+				`no devices configured, please set "${keys.ADB_CONNECT_DEVICES}" in your local environment file`
+			))
 		},
 
-		closeWatcher() {
-			closeAdbSession();
-		},
+		async configureServer(server) {
 
-		configureServer() {
-			if (adbProcess) return;
+			// Wait for server restarted, this is mostly to prevent chaos in the logs
+			await new Promise<void>(r => setTimeout(r, 1000))
 
-			console.log('ADB connecting...');
-			startAdb();
+			server.config.logger.info(formatLog(`connecting ${devices().length} devices...`))
+			for(let device of devices()) {
+				startAdb(device, server.config);
+			}
 		},
 	});
 };

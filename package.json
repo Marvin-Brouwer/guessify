@@ -40,6 +40,7 @@
 		"@solidjs/router": "^0.15.3",
 		"@spotify/web-api-ts-sdk": "^1.2.0",
 		"bowser": "^2.11.0",
+		"chalk": "^5.4.1",
 		"mic-check": "^1.1.0",
 		"solid-js": "^1.9.4"
 	}
