@@ -2,7 +2,7 @@
 export const canvasConfiguration = {
 	canvasContextOptions: {
 		willReadFrequently: true,
-		desynchronized: false // import.meta.env.PROD this will hide output
+		desynchronized: true
 	} as CanvasRenderingContext2DSettings,
 
 	showScaleCanvas: false,
@@ -18,9 +18,13 @@ export const canvasConfiguration = {
 	}
 }
 
-export type Canvas = (HTMLCanvasElement | OffscreenCanvas) & {
+export type Canvas = OffscreenCanvas & {
 	id: string,
 	writeOutput?: (date: number) => Promise<void>
+	// TODO remove?
+	getImageData: () => ImageData
+	putImageData: (image: ImageData) => void
+	getCanvasContext: () => CanvasContext
 }
 
 const writeOutput = !canvasConfiguration.debugEnabled() ? undefined : async (canvas: Canvas, date: number) => {
@@ -44,22 +48,24 @@ const writeOutput = !canvasConfiguration.debugEnabled() ? undefined : async (can
 	link.click()
 }
 
-export const makeCanvas = (id: string, visible: boolean, width: number, height: number): Canvas => {
-	if (visible) {
-		const canvas = document.createElement('canvas')
-		return Object.assign(canvas, {
-			width, height, id, writeOutput: writeOutput && ((date: number) => writeOutput(canvas, date))
-		}) as Canvas
-	}
+export const canvas = (id: string, width: number, height: number, alpha: boolean = true): Canvas => {
 
 	const canvas = new OffscreenCanvas(width, height)
+
+	const getCanvasContext = () => canvas.getContext( '2d', {
+		...canvasConfiguration.canvasContextOptions,
+		alpha
+	}) as CanvasContext
+	const getImageData = () => getCanvasContext().getImageData(0, 0, width, height)
+	const putImageData = (image: ImageData) => getCanvasContext().putImageData(image, 0, 0)
+
 	return Object.assign(canvas, {
-		id, writeOutput: writeOutput && ((date: number) => writeOutput(canvas as Canvas, date))
+		id,
+		writeOutput: writeOutput && ((date: number) => writeOutput(canvas as Canvas, date)),
+		getCanvasContext,
+		getImageData,
+		putImageData
 	}) as Canvas
 }
 
-export type CanvasContext = OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D
-export const getContext = (canvas: OffscreenCanvas | HTMLCanvasElement, options: CanvasRenderingContext2DSettings = {}) => canvas.getContext('2d', {
-	...canvasConfiguration.canvasContextOptions,
-	...options
-})! as CanvasContext
+export type CanvasContext = OffscreenCanvasRenderingContext2D

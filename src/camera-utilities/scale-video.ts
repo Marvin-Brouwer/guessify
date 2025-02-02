@@ -1,4 +1,4 @@
-import { canvasConfiguration, getContext, makeCanvas } from './canvas'
+import { canvas } from './canvas'
 import { awaitAnimationFrame } from './frame-helper'
 
 type ScaledVideoFrame = {
@@ -49,22 +49,20 @@ export function scaleupVideo(videoElement: HTMLVideoElement, videoFrame: MediaSt
 	if (boxWidth === 0 || Number.isNaN(boxWidth)) return undefined
 
 	return awaitAnimationFrame(() => {
-		const scaleCanvas = makeCanvas(
-			'scale', canvasConfiguration.showScaleCanvas,
+		const scaleCanvas = canvas(
+			'scale',
 			boxWidth,
 			boxHeight
 		)
-		const scaleContext = getContext(scaleCanvas, {
-			alpha: false,
-			desynchronized: !canvasConfiguration.showScaleCanvas
-		})
-		scaleContext.drawImage(
-			videoElement,
-			0, 0,
-			frameWidth, frameHeight,
-			offsetX, offsetY,
-			boxWidth, boxHeight
-		)
+		scaleCanvas
+			.getCanvasContext()
+			.drawImage(
+				videoElement,
+				0, 0,
+				frameWidth, frameHeight,
+				offsetX, offsetY,
+				boxWidth, boxHeight
+			)
 
 		return scaleCanvas
 	})

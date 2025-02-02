@@ -1,4 +1,4 @@
-import { Canvas, canvasConfiguration, getContext, makeCanvas } from './canvas'
+import { Canvas, canvasConfiguration, canvas } from './canvas'
 import { awaitAnimationFrame } from './frame-helper'
 
 /**
@@ -8,25 +8,24 @@ export function readViewFinder(viewFinderRect: DOMRectReadOnly, videoInput: Canv
 
 	return awaitAnimationFrame(() => {
 
-		const grayScaleCanvas = makeCanvas(
-			invert ? 'grayscale-inverted' : 'grayscale', !invert && canvasConfiguration.showGrayscaleImage,
+		const grayScaleCanvas = canvas(
+			invert ? 'grayscale-inverted' : 'grayscale',
 			viewFinderRect.width * 2,
 			viewFinderRect.height * 2
 		)
-		const grayscaleContext = getContext(grayScaleCanvas, {
-			alpha: false,
-			desynchronized: !canvasConfiguration.showGrayscaleImage
-		})
 		// Fiddle with the image to make black more clear and glare less obvious
 		// Todo dynamic lighting?
-		grayscaleContext.filter = `grayscale() ${invert ? 'invert()' : ''} contrast(4.5)`
-		grayscaleContext.drawImage(
-			videoInput,
-			viewFinderRect.x, viewFinderRect.y,
-			viewFinderRect.width, viewFinderRect.height,
-			0, 0,
-			grayScaleCanvas.width, grayScaleCanvas.height
-		);
+		grayScaleCanvas
+			.getCanvasContext().filter = `grayscale() ${invert ? 'invert()' : ''} contrast(4.5)`
+		grayScaleCanvas
+			.getCanvasContext()
+			.drawImage(
+				videoInput,
+				viewFinderRect.x, viewFinderRect.y,
+				viewFinderRect.width, viewFinderRect.height,
+				0, 0,
+				grayScaleCanvas.width, grayScaleCanvas.height
+			);
 
 		return grayScaleCanvas;
 	})
@@ -40,23 +39,24 @@ export function blurViewFinder(viewFinderCanvas: Canvas) {
 
 	return awaitAnimationFrame(() => {
 
-		const grayScaleCanvas = makeCanvas(
+		const blurredCanvas = canvas(
 			viewFinderCanvas.id.replace('grayscale', 'blur'),
-			false,
 			viewFinderCanvas.width,
 			viewFinderCanvas.height
 		)
-		const grayscaleContext = getContext(grayScaleCanvas)
 		// Blur and up the contrast so we can edge detect later
-		grayscaleContext.filter = `blur(${canvasConfiguration.blurAmount}px)`
-		grayscaleContext.drawImage(
-			viewFinderCanvas,
-			0, 0,
-			viewFinderCanvas.width, viewFinderCanvas.height,
-			0, 0,
-			grayScaleCanvas.width, grayScaleCanvas.height
-		);
+		blurredCanvas
+			.getCanvasContext().filter = `blur(${canvasConfiguration.blurAmount}px)`
+		blurredCanvas
+			.getCanvasContext()
+			.drawImage(
+				viewFinderCanvas,
+				0, 0,
+				viewFinderCanvas.width, viewFinderCanvas.height,
+				0, 0,
+				blurredCanvas.width, blurredCanvas.height
+			);
 
-		return grayScaleCanvas;
+		return blurredCanvas;
 	})
 }

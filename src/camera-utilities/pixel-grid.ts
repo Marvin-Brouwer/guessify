@@ -1,4 +1,4 @@
-import { Canvas, getContext } from './canvas'
+import { Canvas } from './canvas'
 import { awaitAnimationFrame } from './frame-helper'
 import { getSinglePixel, Pixel } from './pixel'
 
@@ -18,10 +18,8 @@ export type PixelRow = Array<GridPixel>
  */
 export async function convertToPixelGrid(imageCanvas: Canvas, invertedCanvas: Canvas) {
 
-	const imageData = getContext(imageCanvas)
-		.getImageData(0,0, imageCanvas.width, imageCanvas.height);
-	const invertedImageData = getContext(invertedCanvas)
-		.getImageData(0,0, invertedCanvas.width, invertedCanvas.height);
+	const imageData = imageCanvas.getImageData();
+	const invertedImageData = invertedCanvas.getImageData();
 
 	// Very costly operation, makes debugging easier
 	if (import.meta.env.DEV && imageData.data.every(v => v === 0)) return Object.assign([], { width: 0, height: 0 });
