@@ -15,13 +15,13 @@ export type ModalComponent = (props: ParentProps<ModalProps>) => NonNullable<Mod
 export type CreateModal = () => { Modal: ModalComponent, showModal: () => void, closeModal: () => void }
 
 // https://stackoverflow.com/a/26984690
-const checkBackdropClick = (modalElement: HTMLDialogElement, close: Accessor<() => void>) => (event: MouseEvent) => {
+const checkBackdropClick = (modalElement: HTMLDialogElement, close: () => void) => (event: MouseEvent) => {
 	if (modalElement.hidden) return
 	const rect = modalElement.getBoundingClientRect()
 	const isInDialog = (rect.top <= event.clientY && event.clientY <= rect.top + rect.height &&
 		rect.left <= event.clientX && event.clientX <= rect.left + rect.width)
 	if (!isInDialog) {
-		close()()
+		close()
 	}
 }
 
@@ -30,7 +30,19 @@ export const createModal: CreateModal = () => {
 	const { dictionary } = useDictionaries()
 	const [modalElement, setModalElement] = createSignal<HTMLDialogElement>()
 	const [opened, setOpened] = createSignal(false)
-	const [onClose, setOnClose] = createSignal(() => {modalElement()?.close()})
+	const [beforeClose, setBeforeClose] = createSignal<ModalProps['beforeClose']>()
+	const closeModal = () => {
+		if (!opened()) return false;
+		if (!beforeClose()) {
+			setOpened(false)
+			return modalElement()?.close()
+		}
+		if (beforeClose()!() !== false) {
+			setOpened(false)
+			modalElement()?.close()
+		}
+
+	}
 
 	const Modal: Component<ParentProps<ModalProps>> = (props) => {
 		const renderChildren = () => opened() ? children(() => props.children)() : children(() => undefined)()
@@ -44,29 +56,20 @@ export const createModal: CreateModal = () => {
 						<AppButton
 							text={dictionary().common.close}
 							imageUrl={closeIcon}
-							onClick={onClose()}
+							onClick={closeModal}
 						/>
 					</div>
 				</div>
 			</dialog> as HTMLDialogElement
 		)
-		setOnClose(() => () => {
-			if (!opened()) return false;
-			if (!props.beforeClose) {
-				setOpened(false)
-				return modalElement()?.close()
-			}
-			if (props.beforeClose() !== false) {
-				setOpened(false)
-				modalElement()?.close()
-			}
-		})
+
+		setBeforeClose(() => props.beforeClose)
 
 		onMount(() => {
-			modalElement()?.addEventListener('click', checkBackdropClick(modalElement()!, onClose))
+			modalElement()?.addEventListener('click', checkBackdropClick(modalElement()!, closeModal))
 		})
 		onCleanup(() => {
-			modalElement()?.removeEventListener('click', checkBackdropClick(modalElement()!, onClose))
+			modalElement()?.removeEventListener('click', checkBackdropClick(modalElement()!, closeModal))
 		})
 
 		return <Portal>{modalElement()}</Portal> as JSXElement
@@ -83,6 +86,6 @@ export const createModal: CreateModal = () => {
 			setOpened(true)
 			modalElement()?.showModal()
 		},
-		closeModal: () => onClose()()
+		closeModal
 	}
 }
