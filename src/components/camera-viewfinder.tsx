@@ -8,9 +8,7 @@ import { scaleupVideo } from '../camera-utilities/scale-video'
 import { blurViewFinder, readViewFinder } from '../camera-utilities/read-viewfinder'
 import { convertToPixelGrid } from '../camera-utilities/pixel-grid'
 
-const { DebugCanvasDisplay, debugCanvas, DebugGridDisplay, debugImageData } = canvasConfiguration.debugEnabled()
-	? await import('./camera-viewfinder.debug')
-	: { } as Partial<typeof import('./camera-viewfinder.debug')>
+import debug from './camera-viewfinder.debug'
 
 // This is just as an example:
 const [codeExample, _setCode] = createSignal('')
@@ -31,7 +29,6 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		if (cameraContext.hasErrored()) return;
 		if (!cameraContext.hasPermission()){
 			if (import.meta.env.DEV) {
-				debugger
 				window.location.reload()
 				return
 			} else {
@@ -53,13 +50,13 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 
 		const scaledUpCanvas = await scaleupVideo(videoElement, videoFrame)
 		if (!scaledUpCanvas) return requestAnimationFrame(scanFrame)
-		debugCanvas?.(canvasConfiguration.showScaleCanvas, scaledUpCanvas)
+		debug?.debugCanvas(canvasConfiguration.showScaleCanvas, scaledUpCanvas)
 
 		const viewFinderCanvasses = await Promise.all([
 			readViewFinder(viewFinderRect, scaledUpCanvas, false),
 			readViewFinder(viewFinderRect, scaledUpCanvas, true)
 		])
-		debugCanvas?.(canvasConfiguration.showGrayscaleImage, viewFinderCanvasses[0])
+		debug?.debugCanvas(canvasConfiguration.showGrayscaleImage, viewFinderCanvasses[0])
 
 		const blurryViewFinderCanvasses = await Promise.all(viewFinderCanvasses
 			.map(viewFinderCanvas => blurViewFinder(viewFinderCanvas))
@@ -74,7 +71,7 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 			return [0, 0, 0, 0]
 		}))
 
-		debugImageData?.(canvasConfiguration.showOrientationLines, 'edge', new ImageData(
+		debug?.debugImageData(canvasConfiguration.showOrientationLines, 'edge', new ImageData(
 			new Uint8ClampedArray(uintPixels),
 			pixelGrid.width, pixelGrid.length)
 		)
@@ -117,8 +114,8 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 			ref={setViewFinder}
 			class={codeDetected() ? 'viewfinder scanning' : 'viewfinder'}
 		>
-			{DebugCanvasDisplay && <DebugCanvasDisplay />}
-			{DebugGridDisplay && <DebugGridDisplay />}
+			{debug && <debug.DebugCanvasDisplay />}
+			{debug && <debug.DebugGridDisplay />}
 		</div>
 		<div class="feedback">{codeExample()}</div>
 	</>

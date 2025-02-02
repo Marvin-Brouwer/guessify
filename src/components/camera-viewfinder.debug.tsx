@@ -1,12 +1,12 @@
 import { Component, createEffect, createMemo, createSignal } from 'solid-js'
-import './camera-viewfinder.debug.pcss';
-import { canvas, Canvas } from '../camera-utilities/canvas'
+import './camera-viewfinder.debug.pcss'
+import { canvas, Canvas, canvasConfiguration } from '../camera-utilities/canvas'
 
 
-export type DebugCanvasProps = {
+type DebugCanvasProps = {
 	canvas: Canvas
 }
-export const DebugCanvas: Component<DebugCanvasProps> = ({ canvas }) => {
+const DebugCanvas: Component<DebugCanvasProps> = ({ canvas }) => {
 
 	const debugCanvas = Object.assign(document.createElement('canvas'), {
 		id: canvas.id,
@@ -19,17 +19,17 @@ export const DebugCanvas: Component<DebugCanvasProps> = ({ canvas }) => {
 	})!
 
 	createEffect(() => {
-		const image = canvas.getImageData();
+		const image = canvas.getImageData()
 		debugContext.putImageData(image, 0, 0)
 	})
 
 	return debugCanvas
 }
-export type DebugImageCanvasProps = {
+type DebugImageCanvasProps = {
 	id: string
 	image: ImageData
 }
-export const DebugImageCanvas: Component<DebugImageCanvasProps> = ({ id, image }) => {
+const DebugImageCanvas: Component<DebugImageCanvasProps> = ({ id, image }) => {
 
 	const debugCanvas = Object.assign(document.createElement('canvas'), {
 		id,
@@ -51,10 +51,10 @@ export const DebugImageCanvas: Component<DebugImageCanvasProps> = ({ id, image }
 }
 
 const [debugCanvases, setDebugCanvases] = createSignal<{ [key: string]: Canvas }>({})
-export const debugCanvas = (show: boolean, canvas: Canvas) =>
+const debugCanvas = (show: boolean, canvas: Canvas) =>
 	show && setDebugCanvases?.(p => ({ ...p, [canvas.id]: canvas }))
 
-export const DebugCanvasDisplay: Component = () => {
+const DebugCanvasDisplay: Component = () => {
 
 	const canvasDisplays = createMemo(() => Object.entries(debugCanvases())
 		.map(([_id, canvas]) => <DebugCanvas canvas={canvas} />), () => Object.keys(debugCanvases()))
@@ -65,11 +65,11 @@ export const DebugCanvasDisplay: Component = () => {
 }
 
 const [images, setImages] = createSignal<{ [key: string]: ImageData }>({})
-export const debugImageData = (show: boolean, id: string, grid: ImageData) =>
+const debugImageData = (show: boolean, id: string, grid: ImageData) =>
 	show && setImages?.(p => ({ ...p, [id]: grid }))
 
 
-export const DebugGridDisplay: Component = () => {
+const DebugGridDisplay: Component = () => {
 
 	let touchTimeout: NodeJS.Timeout | undefined
 	let touched = false
@@ -103,7 +103,14 @@ const downloadCanvasData = async () => {
 	}
 	for (const [id, image] of Object.entries(images())) {
 		const tempCanvas = canvas(id, image.width, image.height)
-		tempCanvas.putImageData(image);
+		tempCanvas.putImageData(image)
 		await tempCanvas.writeOutput?.(date)
 	}
 }
+
+
+const debug = canvasConfiguration.debugEnabled()
+	? { DebugCanvasDisplay, debugCanvas, DebugGridDisplay, debugImageData }
+	: undefined
+
+export default debug

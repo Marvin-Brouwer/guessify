@@ -20,7 +20,7 @@ export const AppBar: Component = () => {
 	const { Modal, showModal, closeModal } = createModal()
 
 	onMount(async () => {
-		if (import.meta.env.PROD) return
+		if (import.meta.env.PROD) return;
 		try {
 			await navigator.wakeLock.request("screen")
 			console.debug('wakelock on')
