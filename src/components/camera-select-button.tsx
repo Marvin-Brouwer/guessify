@@ -9,9 +9,8 @@ import { AppDropdownButton } from './controls/app-dropdown';
 
 export type CameraSelectButtonProps = {
 	nameRef?: Setter<string>
-	onClick?: () => void
 }
-export const CameraSelectButton: Component<CameraSelectButtonProps> = ({ nameRef, onClick }) => {
+export const CameraSelectButton: Component<CameraSelectButtonProps> = ({ nameRef }) => {
 
 	const { camera, devices, requestCamera, stopCameraStream } = useCameraContext()
 	const { dictionary } = useDictionaries();
@@ -31,7 +30,6 @@ export const CameraSelectButton: Component<CameraSelectButtonProps> = ({ nameRef
 				nameRef?.(selectValue)
 				await stopCameraStream();
 				await requestCamera(selectValue);
-				onClick?.()
 			}}
 		/>
 	</div>

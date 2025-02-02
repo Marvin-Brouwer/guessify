@@ -1,4 +1,4 @@
-import { Component, onMount } from 'solid-js'
+import { Component, createEffect, onMount } from 'solid-js'
 
 import './app-bar.pcss'
 import logo from '../../../public/guessify-logo.svg'
@@ -13,20 +13,19 @@ import { AppDropdownButton } from '../controls/app-dropdown'
 
 export const AppBar: Component = () => {
 
-	const { Modal, showModal, closeModal } = createModal();
-
-	// TEMP
-	onMount(() => showModal())
+	const { Modal, showModal, closeModal } = createModal()
 
 	onMount(async () => {
 		if (import.meta.env.PROD) return
+		// TEMP
+		showModal()
 		try {
-			await navigator.wakeLock.request("screen");
+			await navigator.wakeLock.request("screen")
 			console.debug('wakelock on')
-		  } catch (err) {
+		} catch (err) {
 			// the wake lock request fails - usually system related, such being low on battery
-			console.log(err);
-		  }
+			console.log(err)
+		}
 	})
 
 	return <header>
@@ -48,27 +47,31 @@ type MenuProps = {
 }
 const Menu: Component<MenuProps> = ({ closeModal }) => {
 
-	const { logOut } = useSpotifyContext();
-	const { locale } = useDictionaries();
+	const { logOut } = useSpotifyContext()
+	const { locale } = useDictionaries()
 
 	return <div class='menu'>
 		<div class='details'>
-		<h2 class="logo"><img src={logo} /> <span>Guessify</span> <sub>{import.meta.env['VITE_APP_VERSION']}</sub></h2>
+			<h2 class="logo"><img src={logo} /> <span>Guessify</span> <sub>{import.meta.env['VITE_APP_VERSION']}</sub></h2>
 
-		<AppDropdownButton
-			disabled={() => false}
-			value={locale}
-			options={() => [{ id: 'en', text: 'English (en)' }, { id: 'nl', text: 'Nederlands (nl)' }]}
-			onChange={() => {
+			<AppDropdownButton
+				disabled={() => false}
+				value={locale}
+				options={() => [{ id: 'en', text: 'English (en)' }, { id: 'nl', text: 'Nederlands (nl)' }]}
+				onChange={() => {
+					closeModal()
+					// TODO navigate
+				}}
+			/>
+			<AppButton disabled text='Share' />
+			<hr />
+			<CameraSetting closeModal={closeModal} />
+			<p></p>
+			<p>Account</p>
+			<AppButton text='Logout' onClick={() => {
 				closeModal()
-			}}
-		/>
-		<AppButton disabled text='Share' />
-		<hr />
-		<CameraSetting closeModal={closeModal} />
-		<p></p>
-		<p>Account</p>
-		<AppButton text='Logout' onClick={logOut} />
+				logOut()
+			}} />
 		</div>
 	</div>
 }
@@ -78,15 +81,19 @@ type CameraSettingProps = {
 }
 const CameraSetting: Component<CameraSettingProps> = ({ closeModal }) => {
 
-	const { camera } = useCameraContext();
+	const { camera, hasPermission, hasErrored } = useCameraContext()
 	const { dictionary, template } = useDictionaries();
+
+	createEffect(() => {
+		if (!hasPermission() || hasErrored()) closeModal();
+	}, [hasPermission, hasErrored])
 
 	return <>
 		<div class='camera-settings'>
 			<p>{template(dictionary().camera.selectedCamera, {
 				label: camera()?.label ?? '?'
 			})}</p>
-			<CameraSelectButton onClick={closeModal} />
+			<CameraSelectButton />
 		</div>
 	</>
 }

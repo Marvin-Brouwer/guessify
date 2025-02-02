@@ -51,6 +51,7 @@ export const createModal: CreateModal = () => {
 			</dialog> as HTMLDialogElement
 		)
 		setOnClose(() => () => {
+			if (!opened()) return false;
 			if (!props.beforeClose) {
 				setOpened(false)
 				return modalElement()?.close()
@@ -73,16 +74,15 @@ export const createModal: CreateModal = () => {
 
 	return {
 		Modal: Modal as ModalComponent,
-		showModal: import.meta.env.PROD
-			? () => {
-				setOpened(true)
-				modalElement()?.showModal()
+		showModal: () => {
+			if (opened()) return false;
+			if (!modalElement) {
+				if (import.meta.env.DEV) console.warn('A modal has been requested without rendering on the page!')
+				return;
 			}
-			: () => {
-				if (!modalElement()) console.warn('A modal has been requested without rendering on the page!')
-				modalElement() && setOpened(true)
-				modalElement()?.showModal()
-			},
+			setOpened(true)
+			modalElement()?.showModal()
+		},
 		closeModal: () => onClose()()
 	}
 }
