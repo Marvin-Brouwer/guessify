@@ -1,15 +1,14 @@
 import { spawn } from 'node:child_process'
-import { createLogger, loadEnv, Logger, ViteDevServer, type Plugin } from 'vite'
+import { createLogger, loadEnv, type Plugin } from 'vite'
 import { getAndroidToolPath } from "android-tools-bin"
 import chalk from 'chalk'
+import { asyncExitHook } from 'exit-hook'
 
 const keys = {
-	ADB_CONNECT_DEVICES: 'ADB_CONNECT_DEVICES' as const
+	ADB_CONNECT_DEVICES: 'ADB_CONNECT_DEVICES' as const,
+	CLEANUP_CONFIGURED: (pluginName: string) => `PLUGIN_CLEANUP_CONFIGURED_${pluginName}` as const
 }
-const terminationSignals = ['SIGINT', 'SIGTERM', 'SIGQUIT', 'SIGHUP']
 
-// TODO improve to where it warns and retries on starting daemon + store if connected and deconnect if no
-// + verbose
 /**
  * ## `vite-plugin-connect-adb`
  *
@@ -28,6 +27,7 @@ const terminationSignals = ['SIGINT', 'SIGTERM', 'SIGQUIT', 'SIGHUP']
 export const connectAdb = (): Plugin => {
 
 	const pluginName = 'vite-plugin-connect-adb'
+	let handleClose = false;
 
 	let env_devices: string = process.env[keys.ADB_CONNECT_DEVICES]!
 	const devices = () => env_devices?.split(',')?.map(d => d.trim()) ?? []
@@ -47,7 +47,7 @@ export const connectAdb = (): Plugin => {
 
 	let logger = createLogger()
 
-	const adb = (...parameters: string[]) => {
+	const adb = (...parameters: string[]) => new Promise<void>((resolve) => {
 		const adbProcess = spawn(getAndroidToolPath("adb", false), parameters, {
 			cwd: process.cwd(),
 			detached: false,
@@ -60,7 +60,9 @@ export const connectAdb = (): Plugin => {
 			logger.error(formatError(e.toString()))
 		})
 		adbProcess.stdout.on('data', (e) => {
-			const message = e.toString()
+			const message = e.toString().replace('\n', '')
+			if (message.trim() === '') return
+
 			if (message.startsWith('already connected to'))
 				return logger.info(formatVerbose(message))
 			if (message.startsWith('cannot connect to '))
@@ -70,13 +72,19 @@ export const connectAdb = (): Plugin => {
 
 			logger.info(formatLog(message))
 		})
-	}
 
+		// We don't care about the errors, just write them out, otherwise this is where you'd reject
+		adbProcess.once('close', () => {
+			adbProcess.removeAllListeners();
+			resolve();
+		})
+	})
+
+	// https://remysharp.com/2016/12/17/chrome-remote-debugging-over-wifi
 	const connectAdbDevices = async () => {
 		logger.info(formatLog(`connecting ${devices().length} devices...`))
 		for (let device of devices()) {
-			logger.info(formatLog(`connecting '${device}'`))
-			// https://remysharp.com/2016/12/17/chrome-remote-debugging-over-wifi
+			logger.info(formatLog(`connecting ${device}`))
 			await adb('connect', device)
 		}
 	}
@@ -84,22 +92,16 @@ export const connectAdb = (): Plugin => {
 	const disconnectAdbDevices = async () => {
 		logger.info(formatLog(`disconnecting ${devices().length} devices...`))
 		for (let device of devices()) {
-			logger.info(formatLog(`disconnecting '${device}'`))
-			// https://remysharp.com/2016/12/17/chrome-remote-debugging-over-wifi
+			logger.info(formatLog(`disconnecting ${device}`))
 			await adb('disconnect', device)
 		}
 	}
 
-	const close = async () => {
-
+	const closePlugin = async () => {
 		try {
-			process.stdin.pause()
-			process.stdout.pause()
-			process.stderr.pause()
-			terminationSignals.forEach((signal) => {
-				process.removeAllListeners(signal)
-			})
+			process.stdin.pause();
 			await disconnectAdbDevices()
+			process.stdin.resume();
 		}
 		catch(e) {
 			const err = e as Error
@@ -113,7 +115,7 @@ export const connectAdb = (): Plugin => {
 		enforce: 'pre',
 		apply: 'serve',
 
-		async configResolved(config) {
+		configResolved(config) {
 
 			if (!testAdb()) throw new Error(`'adb' command was either not found or inaccessible.`)
 
@@ -126,22 +128,33 @@ export const connectAdb = (): Plugin => {
 			logger = config.logger
 		},
 
-		async configureServer() {
-			process.on('vite-restart', () => {
-				console.log('restart')
+		async configureServer(server) {
+
+			handleClose = true;
+			let unsubscribeExitHook = () => { }
+
+			const originalClose = server.close;
+			const originalRestart = server.restart;
+
+			server.restart = async () =>{
+				handleClose = false;
+				await originalRestart();
+			}
+			server.close = async () =>{
+				if(handleClose) {
+					unsubscribeExitHook();
+					await closePlugin()
+				}
+				await originalClose();
+			}
+
+			process.env[keys.CLEANUP_CONFIGURED(pluginName)] = '1'
+
+			await connectAdbDevices();
+
+			unsubscribeExitHook = asyncExitHook(() => closePlugin(), {
+				wait: 300
 			})
-			process.on('vite-stop', () => {
-				console.log('stop')
-			})
-			process.on('vite-close', () => {
-				console.log('close')
-			})
-			// Wait for server restarted, this is mostly to prevent chaos in the logs
-			await new Promise<void>(r => setTimeout(r, 1000))
-			await connectAdbDevices()
-			return terminationSignals.forEach((signal) => {
-				process.on(signal, close);
-			});
-		},
+		}
 	})
 }
