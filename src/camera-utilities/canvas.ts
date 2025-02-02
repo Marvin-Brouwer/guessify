@@ -2,13 +2,13 @@
 export const canvasConfiguration = {
 	canvasContextOptions: {
 		willReadFrequently: true,
-		desynchronized: import.meta.env.PROD
+		desynchronized: false // import.meta.env.PROD this will hide output
 	} as CanvasRenderingContext2DSettings,
 
 	showScaleCanvas: false,
 	showGrayscaleImage: true, // import.meta.env.DEV,
 	showOrientationLines: true,
-	sampleRate: import.meta.env.PROD ? 500 : 1000,
+	sampleRate: import.meta.env.PROD ? 2000 : 1000,
 
 	blurAmount: 1,
 	debugEnabled() {
