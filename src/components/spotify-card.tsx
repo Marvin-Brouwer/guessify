@@ -10,6 +10,7 @@ import loginIcon from '../assets/login_24dp_E8EAED.svg'
 import { useSpotifyContext } from '../context/spotify-context'
 import { useDictionaries } from '../i18n/dictionary'
 import { useCameraContext } from '../context/camera-context'
+import { AppButton } from './controls/app-button'
 
 export const SpotifyCard: Component = () => {
 
@@ -49,15 +50,17 @@ const SpotifyLoginCard: Component = () => {
 				</p>}
 			</div>
 			<div class="controls">
-				<button disabled={spotifyContext.isAuthenticating()} onclick={() => {
-					spotifyContext.logIn()
-				}}>
-					{spotifyContext.isAuthenticating()
-						? <span>{dictionary().spotify.signingIn}</span>
-						: <span>{dictionary().spotify.signIn}</span>
+				<AppButton
+					disabled={spotifyContext.isAuthenticating()}
+					imageUrl={!spotifyContext.isAuthenticating() && loginIcon}
+					text={spotifyContext.isAuthenticating()
+						? dictionary().spotify.signingIn
+						: dictionary().spotify.signIn
 					}
-					{!spotifyContext.isAuthenticating() && <img src={loginIcon} />}
-				</button>
+					onClick={() => {
+						spotifyContext.logIn()
+					}}
+				/>
 			</div>
 		</div>
 	</>
@@ -116,10 +119,14 @@ const SpotifyProfileCard: Component = () => {
 			}
 		</div>
 		<div class="controls">
-			<button onclick={() => spotifyContext.logOut()}>
-				<span>{dictionary().spotify.signOut}</span>
-				<img src={logoutIcon} />
-			</button>
+			<AppButton
+				text={dictionary().spotify.signOut}
+				imageUrl={logoutIcon}
+				onClick={(e) => {
+					e.currentTarget.disabled == true;
+					spotifyContext.logOut()
+				}}
+			/>
 		</div>
 	</div>
 }

@@ -14,6 +14,8 @@ import postcssNesting from 'postcss-nesting';
 // @ts-expect-error
 import postcssDesignTokens from 'postcss-design-tokens';
 import { viewfinderConstants } from './src/constants/viewfinder-constants';
+// @ts-expect-error
+import postCssImport from 'postcss-import'
 
 import { connectAdb } from './plugins/vite-plugin-adb-connect.mjs'
 
@@ -72,6 +74,7 @@ export default defineConfig({
 	css: {
 		postcss: {
 			plugins: [
+				postCssImport(),
 				postcssNesting,
 				postcssDesignTokens({ tokens: designTokens })
 			]

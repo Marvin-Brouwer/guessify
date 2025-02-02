@@ -1,4 +1,4 @@
-import './app.css'
+import './app.pcss'
 
 import { RouteSectionProps } from '@solidjs/router'
 import { children, Component } from 'solid-js'

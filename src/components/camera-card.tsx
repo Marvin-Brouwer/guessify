@@ -9,6 +9,7 @@ import { ResetPermissionModal } from './camera-card/reset-permission-modal'
 import { useCameraDisplayIcon } from './camera-card.icon'
 import { CameraSelectButton } from './camera-select-button'
 import { VideoPlayer } from '../context/camera-context.player'
+import { AppButton } from './controls/app-button'
 
 export const CameraCard: Component = () => {
 
@@ -67,25 +68,29 @@ const CameraRequestCard: Component = () => {
 
 	const permissionButton = createMemo(() => {
 
-		console.log(cameraContext.permission())
-		if (cameraContext.permission() === 'pending') return <button disabled>
-			<span>{dictionary().camera.requestingPermission}</span>
-			<img src={changeCameraIcon} />
-		</button>
-		if (cameraContext.permission() === 'error:inuse') return <button onClick={(e) => {
-			(e.target as HTMLButtonElement).disabled = true
-			window.location.reload()
-		}}>
-			<span>{dictionary().common.refresh}</span>
-			<img src={changeCameraIcon} />
-		</button>
+		if (cameraContext.permission() === 'pending') return <AppButton
+			disabled
+			text={dictionary().camera.requestingPermission}
+			imageUrl={changeCameraIcon}
+		/>
 
-		return <button disabled={!cameraContext.canPrompt()} onclick={() => {
-			cameraContext.requestPermission()
-		}}>
-			<span>{dictionary().camera.requestPermission}</span>
-			<img src={changeCameraIcon} />
-		</button>
+		if (cameraContext.permission() === 'error:inuse') return <AppButton
+			text={dictionary().common.refresh}
+			imageUrl={changeCameraIcon}
+			onClick={(e) => {
+				(e.target as HTMLButtonElement).disabled = true
+				window.location.reload()
+			}}
+		/>
+
+		return <AppButton
+			disabled={!cameraContext.canPrompt()}
+			text={dictionary().camera.requestPermission}
+			imageUrl={changeCameraIcon}
+			onClick={() => {
+				cameraContext.requestPermission()
+			}}
+		/>
 	}, [cameraContext.canPrompt, cameraContext.permission])
 
 	return <>

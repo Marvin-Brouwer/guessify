@@ -2,7 +2,7 @@
 import { render } from 'solid-js/web'
 import { Router, Route } from '@solidjs/router'
 
-import './index.css'
+import './index.pcss'
 import { AppRoot, LandingPage, MainApp } from './app'
 import { SpotifyAuthHandler } from './components/spotify-auth'
 

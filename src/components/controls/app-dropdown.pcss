@@ -1,0 +1,78 @@
+@import "./_control-base.pcss";
+
+.app-dropdown {
+  position: relative;
+  width: 100%;
+  height: 8ex;
+  display: grid;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+
+  .fake-button.disabled img {
+    opacity: 0.4;
+  }
+
+  select,
+  .fake-button {
+    width: 100%;
+    height: 8ex;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: 8ex 1fr 8ex;
+    grid-template-rows: 1fr;
+    gap: 0em 0em;
+    grid-template-areas: ". text icon";
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+  }
+
+  select {
+    text-align: center;
+    padding-left: 8ex;
+    padding-right: 8ex;
+    padding-top: 2ex;
+    padding-bottom: 2ex;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+  select[disabled] {
+    cursor: default;
+  }
+  option {
+    text-align: left;
+    padding-left: 8ex;
+    padding-right: 8ex;
+    padding-top: 2ex;
+    padding-bottom: 2ex;
+  }
+
+  .fake-button {
+    position: absolute;
+    bottom: 0;
+    pointer-events: none;
+	border-radius: 8px;
+  }
+  .fake-button span {
+    grid-area: text;
+  }
+  .fake-button span {
+    background-color: #1a1a1a;
+    text-align: center;
+  }
+  .fake-button.disabled {
+    cursor: default;
+  }
+  .fake-button.disabled span {
+    color: gray;
+  }
+  button img,
+  .fake-button img {
+    grid-area: icon;
+  }
+}

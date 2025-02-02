@@ -1,52 +1,44 @@
-dialog {
-  padding: 0;
-  background: none;
-  min-width: 320px;
-  max-width: 60ex;
-  width: 100%;
-}
-
-.modal {
-  width: 100%;
-  min-height: 10ex;
-  display: flex;
-  flex-direction: column;
-  align-content: center;
-  justify-content: flex-start;
-  align-items: center;
-  padding: 4ex 4ex 0 4ex;
-  box-sizing: border-box;
-
-  .details {
+.app-dialog {
+  &dialog {
+    background: none;
+    min-width: 320px;
+    max-width: 60ex;
     width: 100%;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+
+    &::backdrop {
+      background: rgba(0, 0, 0, 0.7);
+    }
   }
 
-  .controls {
-    grid-area: controls;
-    margin: 0 -4ex 0 -4ex;
-    height: 8ex;
-    width: calc(100% + 8ex);
+  .modal {
+    width: calc(100% - 2.4em);
+    min-height: 10ex;
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 4ex 4ex 0 4ex;
+    box-sizing: border-box;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    border-radius: 8px;
+    border: 1px solid transparent;
+	background-color: rgb(32, 32, 32);
 
-    button {
+    .details {
       width: 100%;
+    }
+
+    .controls {
+      grid-area: controls;
+      margin: 0 -4ex 0 -4ex;
       height: 8ex;
-      display: grid;
-      grid-auto-flow: column;
-      grid-template-columns: 8ex 1fr 8ex;
-      grid-template-rows: 1fr;
-      gap: 0em 0em;
-      grid-template-areas: ". text icon";
-      align-content: center;
-      justify-content: center;
-      align-items: center;
-
-      span {
-        grid-area: text;
-      }
-
-      img {
-        grid-area: icon;
-      }
+      width: calc(100% + 8ex);
     }
   }
 }

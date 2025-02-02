@@ -2,7 +2,7 @@ import { Accessor, children, createContext, createMemo, createSignal, onCleanup,
 
 export type NetworkStatus = 'online' | 'slow' | 'offline'
 const [status, setStatus] = createSignal<NetworkStatus>(window.navigator.onLine ? 'online' : 'offline')
-const online = createMemo(() => status() !== 'offline', status)
+const online = () => status() !== 'offline'
 
 export type NetworkContext = {
 	status: Accessor<NetworkStatus>
@@ -29,7 +29,10 @@ export const NetworkStatusContext: ParentComponent = (props) => {
 		window.removeEventListener('offline', handleOffline)
 	})
 
-	return <networkContext.Provider value={networkContext.defaultValue}>
+	return <networkContext.Provider value={{
+		...networkContext.defaultValue,
+		online: createMemo(() => status() !== 'offline', status)
+	}}>
 		{children(() => props.children)()}
 	</networkContext.Provider>
 }

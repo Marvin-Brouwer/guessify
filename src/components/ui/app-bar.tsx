@@ -8,13 +8,15 @@ import { useCameraContext } from '../../context/camera-context'
 import { useDictionaries } from '../../i18n/dictionary'
 import { useSpotifyContext } from '../../context/spotify-context'
 import { CameraSelectButton } from '../camera-select-button'
+import { AppButton } from '../controls/app-button'
+import { AppDropdownButton } from '../controls/app-dropdown'
 
 export const AppBar: Component = () => {
 
-	const { Modal, showModal } = createModal();
+	const { Modal, showModal, closeModal } = createModal();
 
 	// TEMP
-	// onMount(() => showModal())
+	onMount(() => showModal())
 
 	onMount(async () => {
 		if (import.meta.env.PROD) return
@@ -36,31 +38,45 @@ export const AppBar: Component = () => {
 			</button>
 		</nav>
 		<Modal>
-			<Menu />
+			<Menu closeModal={closeModal} />
 		</Modal>
 	</header>
 }
 
-const Menu: Component = () => {
+type MenuProps = {
+	closeModal: () => void
+}
+const Menu: Component<MenuProps> = ({ closeModal }) => {
 
 	const { logOut } = useSpotifyContext();
+	const { locale } = useDictionaries();
 
 	return <div class='menu'>
 		<div class='details'>
 		<h2 class="logo"><img src={logo} /> <span>Guessify</span> <sub>{import.meta.env['VITE_APP_VERSION']}</sub></h2>
-		<p>TODO: This will be styled later</p>
-		<select disabled>
-			<option>English (en)</option>
-			<option>Nederlands (nl)</option>
-		</select>
-		<CameraSetting />
-		<button onClick={logOut}><span>Logout</span></button>
-		<button disabled><span>Share</span></button>
+
+		<AppDropdownButton
+			disabled={() => false}
+			value={locale}
+			options={() => [{ id: 'en', text: 'English (en)' }, { id: 'nl', text: 'Nederlands (nl)' }]}
+			onChange={() => {
+				closeModal()
+			}}
+		/>
+		<AppButton disabled text='Share' />
+		<hr />
+		<CameraSetting closeModal={closeModal} />
+		<p></p>
+		<p>Account</p>
+		<AppButton text='Logout' onClick={logOut} />
 		</div>
 	</div>
 }
 
-const CameraSetting: Component = () => {
+type CameraSettingProps = {
+	closeModal: () => void
+}
+const CameraSetting: Component<CameraSettingProps> = ({ closeModal }) => {
 
 	const { camera } = useCameraContext();
 	const { dictionary, template } = useDictionaries();
@@ -70,7 +86,7 @@ const CameraSetting: Component = () => {
 			<p>{template(dictionary().camera.selectedCamera, {
 				label: camera()?.label ?? '?'
 			})}</p>
-			<CameraSelectButton />
+			<CameraSelectButton onClick={closeModal} />
 		</div>
 	</>
 }
