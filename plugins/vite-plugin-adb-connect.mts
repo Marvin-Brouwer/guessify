@@ -1,11 +1,12 @@
 import { spawn } from 'node:child_process'
-import { loadEnv, ViteDevServer, type Plugin } from 'vite';
-import { getAndroidToolPath } from "android-tools-bin";
+import { createLogger, loadEnv, Logger, ViteDevServer, type Plugin } from 'vite'
+import { getAndroidToolPath } from "android-tools-bin"
 import chalk from 'chalk'
 
 const keys = {
 	ADB_CONNECT_DEVICES: 'ADB_CONNECT_DEVICES' as const
 }
+const terminationSignals = ['SIGINT', 'SIGTERM', 'SIGQUIT', 'SIGHUP']
 
 // TODO improve to where it warns and retries on starting daemon + store if connected and deconnect if no
 // + verbose
@@ -26,53 +27,87 @@ const keys = {
  */
 export const connectAdb = (): Plugin => {
 
-	const pluginName = 'vite-plugin-connect-adb';
+	const pluginName = 'vite-plugin-connect-adb'
 
-	let env_devices: string = process.env[keys.ADB_CONNECT_DEVICES]!;
-	const devices = () => env_devices?.split(',')?.map(d => d.trim()) ?? [];
+	let env_devices: string = process.env[keys.ADB_CONNECT_DEVICES]!
+	const devices = () => env_devices?.split(',')?.map(d => d.trim()) ?? []
 
 	const testAdb = (): boolean => {
 		try {
-			return !!getAndroidToolPath("adb", false);
+			return !!getAndroidToolPath("adb", false)
 		} catch {
-			return false;
+			return false
 		}
 	}
 
 	const formatLog = (message: string) => `${chalk.blueBright(`[${pluginName}]`)} ${message}`
-	const formatVerbose = (message: string) => formatLog(chalk.italic.gray(message));
-	const formatWarn = (message: string) => formatLog(chalk.bold.yellowBright(message));
-	const formatError = (message: string) => formatLog(chalk.bold.red(message));
+	const formatVerbose = (message: string) => formatLog(chalk.italic.gray(message))
+	const formatWarn = (message: string) => formatLog(chalk.bold.yellowBright(message))
+	const formatError = (message: string) => formatLog(chalk.bold.red(message))
 
-	const startAdb = (device: string, config: ViteDevServer['config']) => {
+	let logger = createLogger()
 
-		config.logger.info(formatLog(`connecting '${device}'`));
-		// https://remysharp.com/2016/12/17/chrome-remote-debugging-over-wifi
-		const adbProcess = spawn(getAndroidToolPath("adb", false), [
-			'connect', `${device}`
-		], {
+	const adb = (...parameters: string[]) => {
+		const adbProcess = spawn(getAndroidToolPath("adb", false), parameters, {
 			cwd: process.cwd(),
 			detached: false,
 			env: process.env,
 			windowsHide: true,
 			stdio: 'pipe'
-		});
+		})
 
 		adbProcess.stderr.on('data', (e) => {
-			config.logger.error(formatError(e.toString()))
+			logger.error(formatError(e.toString()))
 		})
 		adbProcess.stdout.on('data', (e) => {
-			const message = e.toString();
+			const message = e.toString()
 			if (message.startsWith('already connected to'))
-				return config.logger.info(formatVerbose(message))
+				return logger.info(formatVerbose(message))
 			if (message.startsWith('cannot connect to '))
-				return config.logger.warn(formatWarn(message))
+				return logger.warn(formatWarn(message))
 			if (message.startsWith('failed to connect to'))
-				return config.logger.warn(formatWarn(message))
+				return logger.warn(formatWarn(message))
 
-			config.logger.info(formatLog(message));
+			logger.info(formatLog(message))
 		})
 	}
+
+	const connectAdbDevices = async () => {
+		logger.info(formatLog(`connecting ${devices().length} devices...`))
+		for (let device of devices()) {
+			logger.info(formatLog(`connecting '${device}'`))
+			// https://remysharp.com/2016/12/17/chrome-remote-debugging-over-wifi
+			await adb('connect', device)
+		}
+	}
+
+	const disconnectAdbDevices = async () => {
+		logger.info(formatLog(`disconnecting ${devices().length} devices...`))
+		for (let device of devices()) {
+			logger.info(formatLog(`disconnecting '${device}'`))
+			// https://remysharp.com/2016/12/17/chrome-remote-debugging-over-wifi
+			await adb('disconnect', device)
+		}
+	}
+
+	const close = async () => {
+
+		try {
+			process.stdin.pause()
+			process.stdout.pause()
+			process.stderr.pause()
+			terminationSignals.forEach((signal) => {
+				process.removeAllListeners(signal)
+			})
+			await disconnectAdbDevices()
+		}
+		catch(e) {
+			const err = e as Error
+			logger.error(formatError(err.stack ?? err.message))
+			process.exit(-1)
+		}
+	}
+
 	return ({
 		name: pluginName,
 		enforce: 'pre',
@@ -80,24 +115,33 @@ export const connectAdb = (): Plugin => {
 
 		async configResolved(config) {
 
-			if (!testAdb()) throw new Error(`'adb' command was either not found or inaccessible.`);
+			if (!testAdb()) throw new Error(`'adb' command was either not found or inaccessible.`)
 
-			env_devices ??= loadEnv(config.mode, process.cwd(), 'ADB')?.[keys.ADB_CONNECT_DEVICES]!;
+			env_devices ??= loadEnv(config.mode, process.cwd(), 'ADB')?.[keys.ADB_CONNECT_DEVICES]!
 			// TODO validate devices format
-			if(!env_devices)  config.logger.warn(formatWarn(
+			if (!env_devices) config.logger.warn(formatWarn(
 				`no devices configured, please set "${keys.ADB_CONNECT_DEVICES}" in your local environment file`
 			))
+
+			logger = config.logger
 		},
 
-		async configureServer(server) {
-
+		async configureServer() {
+			process.on('vite-restart', () => {
+				console.log('restart')
+			})
+			process.on('vite-stop', () => {
+				console.log('stop')
+			})
+			process.on('vite-close', () => {
+				console.log('close')
+			})
 			// Wait for server restarted, this is mostly to prevent chaos in the logs
 			await new Promise<void>(r => setTimeout(r, 1000))
-
-			server.config.logger.info(formatLog(`connecting ${devices().length} devices...`))
-			for(let device of devices()) {
-				startAdb(device, server.config);
-			}
+			await connectAdbDevices()
+			return terminationSignals.forEach((signal) => {
+				process.on(signal, close);
+			});
 		},
-	});
-};
+	})
+}
