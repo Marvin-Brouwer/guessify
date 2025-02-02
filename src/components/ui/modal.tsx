@@ -1,4 +1,4 @@
-import { children, JSXElement, onCleanup, ParentProps, createSignal, Component, onMount, Accessor } from 'solid-js'
+import { children, JSXElement, onCleanup, ParentProps, createSignal, Component, onMount } from 'solid-js'
 import { useDictionaries } from '../../i18n/dictionary'
 
 import './modal.pcss'
@@ -69,6 +69,7 @@ export const createModal: CreateModal = () => {
 			modalElement()?.addEventListener('click', checkBackdropClick(modalElement()!, closeModal))
 		})
 		onCleanup(() => {
+			closeModal();
 			modalElement()?.removeEventListener('click', checkBackdropClick(modalElement()!, closeModal))
 		})
 

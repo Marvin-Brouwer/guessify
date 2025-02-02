@@ -1,5 +1,5 @@
 import * as i18n from "@solid-primitives/i18n"
-import { Accessor, createMemo, createSignal, JSX, onMount } from 'solid-js';
+import { Accessor, createEffect, createMemo, createSignal, JSX, onMount } from 'solid-js';
 import { default_dictionary } from './dictionaries/_default'
 import { nl_dictionary } from './dictionaries/nl'
 import { useParams, useHref } from '@solidjs/router'
@@ -11,6 +11,9 @@ const dictionaries = {
 	nl: nl_dictionary
 }
 export type Locale = keyof typeof dictionaries
+const locales = Object
+	.getOwnPropertyNames(dictionaries)
+	.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })) as Locale[]
 
 export const getStoredLocale = () => localStorage.getItem('stored-locale') as Locale | undefined
 export const storeLocale = (locale: Locale) => localStorage.setItem('stored-locale', locale)
@@ -26,6 +29,7 @@ const [locale, setLocale] = createSignal<Locale>(getStoredLocale() ?? 'en');
 
 export type Dictionaries = {
 	locale: Accessor<Locale>
+	locales: Locale[]
 	dictionary: Accessor<Dictionary>
 	template: i18n.TemplateResolver<string | NonNullable<JSX.Element>>
 }
@@ -50,10 +54,13 @@ export const useDictionaries: Accessor<Dictionaries> = () => {
 		console.error(console.trace(), err)
 	}
 
-	const dictionary = createMemo(() => dictionaries[locale()], [useHref, locale])
+	createEffect(parseLocale, useHref)
+
+	const dictionary = createMemo(() => dictionaries[locale()], [locale])
 
 	return {
 		locale,
+		locales,
 		dictionary,
 		template: i18n.resolveTemplate
 	}

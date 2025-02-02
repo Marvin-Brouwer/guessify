@@ -5,6 +5,7 @@ export const nl_dictionary: Dictionary = {
 		close: 'Sluiten',
 		offline: 'U bent offline, controleer a.u.b. uw verbinding',
 		refresh: 'Pagina verniewen',
+		share: 'Deel Guessify',
 		unhandledError: {
 			title: 'Er is iets mis gegaan.',
 			details: 'Foutgegevens',

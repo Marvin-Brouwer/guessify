@@ -3,6 +3,7 @@ export const default_dictionary = {
 		close: 'Close',
 		offline: 'You appear to be offline, please check your network connection',
 		refresh: 'Refresh page',
+		share: 'Share Guessify',
 		unhandledError: {
 			title: 'Something went wrong.',
 			details: 'Details',
