@@ -26,7 +26,7 @@ export const AppBar: Component = () => {
 			console.debug('wakelock on')
 		} catch (err) {
 			// the wake lock request fails - usually system related, such being low on battery
-			console.log(err)
+			console.error(err)
 		}
 	})
 

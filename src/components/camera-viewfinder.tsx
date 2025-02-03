@@ -57,12 +57,18 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 			readViewFinder(viewFinderRect, scaledUpCanvas, true)
 		])
 		debug?.debugCanvas(canvasConfiguration.showGrayscaleImage, viewFinderCanvasses[0])
+		debug?.debugCanvas(canvasConfiguration.showGrayscaleImage, viewFinderCanvasses[1])
 
-		const blurryViewFinderCanvasses = await Promise.all(viewFinderCanvasses
-			.map(viewFinderCanvas => blurViewFinder(viewFinderCanvas))
-		)
+		const blurryViewFinderCanvasses = await Promise.all([
+			blurViewFinder(viewFinderCanvasses[0]),
+			blurViewFinder(viewFinderCanvasses[1]),
+		])
+		debug?.debugCanvas(false, blurryViewFinderCanvasses[0])
+		debug?.debugCanvas(false, blurryViewFinderCanvasses[1])
 
 		const pixelGrid = await convertToPixelGrid(blurryViewFinderCanvasses[0], blurryViewFinderCanvasses[1])
+		if(import.meta.env.DEV && pixelGrid.width === 0) return requestAnimationFrame(scanFrame)
+
 		const uintPixels = pixelGrid.flatMap(row => row.flatMap(pixel => {
 			const isEdgePixel = pixel[6]
 			if (isEdgePixel === 1) return [0, 128, 0, 100]

@@ -6,11 +6,11 @@ export const canvasConfiguration = {
 	} as CanvasRenderingContext2DSettings,
 
 	showScaleCanvas: false,
-	showGrayscaleImage: false, // import.meta.env.DEV,
+	showGrayscaleImage: true, // import.meta.env.DEV,
 	showOrientationLines: true,
 	sampleRate: import.meta.env.PROD ? 200 : 1000,
 
-	blurAmount: 1,
+	blurAmount: 3,
 	debugEnabled() {
 		return this.showScaleCanvas
 			|| this.showGrayscaleImage

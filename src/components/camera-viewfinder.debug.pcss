@@ -32,6 +32,12 @@
       &#grayscale {
         opacity: 0.3;
         width: calc(100% + 4px);
+		margin-top: -20vw;
+      }
+      &#grayscale-inverted {
+        opacity: 0.3;
+        width: calc(100% + 4px);
+		margin-top: 20vw;
       }
       &#edge {
         opacity: 0.7;
@@ -39,7 +45,9 @@
       }
     }
     &:hover canvas#grayscale,
-    &:active canvas#grayscale {
+    &:active canvas#grayscale,
+    &:hover canvas#grayscale-inverted,
+    &:active canvas#grayscale-inverted {
       opacity: 1;
     }
   }

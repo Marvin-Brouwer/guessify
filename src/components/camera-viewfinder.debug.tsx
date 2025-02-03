@@ -4,9 +4,12 @@ import { canvas, Canvas, canvasConfiguration } from '../camera-utilities/canvas'
 
 
 type DebugCanvasProps = {
-	canvas: Canvas
+	canvas: Canvas,
+	show: boolean
 }
-const DebugCanvas: Component<DebugCanvasProps> = ({ canvas }) => {
+const DebugCanvas: Component<DebugCanvasProps> = ({ canvas, show }) => {
+
+	if (!show) return undefined;
 
 	const debugCanvas = Object.assign(document.createElement('canvas'), {
 		id: canvas.id,
@@ -28,8 +31,11 @@ const DebugCanvas: Component<DebugCanvasProps> = ({ canvas }) => {
 type DebugImageCanvasProps = {
 	id: string
 	image: ImageData
+	show: boolean
 }
-const DebugImageCanvas: Component<DebugImageCanvasProps> = ({ id, image }) => {
+const DebugImageCanvas: Component<DebugImageCanvasProps> = ({ id, image, show }) => {
+
+	if (!show) return undefined;
 
 	const debugCanvas = Object.assign(document.createElement('canvas'), {
 		id,
@@ -50,23 +56,23 @@ const DebugImageCanvas: Component<DebugImageCanvasProps> = ({ id, image }) => {
 	return debugCanvas
 }
 
-const [debugCanvases, setDebugCanvases] = createSignal<{ [key: string]: Canvas }>({})
+const [debugCanvases, setDebugCanvases] = createSignal<{ [key: string]: { canvas: Canvas, show: boolean } }>({})
 const debugCanvas = (show: boolean, canvas: Canvas) =>
-	show && setDebugCanvases?.(p => ({ ...p, [canvas.id]: canvas }))
+	setDebugCanvases?.(p => ({ ...p, [canvas.id]: { canvas, show } }))
 
 const DebugCanvasDisplay: Component = () => {
 
 	const canvasDisplays = createMemo(() => Object.entries(debugCanvases())
-		.map(([_id, canvas]) => <DebugCanvas canvas={canvas} />), () => Object.keys(debugCanvases()))
+		.map(([_id, {canvas, show}]) => <DebugCanvas canvas={canvas} show={show} />), () => Object.keys(debugCanvases()))
 
 	return <>
 		{canvasDisplays()}
 	</>
 }
 
-const [images, setImages] = createSignal<{ [key: string]: ImageData }>({})
-const debugImageData = (show: boolean, id: string, grid: ImageData) =>
-	show && setImages?.(p => ({ ...p, [id]: grid }))
+const [images, setImages] = createSignal<{ [key: string]: { image: ImageData, show: boolean } }>({})
+const debugImageData = (show: boolean, id: string, image: ImageData) =>
+	setImages?.(p => ({ ...p, [id]: { image, show }}))
 
 
 const DebugGridDisplay: Component = () => {
@@ -86,7 +92,7 @@ const DebugGridDisplay: Component = () => {
 	})
 
 	const canvasDisplays = createMemo(() => Object.entries(images())
-		.map(([id, image]) => <DebugImageCanvas id={id} image={image} />), () => Object.keys(images()))
+		.map(([id, { image, show }]) => <DebugImageCanvas id={id} image={image} show={show} />), () => Object.keys(images()))
 
 	return <>
 		{canvasDisplays()}
@@ -98,10 +104,10 @@ const DebugGridDisplay: Component = () => {
 const downloadCanvasData = async () => {
 	const date = Date.now()
 
-	for (const canvas of Object.values(debugCanvases())) {
+	for (const { canvas } of Object.values(debugCanvases())) {
 		await canvas.writeOutput?.(date)
 	}
-	for (const [id, image] of Object.entries(images())) {
+	for (const [id, { image }] of Object.entries(images())) {
 		const tempCanvas = canvas(id, image.width, image.height)
 		tempCanvas.putImageData(image)
 		await tempCanvas.writeOutput?.(date)

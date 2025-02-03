@@ -30,7 +30,6 @@ export const VideoPlayer: Component<VideoPlayerProps> = (props) => {
 		const player = videoPlayerElement
 		const stream = cameraStream()
 
-		console.log('stream', stream, getSourceActive(stream))
 		if (getSourceActive(stream)) {
 			if (sameDevice(stream, player.srcObject! as MediaStream)) return
 			player.removeAttribute('src')

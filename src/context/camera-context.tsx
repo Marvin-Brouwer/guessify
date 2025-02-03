@@ -288,8 +288,6 @@ async function getCameraInternal(id?: string): Promise<Camera> {
 
 export const CameraContext: ParentComponent = (props) => {
 
-	const [initialized, setInitialised] = createSignal(false)
-
 	const onPermissionChanged = (permissionStatus: PermissionStatus) => async (_event?: Event) => {
 		if (hasErrored()) return
 
@@ -332,10 +330,7 @@ export const CameraContext: ParentComponent = (props) => {
 				// do nothing
 			})
 
-		if (initialized()) return
 		if(hasPermission() && !hasErrored() && !activeStream()) await requestCamera();
-		console.log('ctx', cameraPermission())
-		setInitialised(true)
 	})
 
 	onCleanup(async () => {
