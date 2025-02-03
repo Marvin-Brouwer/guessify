@@ -29,16 +29,16 @@ export type PixelRow = {
 export type PixelColumn = {
 	pixel(y: number): GridPixel
 }
-export type PixelGrid = {
+
+export type PixelGrid = Iterable<GridPixel> & {
 	width: number, height: number,
+	size: number
+
 	pixel(x: number, y: number): GridPixel,
-	// all(): Generator<GridPixel>
 	row(y: number): PixelRow
 	column(x: number): PixelColumn
-	size: number
-	toIterable(mapFunc?: (pixel: GridPixel) => Pixel): PixelGenerator
-	toIterableRaw(mapFunc?: (pixel: GridPixel) => Pixel): Generator<GridPixel>
-	// image(): ImageData
+
+	toArray() : Array<GridPixel>
 }
 
 function pixelFromOffset(imageData: ImageData, invertedImageData: ImageData, x: number, y: number): GridPixel {
@@ -74,19 +74,17 @@ function pixelFromOffset(imageData: ImageData, invertedImageData: ImageData, x: 
 
 		edgePixel,
 
-		// image(): ImageData,
-
 		...debugInfo
 	}
 }
 
-export type PixelGenerator = Generator<GridPixel> & {
-	width: number
-	height: number
-	size: number
-	toArray(): Array<GridPixel>
-	toPixelArray(): Uint8ClampedArray
-	// map(mapFunc?: (pixel: GridPixel) => Pixel): PixelGenerator
+function *convertToIterable(grid: PixelGrid) {
+	for (let x = 0; x < grid.width; x++) {
+		const column = grid.column(x)
+		for (let y = 0; y < grid.height; y++) {
+			yield column.pixel(y)
+		}
+	}
 }
 
 /**
@@ -126,41 +124,11 @@ export function convertToPixelGrid(imageCanvas: Canvas, invertedCanvas: Canvas):
 				pixel: (y) => pixelFromOffset(imageData, invertedImageData, columnOffset, y)
 			}
 		},
-		toIterable(mapFunc) {
-			const generator = this.toIterableRaw(mapFunc);
-			return Object.assign(generator, {
-				width: this.width,
-				height: this.height,
-				size: this.size,
-				toArray: () => Array.from(generator),
-				toPixelArray: () => {
-					const uintPixels = new Uint8ClampedArray(this.size)
-					for (const pixel of generator) {
-						uintPixels[pixel.abs + 0] = pixel.r
-						uintPixels[pixel.abs + 1] = pixel.g
-						uintPixels[pixel.abs + 2] = pixel.b
-						uintPixels[pixel.abs + 3] = pixel.a
-					}
-					return uintPixels
-				}
-			})
+		[Symbol.iterator]() {
+			return convertToIterable(this)
 		},
-		*toIterableRaw(mapFunc) {
-			for (let x = 0; x < this.width; x++) {
-				const column = this.column(x)
-				for (let y = 0; y < this.height; y++) {
-					const pixel = column.pixel(y)
-
-					const newPixel = !mapFunc
-						? pixel
-						: {
-							...pixel,
-							...mapFunc(pixel)
-						}
-
-					yield newPixel
-				}
-			}
+		toArray() {
+			return Array.from(this)
 		},
 
 		...debugInfo

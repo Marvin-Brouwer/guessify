@@ -1,7 +1,7 @@
 import { Component, createEffect, createMemo, createSignal } from 'solid-js'
 import './camera-viewfinder.debug.pcss'
 import { canvas, Canvas, canvasConfiguration } from '../camera-utilities/canvas'
-import { GridPixel, Pixel, PixelGenerator } from '../camera-utilities/pixel-grid'
+import { GridPixel, Pixel, PixelGrid } from '../camera-utilities/pixel-grid'
 
 
 type DebugCanvasProps = {
@@ -74,9 +74,9 @@ const DebugCanvasDisplay: Component = () => {
 const [images, setImages] = createSignal<{ [key: string]: { image: ImageData, show: boolean } }>({})
 const debugImageData = (show: boolean, id: string, image: ImageData) =>
 	setImages?.(p => ({ ...p, [id]: { image, show }}))
-const debugGridPixels = (show: boolean, id: string, grid: PixelGenerator) =>
+const debugGridPixels = (show: boolean, id: string, grid: PixelGrid, transform?: TransformFunc) =>
 	debugImageData(show,id, new ImageData(
-		grid.toPixelArray(),
+		toPixelArray(grid, transform),
 		grid.width, grid.height
 	))
 
@@ -138,6 +138,19 @@ const markLine = ({ edgePixel }: GridPixel): Pixel => {
 	}
 }
 
+type TransformFunc = (pixel: GridPixel) => Pixel
+function toPixelArray(grid: PixelGrid, transformFunc: TransformFunc | undefined) {
+	const uintPixels = new Uint8ClampedArray(grid.size)
+	for (let pixel of grid) {
+		if(transformFunc) pixel = { ...pixel, ...transformFunc(pixel) };
+
+		uintPixels[pixel.abs + 0] = pixel.r
+		uintPixels[pixel.abs + 1] = pixel.g
+		uintPixels[pixel.abs + 2] = pixel.b
+		uintPixels[pixel.abs + 3] = pixel.a
+	}
+	return uintPixels
+}
 
 const debug = canvasConfiguration.debugEnabled()
 	? { DebugCanvasDisplay, debugCanvas, DebugGridDisplay, debugImageData, debugGridPixels, markLine }

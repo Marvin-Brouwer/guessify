@@ -70,8 +70,7 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		if (!pixelGrid) return requestAnimationFrame(scanFrame)
 
 		if (canvasConfiguration.showOrientationLines) {
-			const lineGrid = pixelGrid.toIterable(debug?.markLine)
-			debug?.debugGridPixels(canvasConfiguration.showOrientationLines, 'edge', lineGrid)
+			debug?.debugGridPixels(canvasConfiguration.showOrientationLines, 'edge', pixelGrid, debug?.markLine)
 		}
 
 		// TODO detect circle
