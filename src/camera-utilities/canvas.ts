@@ -21,7 +21,6 @@ export const canvasConfiguration = {
 export type Canvas = OffscreenCanvas & {
 	id: string,
 	writeOutput?: (date: number) => Promise<void>
-	// TODO remove?
 	getImageData: () => ImageData
 	putImageData: (image: ImageData) => void
 	getCanvasContext: () => CanvasContext

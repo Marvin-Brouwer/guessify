@@ -1,6 +1,6 @@
 {
 	"name": "Guessify",
-	"version": "1.0.0-alpha.44",
+	"version": "1.0.0-alpha.45",
 	"description": "A spotify code scanner for playing songs blind",
 	"type": "module",
 	"homepage": "https://marvin.brouwer.github.io/guessify/",

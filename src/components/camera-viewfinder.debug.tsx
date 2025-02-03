@@ -1,6 +1,7 @@
 import { Component, createEffect, createMemo, createSignal } from 'solid-js'
 import './camera-viewfinder.debug.pcss'
 import { canvas, Canvas, canvasConfiguration } from '../camera-utilities/canvas'
+import { GridPixel, Pixel, PixelGenerator } from '../camera-utilities/pixel-grid'
 
 
 type DebugCanvasProps = {
@@ -73,7 +74,11 @@ const DebugCanvasDisplay: Component = () => {
 const [images, setImages] = createSignal<{ [key: string]: { image: ImageData, show: boolean } }>({})
 const debugImageData = (show: boolean, id: string, image: ImageData) =>
 	setImages?.(p => ({ ...p, [id]: { image, show }}))
-
+const debugGridPixels = (show: boolean, id: string, grid: PixelGenerator) =>
+	debugImageData(show,id, new ImageData(
+		grid.toPixelArray(),
+		grid.width, grid.height
+	))
 
 const DebugGridDisplay: Component = () => {
 
@@ -114,9 +119,28 @@ const downloadCanvasData = async () => {
 	}
 }
 
+const markLine = ({ edgePixel }: GridPixel): Pixel => {
+
+	if (edgePixel === 1) return {
+		r: 0, g: 128, b: 100, a: 100
+	}
+
+	if (edgePixel === 2) return {
+		r: 128, g: 255, b: 0, a: 100
+	}
+
+	if (edgePixel === 3) return {
+		r: 0, g: 255, b: 0, a: 255
+	}
+
+	return {
+		r: 0, g: 0, b: 0, a: 0
+	}
+}
+
 
 const debug = canvasConfiguration.debugEnabled()
-	? { DebugCanvasDisplay, debugCanvas, DebugGridDisplay, debugImageData }
+	? { DebugCanvasDisplay, debugCanvas, DebugGridDisplay, debugImageData, debugGridPixels, markLine }
 	: undefined
 
 export default debug

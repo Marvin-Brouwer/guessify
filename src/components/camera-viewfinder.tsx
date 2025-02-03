@@ -21,13 +21,13 @@ export type CameraLensProps = {
 }
 export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 
-	const cameraContext = useCameraContext();
+	const cameraContext = useCameraContext()
 
 	let interval: NodeJS.Timeout | undefined
 
 	async function scanFrame() {
-		if (cameraContext.hasErrored()) return;
-		if (!cameraContext.hasPermission()){
+		if (cameraContext.hasErrored()) return
+		if (!cameraContext.hasPermission()) {
 			if (import.meta.env.DEV) {
 				window.location.reload()
 				return
@@ -45,7 +45,7 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		// Sometimes this seems to happen and cause issues
 		if (!videoElement || videoElement.getBoundingClientRect().width === 0) return requestAnimationFrame(scanFrame)
 
-		const videoFrame = stream.getVideoTracks()[0];
+		const videoFrame = stream.getVideoTracks()[0]
 		if (!videoFrame) return requestAnimationFrame(scanFrame)
 
 		const scaledUpCanvas = await scaleupVideo(videoElement, videoFrame)
@@ -66,22 +66,18 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		debug?.debugCanvas(false, blurryViewFinderCanvasses[0])
 		debug?.debugCanvas(false, blurryViewFinderCanvasses[1])
 
-		const pixelGrid = await convertToPixelGrid(blurryViewFinderCanvasses[0], blurryViewFinderCanvasses[1])
-		if(import.meta.env.DEV && pixelGrid.width === 0) return requestAnimationFrame(scanFrame)
+		const pixelGrid = convertToPixelGrid(blurryViewFinderCanvasses[0], blurryViewFinderCanvasses[1])
+		if (!pixelGrid) return requestAnimationFrame(scanFrame)
 
-		const uintPixels = pixelGrid.flatMap(row => row.flatMap(pixel => {
-			const isEdgePixel = pixel[6]
-			if (isEdgePixel === 1) return [0, 128, 0, 100]
-			if (isEdgePixel === 2) return [128, 255, 0, 100]
-			if (isEdgePixel === 3) return [0, 255, 0, 255]
-			return [0, 0, 0, 0]
-		}))
+		if (canvasConfiguration.showOrientationLines) {
+			const lineGrid = pixelGrid.toIterable(debug?.markLine)
+			debug?.debugGridPixels(canvasConfiguration.showOrientationLines, 'edge', lineGrid)
+		}
 
-		debug?.debugImageData(canvasConfiguration.showOrientationLines, 'edge', new ImageData(
-			new Uint8ClampedArray(uintPixels),
-			pixelGrid.width, pixelGrid.length)
-		)
-
+		// TODO detect circle
+		// TODO detect code end
+		// TODO matrix transform
+		// TODO scan code
 		// const [result, codeValue] = await scanImage(image, canvasContext);
 
 		// if(result === 'code-detected') {
