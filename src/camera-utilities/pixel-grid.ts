@@ -1,4 +1,5 @@
 import { Canvas } from './canvas'
+import { checkEdgeScore, EdgeScore } from './edge-score'
 
 const rowPos = Symbol.for('rowPos')
 const rowS = Symbol.for('rowSize')
@@ -19,12 +20,14 @@ export type GridPixel = Pixel & {
 	x: number,
 	y: number,
 
-	edgePixel: 0 | 1 | 2 | 3,
+	edgeScore: EdgeScore,
+
 	abs: number
 }
 
-export type PixelRow = {
+export type PixelRow = Iterable<GridPixel> & {
 	pixel(x: number): GridPixel
+	y: number
 }
 export type PixelColumn = {
 	pixel(y: number): GridPixel
@@ -37,6 +40,8 @@ export type PixelGrid = Iterable<GridPixel> & {
 	pixel(x: number, y: number): GridPixel,
 	row(y: number): PixelRow
 	column(x: number): PixelColumn
+
+	rows(): Iterable<PixelRow>
 
 	toArray() : Array<GridPixel>
 }
@@ -55,9 +60,7 @@ function pixelFromOffset(imageData: ImageData, invertedImageData: ImageData, x: 
 
 	// We already mark the pixels here so we don't need to edge-map in a separate pass
 	// This should shave significant processing time
-	const edgePixelSource = checkEdgeThreshold(r, g, b) ? 1 : 0
-	const edgePixelInverted = checkEdgeThreshold(ri, gi, bi) ? 2 : 0
-	const edgePixel = edgePixelSource + edgePixelInverted as 0 | 1 | 2 | 3
+	const edgeScore = checkEdgeScore(r, g, b, ri, gi, bi);
 
 	const debugInfo = import.meta.env.PROD
 		? {}
@@ -72,7 +75,7 @@ function pixelFromOffset(imageData: ImageData, invertedImageData: ImageData, x: 
 
 		x, y, abs: start,
 
-		edgePixel,
+		edgeScore,
 
 		...debugInfo
 	}
@@ -87,14 +90,30 @@ function *convertToIterable(grid: PixelGrid) {
 	}
 }
 
+function *iterateRows(grid: PixelGrid) {
+	for (let y = 0; y < grid.height; y++) {
+		yield grid.row(y)
+	}
+}
+
+function *iterateRow(y: number, grid: PixelGrid) {
+	for (let x = 0; x < grid.width; x++) {
+		yield grid.pixel(x, y)
+	}
+}
 /**
  * Convert the bitmap to a grid of polar coordinate pixels.
  * This makes it easier for trigonometry purposes and every index corresponds to a single pixel.
  */
-export function convertToPixelGrid(imageCanvas: Canvas, invertedCanvas: Canvas): PixelGrid | undefined {
+export function canvasToPixelGrid(imageCanvas: Canvas, invertedCanvas: Canvas): PixelGrid | undefined {
+	return imageDataToPixelGrid(imageCanvas.getImageData(), invertedCanvas.getImageData());
+}
 
-	const imageData = imageCanvas.getImageData()
-	const invertedImageData = invertedCanvas.getImageData()
+/**
+ * Convert the bitmap to a grid of polar coordinate pixels.
+ * This makes it easier for trigonometry purposes and every index corresponds to a single pixel.
+ */
+export function imageDataToPixelGrid(imageData: ImageData, invertedImageData: ImageData): PixelGrid | undefined {
 
 	if (Number.isNaN(imageData.width) || imageData.width === 0) return undefined
 	// Very costly operation, makes debugging easier
@@ -114,9 +133,17 @@ export function convertToPixelGrid(imageCanvas: Canvas, invertedCanvas: Canvas):
 		},
 		row(y) {
 			const rowOffset = Math.min(y, imageData.height)
+			const iterator = iterateRow(y, this)
 			return {
-				pixel: (x) => pixelFromOffset(imageData, invertedImageData, x, rowOffset)
+				y,
+				pixel: (x) => pixelFromOffset(imageData, invertedImageData, x, rowOffset),
+				[Symbol.iterator]() {
+					return iterator;
+				},
 			}
+		},
+		rows(){
+			return iterateRows(this)
 		},
 		column(x) {
 			const columnOffset = Math.min(x, imageData.width)
@@ -163,21 +190,4 @@ export function convertToPixelGrid(imageCanvas: Canvas, invertedCanvas: Canvas):
 
 	// 	return Object.assign(imageGrid, { width: imageData.width, height: imageData.height })
 	// })
-}
-
-
-/**
- * Mark pixels as edgePixel when between a certain values.
- */
-export function checkEdgeThreshold(red: number, green: number, blue: number) {
-
-	// TODO: These should be constants
-	const whiteThreshold = 160
-	const blackThreshold = 50
-
-	if (red > whiteThreshold || red < blackThreshold) return false
-	if (green > whiteThreshold || green < blackThreshold) return false
-	if (blue > whiteThreshold || blue < blackThreshold) return false
-
-	return true
 }

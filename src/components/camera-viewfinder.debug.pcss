@@ -28,20 +28,34 @@
         opacity: 0.6;
         position: fixed;
         margin: 0;
+		z-index: 1;
       }
       &#grayscale {
         opacity: 0.3;
         width: calc(100% + 4px);
 		margin-top: -20vw;
+		z-index: 2;
       }
       &#grayscale-inverted {
         opacity: 0.3;
         width: calc(100% + 4px);
 		margin-top: 20vw;
+		z-index: 2;
+      }
+      &#lines {
+        opacity: 0.5;
+        width: calc(100% + 4px);
+		z-index: 3;
       }
       &#edge {
+        opacity: 0.5;
+        width: calc(100% + 4px);
+		z-index: 4;
+      }
+      &#ellipsoid {
         opacity: 0.7;
         width: calc(100% + 4px);
+		z-index: 5;
       }
     }
     &:hover canvas#grayscale,

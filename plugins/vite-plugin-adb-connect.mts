@@ -29,6 +29,8 @@ export const connectAdb = (): Plugin => {
 	const pluginName = 'vite-plugin-connect-adb'
 	let handleClose = false;
 
+	const connected = new Set<string>()
+
 	let env_devices: string = process.env[keys.ADB_CONNECT_DEVICES]!
 	const devices = () => env_devices?.split(',')?.map(d => d.trim()) ?? []
 
@@ -47,7 +49,10 @@ export const connectAdb = (): Plugin => {
 
 	let logger = createLogger()
 
-	const adb = (...parameters: string[]) => new Promise<void>((resolve) => {
+	const adb = (...parameters: string[]) => new Promise<boolean>((resolve) => {
+
+		let success = false;
+
 		const adbProcess = spawn(getAndroidToolPath("adb", false), parameters, {
 			cwd: process.cwd(),
 			detached: false,
@@ -57,18 +62,26 @@ export const connectAdb = (): Plugin => {
 		})
 
 		adbProcess.stderr.on('data', (e) => {
+			success = false
 			logger.error(formatError(e.toString()))
 		})
 		adbProcess.stdout.on('data', (e) => {
 			const message = e.toString().replace('\n', '')
 			if (message.trim() === '') return
 
-			if (message.startsWith('already connected to'))
+			if (message.startsWith('already connected to')) {
+				success = true;
 				return logger.info(formatVerbose(message))
+			}
 			if (message.startsWith('cannot connect to '))
 				return logger.warn(formatWarn(message))
 			if (message.startsWith('failed to connect to'))
 				return logger.warn(formatWarn(message))
+
+			if (message.startsWith('connected to')) {
+				success = true;
+				return logger.info(formatLog(message))
+			}
 
 			logger.info(formatLog(message))
 		})
@@ -76,7 +89,7 @@ export const connectAdb = (): Plugin => {
 		// We don't care about the errors, just write them out, otherwise this is where you'd reject
 		adbProcess.once('close', () => {
 			adbProcess.removeAllListeners();
-			resolve();
+			resolve(success);
 		})
 	})
 
@@ -85,13 +98,14 @@ export const connectAdb = (): Plugin => {
 		logger.info(formatLog(`connecting ${devices().length} devices...`))
 		for (let device of devices()) {
 			logger.info(formatLog(`connecting ${device}`))
-			await adb('connect', device)
+			if(await adb('connect', device))
+				connected.add(device)
 		}
 	}
 
 	const disconnectAdbDevices = async () => {
-		logger.info(formatLog(`disconnecting ${devices().length} devices...`))
-		for (let device of devices()) {
+		logger.info(formatLog(`disconnecting ${connected.size} devices...`))
+		for (let device of connected) {
 			logger.info(formatLog(`disconnecting ${device}`))
 			await adb('disconnect', device)
 		}

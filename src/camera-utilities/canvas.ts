@@ -8,6 +8,7 @@ export const canvasConfiguration = {
 	showScaleCanvas: false,
 	showGrayscaleImage: true, // import.meta.env.DEV,
 	showOrientationLines: true,
+	showEllipsoid: true,
 	sampleRate: import.meta.env.PROD ? 200 : 1000,
 
 	blurAmount: 3,
@@ -15,6 +16,7 @@ export const canvasConfiguration = {
 		return this.showScaleCanvas
 			|| this.showGrayscaleImage
 			|| this.showOrientationLines
+			|| this.showEllipsoid
 	}
 }
 

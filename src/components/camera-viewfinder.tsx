@@ -6,9 +6,10 @@ import { useCameraContext } from '../context/camera-context'
 import { canvasConfiguration } from '../camera-utilities/canvas'
 import { scaleupVideo } from '../camera-utilities/scale-video'
 import { blurViewFinder, readViewFinder } from '../camera-utilities/read-viewfinder'
-import { convertToPixelGrid } from '../camera-utilities/pixel-grid'
+import { canvasToPixelGrid } from '../camera-utilities/pixel-grid'
 
 import debug from './camera-viewfinder.debug'
+import { findEllipsoid, markEdges } from '../camera-utilities/edge-mark'
 
 // This is just as an example:
 const [codeExample, _setCode] = createSignal('')
@@ -66,11 +67,23 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		debug?.debugCanvas(false, blurryViewFinderCanvasses[0])
 		debug?.debugCanvas(false, blurryViewFinderCanvasses[1])
 
-		const pixelGrid = convertToPixelGrid(blurryViewFinderCanvasses[0], blurryViewFinderCanvasses[1])
+		const pixelGrid = canvasToPixelGrid(blurryViewFinderCanvasses[0], blurryViewFinderCanvasses[1])
 		if (!pixelGrid) return requestAnimationFrame(scanFrame)
 
-		if (canvasConfiguration.showOrientationLines) {
-			debug?.debugGridPixels(canvasConfiguration.showOrientationLines, 'edge', pixelGrid, debug?.markLine)
+		debug?.debugGridPixels(canvasConfiguration.showOrientationLines, 'lines', pixelGrid, debug?.markLine)
+
+		const edges = markEdges(pixelGrid);
+		debug?.debugEdgeMap(canvasConfiguration.showOrientationLines, pixelGrid, edges)
+		if (!canvasConfiguration.debugEnabled() && !edges) {
+			interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
+			return;
+		}
+
+		const ellipsoid = findEllipsoid(edges);
+		debug?.debugEllipsoid(canvasConfiguration.showEllipsoid, pixelGrid, ellipsoid)
+		if (!canvasConfiguration.debugEnabled() && !ellipsoid) {
+			interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
+			return;
 		}
 
 		// TODO detect circle
