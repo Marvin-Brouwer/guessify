@@ -36,7 +36,7 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 
 			// const relative = (dx: number, dy: number) => grid.pixel(x + dx, y + dy)
 			// const left = (number: number) => grid.pixel(x - number, y)
-			const right = (number: number) => grid.pixel(x + number, y)
+			// const right = (number: number) => grid.pixel(x + number, y)
 			const up = (number: number) => grid.pixel(x, y - number)
 			const down = (number: number) => grid.pixel(x, y + number)
 
@@ -95,8 +95,7 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 				leftDown(4).edgeScore === edgeScores.notEdge &&
 				rightUp(4).edgeScore === edgeScores.notEdge
 			) {
-				if (right(7).edgeScore !== edgeScores.notEdge) continue;
-				if (down(7).edgeScore !== edgeScores.notEdge) continue;
+				if (down(8).edgeScore !== edgeScores.notEdge) continue;
 
 				seCount ++;
 				edges.push({
@@ -118,8 +117,7 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 				leftUp(4).edgeScore === edgeScores.notEdge
 			) {
 				// Erase left corners of black square
-				if (right(7).edgeScore !== edgeScores.notEdge) continue;
-				if (up(7).edgeScore !== edgeScores.notEdge) continue;
+				if (up(8).edgeScore !== edgeScores.notEdge) continue;
 
 				swCount ++;
 				edges.push({
@@ -133,9 +131,9 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 	}
 
 	/// todo tweak
-	if(seCount < 5) return undefined;
-	if(swCount < 5) return undefined;
-	if(edges.length >= 80) return undefined;
+	if(seCount < 2) return undefined;
+	if(swCount < 2) return undefined;
+	if(edges.length >= grid.width / 2) return undefined;
 
 	return edges
 }
@@ -146,7 +144,7 @@ export type GridEllipsoid = {
 	radiusA: number,
 	radiusB: number
 }
-export function findEllipsoid(edges: EdgeMap | undefined): GridEllipsoid | undefined {
+export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): GridEllipsoid | undefined {
 
 	if (!edges) return undefined
 
@@ -186,7 +184,15 @@ export function findEllipsoid(edges: EdgeMap | undefined): GridEllipsoid | undef
 	if (distanceA === 0 || distanceB === 0) return undefined
 
 	// exit if it's too flat
-	if (Math.abs(distanceA - distanceB) > 3) return undefined;
+	if (Math.abs(distanceA - distanceB) > (maxHeight / 10)) return undefined;
+	// This would mean you're too close
+	if (distanceB > (maxHeight / 4)) return undefined;
+	// Ellipse may not exit the screen at the bottom
+	if (ellipsoidY + distanceB > maxHeight - 3) return undefined;
+	// Ellipse may not exit the screen at the top
+	if (ellipsoidY - distanceB < 3) return undefined;
+	// Ellipse may not exit the screen on the left
+	if (ellipsoidX - distanceA < 3) return undefined;
 
 	// TODO see if we can determine rotation somehow?
 	return {

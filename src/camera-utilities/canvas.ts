@@ -6,7 +6,7 @@ export const canvasConfiguration = {
 	} as CanvasRenderingContext2DSettings,
 
 	showScaleCanvas: false,
-	showGrayscaleImage: true, // import.meta.env.DEV,
+	showGrayscaleImage: import.meta.env.DEV,
 	showOrientationLines: true,
 	showEllipsoid: true,
 	sampleRate: import.meta.env.PROD ? 200 : 1000,

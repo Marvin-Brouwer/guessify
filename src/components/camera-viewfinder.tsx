@@ -79,7 +79,7 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 			return;
 		}
 
-		const ellipsoid = findEllipsoid(edges);
+		const ellipsoid = findEllipsoid(edges, pixelGrid.height);
 		debug?.debugEllipsoid(canvasConfiguration.showEllipsoid, pixelGrid, ellipsoid)
 		if (!canvasConfiguration.debugEnabled() && !ellipsoid) {
 			interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)

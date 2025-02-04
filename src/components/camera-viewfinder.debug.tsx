@@ -165,7 +165,7 @@ function drawEdgeMap(canvas: Canvas, edges: EdgeMap | undefined) {
 
 	if (!edges) return canvas;
 
-	ctx.strokeStyle = 'rgb(0, 128, 0)'
+	ctx.strokeStyle = 'rgb(145, 255, 0)'
 	ctx.lineWidth = 3;
 
 	for (const edge of edges) {
