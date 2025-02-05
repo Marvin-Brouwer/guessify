@@ -1,5 +1,5 @@
 import { canvasConfiguration } from './canvas'
-import { edgeScores } from './edge-score';
+import { edgeScores } from './edge-score'
 import { PixelGrid } from './pixel-grid'
 
 export const edgeDirections = {
@@ -25,7 +25,7 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 	const leftOffset = Math.ceil(grid.width / 9)
 
 	const edges = new Array()
-	let swCount = 0;
+	let swCount = 0
 	let seCount = 0
 
 	for (let x = leftOffset + edgeOffset; x < (grid.width / 2); x += stepSize) {
@@ -34,11 +34,11 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 
 			if (pixel.edgeScore !== edgeScores.compoundEdge) continue
 
-			// const relative = (dx: number, dy: number) => grid.pixel(x + dx, y + dy)
+			const relative = (dx: number, dy: number) => grid.pixel(x + dx, y + dy)
 			// const left = (number: number) => grid.pixel(x - number, y)
 			// const right = (number: number) => grid.pixel(x + number, y)
 			const up = (number: number) => grid.pixel(x, y - number)
-			const down = (number: number) => grid.pixel(x, y + number)
+			// const down = (number: number) => grid.pixel(x, y + number)
 
 			const leftUp = (number: number) => grid.pixel(x - number, y - number)
 			const rightUp = (number: number) => grid.pixel(x + number, y - number)
@@ -95,9 +95,20 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 				leftDown(4).edgeScore === edgeScores.notEdge &&
 				rightUp(4).edgeScore === edgeScores.notEdge
 			) {
-				if (down(8).edgeScore !== edgeScores.notEdge) continue;
+				if (
+					relative(+0, -6).edgeScore === edgeScores.compoundEdge &&
+					relative(+0, -8).edgeScore === edgeScores.compoundEdge
+				) continue
+				if (
+					relative(-3, -6).edgeScore === edgeScores.compoundEdge &&
+					relative(-3, -8).edgeScore === edgeScores.compoundEdge
+				) continue
+				if (
+					relative(+3, -6).edgeScore === edgeScores.compoundEdge &&
+					relative(+3, -8).edgeScore === edgeScores.compoundEdge
+				) continue
 
-				seCount ++;
+				seCount++
 				edges.push({
 					x, y, edgeDirection: edgeDirections.SE
 				})
@@ -117,9 +128,20 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 				leftUp(4).edgeScore === edgeScores.notEdge
 			) {
 				// Erase left corners of black square
-				if (up(8).edgeScore !== edgeScores.notEdge) continue;
+				if (
+					relative(+0, +6).edgeScore === edgeScores.compoundEdge &&
+					relative(+0, +8).edgeScore === edgeScores.compoundEdge
+				) continue
+				if (
+					relative(-3, +6).edgeScore === edgeScores.compoundEdge &&
+					relative(-3, +8).edgeScore === edgeScores.compoundEdge
+				) continue
+				if (
+					relative(+3, +6).edgeScore === edgeScores.compoundEdge &&
+					relative(+3, +8).edgeScore === edgeScores.compoundEdge
+				) continue
 
-				swCount ++;
+				swCount++
 				edges.push({
 					x, y, edgeDirection: edgeDirections.SW
 				})
@@ -131,9 +153,9 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 	}
 
 	/// todo tweak
-	if(seCount < 2) return undefined;
-	if(swCount < 2) return undefined;
-	if(edges.length >= grid.width / 2) return undefined;
+	if (seCount < 2) return undefined
+	if (swCount < 2) return undefined
+	if (edges.length >= grid.width / 2) return undefined
 
 	return edges
 }
@@ -184,15 +206,15 @@ export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): Gr
 	if (distanceA === 0 || distanceB === 0) return undefined
 
 	// exit if it's too flat
-	if (Math.abs(distanceA - distanceB) > (maxHeight / 10)) return undefined;
+	if (Math.abs(distanceA - distanceB) > (maxHeight / 10)) return undefined
 	// This would mean you're too close
-	if (distanceB > (maxHeight / 4)) return undefined;
+	if (distanceB > (maxHeight / 4)) return undefined
 	// Ellipse may not exit the screen at the bottom
-	if (ellipsoidY + distanceB > maxHeight - 3) return undefined;
+	if (ellipsoidY + distanceB > maxHeight - 3) return undefined
 	// Ellipse may not exit the screen at the top
-	if (ellipsoidY - distanceB < 3) return undefined;
+	if (ellipsoidY - distanceB < 3) return undefined
 	// Ellipse may not exit the screen on the left
-	if (ellipsoidX - distanceA < 3) return undefined;
+	if (ellipsoidX - distanceA < 3) return undefined
 
 	// TODO see if we can determine rotation somehow?
 	return {

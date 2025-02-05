@@ -5,6 +5,9 @@ export const canvasConfiguration = {
 		desynchronized: true
 	} as CanvasRenderingContext2DSettings,
 
+
+	clearBeforeDraw: true,
+
 	showScaleCanvas: false,
 	showGrayscaleImage: import.meta.env.DEV,
 	showOrientationLines: true,

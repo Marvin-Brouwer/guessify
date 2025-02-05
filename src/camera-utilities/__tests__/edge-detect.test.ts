@@ -1,24 +1,40 @@
 import { expect, test } from 'vitest'
 
 import { imageDataToPixelGrid } from '../pixel-grid'
-import { readImageFile } from '../../__tests__/test-utils'
-import { markEdges } from '../edge-mark'
+import { readImageFile, writeCanvas } from '../../__tests__/test-utils'
+import { findEllipsoid, markEdges } from '../edge-map'
+import { createCanvas, createImageData } from 'canvas'
+import { drawEdgeMap } from '../edge-map.debug'
+import { toPixelArray } from '../pixel-grid.debug'
+import { drawEllipsoid } from '../edge-score.debug'
+import { canvasConfiguration } from '../canvas'
 
 test('edge-detect', async () => {
 
 	// Arrange
 	const inputData = await readImageFile(__dirname, './edge-detect/camera-feed-1738612798790-blur.png')
 	const inputDataInverted = await readImageFile(__dirname, './edge-detect/camera-feed-1738612798790-blur-inverted.png')
-	const inputGrid = imageDataToPixelGrid(inputData, inputDataInverted)!
+	const debugCanvas = createCanvas(inputData.width, inputData.height);
+	canvasConfiguration.clearBeforeDraw = false;
 
 	// Act
-	const edgeCoordinates = markEdges(inputGrid)
-	console.log(edgeCoordinates)
+	const inputGrid = imageDataToPixelGrid(inputData, inputDataInverted)!
+	debugCanvas.getContext('2d').putImageData(createImageData(toPixelArray(inputGrid), inputGrid.width, inputGrid.height),0,0)
+	await writeCanvas(debugCanvas, __dirname, './edge-detect/.output/camera-feed-01-lines.png')
+
+	const edgeMap = markEdges(inputGrid)
+	drawEdgeMap(debugCanvas, edgeMap)
+	await writeCanvas(debugCanvas, __dirname, './edge-detect/.output/camera-feed-02-edge.png')
+
+	const ellipsoid = findEllipsoid(edgeMap, inputGrid.height);
+	drawEllipsoid(debugCanvas, ellipsoid)
+	await writeCanvas(debugCanvas, __dirname, './edge-detect/.output/camera-feed-03-ellipse.png')
 
 	// Assert
 
 	expect(true).toBe(true)
 })
+
 
 // // Sobol convolution kernels
 // const sobel = {

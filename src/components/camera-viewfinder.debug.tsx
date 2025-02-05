@@ -1,9 +1,11 @@
 import { Component, createEffect, createMemo, createSignal } from 'solid-js'
 import './camera-viewfinder.debug.pcss'
 import { canvas, Canvas, canvasConfiguration } from '../camera-utilities/canvas'
-import { GridPixel, Pixel, PixelGrid } from '../camera-utilities/pixel-grid'
-import { edgeScores } from '../camera-utilities/edge-score'
-import { edgeDirections, EdgeMap, GridEllipsoid } from '../camera-utilities/edge-mark'
+import { PixelGrid } from '../camera-utilities/pixel-grid'
+import { EdgeMap, GridEllipsoid } from '../camera-utilities/edge-map'
+import { drawEdgeMap } from '../camera-utilities/edge-map.debug'
+import { toPixelArray } from '../camera-utilities/pixel-grid.debug'
+import { drawEllipsoid } from '../camera-utilities/edge-score.debug'
 
 
 type DebugCanvasProps = {
@@ -76,11 +78,12 @@ const DebugCanvasDisplay: Component = () => {
 const [images, setImages] = createSignal<{ [key: string]: { image: ImageData, show: boolean } }>({})
 const debugImageData = (show: boolean, id: string, image: ImageData) =>
 	setImages?.(p => ({ ...p, [id]: { image, show } }))
-const debugGridPixels = (show: boolean, id: string, grid: PixelGrid, transform?: TransformFunc) =>
+const debugGridPixels = (show: boolean, id: string, grid: PixelGrid) =>
 	debugImageData(show, id, new ImageData(
-		toPixelArray(grid, transform),
+		toPixelArray(grid),
 		grid.width, grid.height
 	))
+
 const debugEdgeMap = (show: boolean, grid: PixelGrid, edges: EdgeMap | undefined) =>
 	debugCanvas(show, drawEdgeMap(canvas('edge', grid.width, grid.height), edges))
 const debugEllipsoid = (show: boolean, grid: PixelGrid, ellipsoid: GridEllipsoid | undefined) =>
@@ -125,129 +128,10 @@ const downloadCanvasData = async () => {
 	}
 }
 
-const markLine = ({ edgeScore }: GridPixel): Pixel => {
-
-	if (edgeScore === edgeScores.primaryEdge) return {
-		r: 0, g: 128, b: 100, a: 50
-	}
-
-	if (edgeScore === edgeScores.secondaryEdge) return {
-		r: 128, g: 255, b: 0, a: 50
-	}
-
-	if (edgeScore === edgeScores.compoundEdge) return {
-		r: 0, g: 255, b: 0, a: 255
-	}
-
-	return {
-		r: 0, g: 0, b: 0, a: 0
-	}
-}
-
-type TransformFunc = (pixel: GridPixel) => Pixel
-function toPixelArray(grid: PixelGrid, transformFunc: TransformFunc | undefined) {
-	const uintPixels = new Uint8ClampedArray(grid.size)
-	for (let pixel of grid) {
-		if (transformFunc) pixel = { ...pixel, ...transformFunc(pixel) }
-
-		uintPixels[pixel.abs + 0] = pixel.r
-		uintPixels[pixel.abs + 1] = pixel.g
-		uintPixels[pixel.abs + 2] = pixel.b
-		uintPixels[pixel.abs + 3] = pixel.a
-	}
-	return uintPixels
-}
-
-function drawEdgeMap(canvas: Canvas, edges: EdgeMap | undefined) {
-
-	const ctx = canvas.getCanvasContext()
-	ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-	if (!edges) return canvas;
-
-	ctx.strokeStyle = 'rgb(145, 255, 0)'
-	ctx.lineWidth = 3;
-
-	for (const edge of edges) {
-
-		if (!edge) continue;
-
-		if (edge.edgeDirection === edgeDirections.NS) {
-
-			// Draw horizontal
-			ctx.strokeStyle = 'red';
-			ctx.beginPath()
-			ctx.moveTo(edge.x - 2, edge.y)
-			ctx.lineTo(edge.x + 2, edge.y)
-			ctx.stroke()
-			continue
-		}
-
-		if (edge.edgeDirection === edgeDirections.EW) {
-
-			// Draw vertical
-			ctx.strokeStyle = 'purple';
-			ctx.beginPath()
-			ctx.moveTo(edge.x, edge.y - 2)
-			ctx.lineTo(edge.x, edge.y + 2)
-			ctx.stroke()
-			continue
-		}
-
-		if (edge.edgeDirection === edgeDirections.SE) {
-
-			// Draw SW
-			ctx.beginPath()
-			ctx.moveTo(edge.x + 2, edge.y - 2)
-			ctx.lineTo(edge.x - 2, edge.y + 2)
-			ctx.stroke()
-			continue
-		}
-
-		if (edge.edgeDirection === edgeDirections.SW) {
-
-			// Draw SE
-			ctx.beginPath()
-			ctx.moveTo(edge.x - 2, edge.y - 2)
-			ctx.lineTo(edge.x + 2, edge.y + 2)
-			ctx.stroke()
-			continue
-		}
-	}
-
-	return canvas
-}
-function drawEllipsoid(canvas: Canvas, ellipsoid: GridEllipsoid | undefined) {
-
-	const ctx = canvas.getCanvasContext()
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-	if (!ellipsoid) return canvas;
-
-	ctx.lineWidth = 4;
-	ctx.fillStyle = 'yellow'
-	ctx.strokeStyle = 'yellow'
-
-	// Mark center
-	ctx.fillRect(ellipsoid.x - 2, ellipsoid.y - 2, 4, 4)
-
-	// Mark border
-	ctx.beginPath();
-	ctx.ellipse(
-		(ellipsoid.x),
-		(ellipsoid.y),
-		(ellipsoid.radiusA),
-		(ellipsoid.radiusB),
-		0, 0, 180
-	);
-	ctx.stroke();
-
-	return canvas
-}
 const debug = canvasConfiguration.debugEnabled()
 	? {
 		DebugCanvasDisplay, debugCanvas, DebugGridDisplay, debugImageData,
-		debugGridPixels, markLine, debugEdgeMap, debugEllipsoid
+		debugGridPixels, debugEdgeMap, debugEllipsoid
 	}
 	: undefined
 

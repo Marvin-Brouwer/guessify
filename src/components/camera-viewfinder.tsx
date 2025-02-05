@@ -9,7 +9,7 @@ import { blurViewFinder, readViewFinder } from '../camera-utilities/read-viewfin
 import { canvasToPixelGrid } from '../camera-utilities/pixel-grid'
 
 import debug from './camera-viewfinder.debug'
-import { findEllipsoid, markEdges } from '../camera-utilities/edge-mark'
+import { findEllipsoid, markEdges } from '../camera-utilities/edge-map'
 
 // This is just as an example:
 const [codeExample, _setCode] = createSignal('')
@@ -70,7 +70,7 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		const pixelGrid = canvasToPixelGrid(blurryViewFinderCanvasses[0], blurryViewFinderCanvasses[1])
 		if (!pixelGrid) return requestAnimationFrame(scanFrame)
 
-		debug?.debugGridPixels(canvasConfiguration.showOrientationLines, 'lines', pixelGrid, debug?.markLine)
+		debug?.debugGridPixels(canvasConfiguration.showOrientationLines, 'lines', pixelGrid)
 
 		const edges = markEdges(pixelGrid);
 		debug?.debugEdgeMap(canvasConfiguration.showOrientationLines, pixelGrid, edges)
