@@ -42,13 +42,9 @@ export function drawEllipsoid<T extends DebugCanvas>(canvas: T, ellipsoid: GridE
 		(ellipsoid.averageY),
 		(ellipsoid.radiusA),
 		(ellipsoid.radiusB),
-		0, 0, 180
+		-45, 0, 180
 	);
-	ctx.stroke();
-	ctx.fillStyle = 'red'
-	ctx.fillRect(ellipsoid.ellipsoidXse - 2, ellipsoid.ellipsoidYse - 2, 4, 4)
-	ctx.fillStyle = 'purple'
-	ctx.fillRect(ellipsoid.ellipsoidXsw - 2, ellipsoid.ellipsoidYsw - 2, 4, 4)
+	ctx.stroke()
 
 	return canvas
 }

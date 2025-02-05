@@ -178,10 +178,15 @@ export type GridEllipsoid = {
 	xMinSW: number,
 	xMaxSW: number,
 	yMinSW: number,
-	yMaxSW: number,
-
-	[key: string]: number
+	yMaxSW: number
 }
+
+/**
+ * Finds an ellipsoid on the {@link EdgeMap}, using the diagonal edges only.
+ * Returns undefined if not exactly one circle is found.
+ * The circle is an approximation since we don't need to be absolutely accurate.
+ * We mostly care about the center and an approximation of the width.
+ */
 export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): GridEllipsoid | undefined {
 
 	if (!edges) return undefined
@@ -241,10 +246,6 @@ export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): Gr
 
 	const ellipsoidX = 1 / edges.length * sum_xi
 	const ellipsoidY = 1 / edges.length * sum_yi
-	const ellipsoidXse = 1 / edges_se * sum_xi_se
-	const ellipsoidYse = 1 / edges_se * sum_yi_se
-	const ellipsoidXsw = 1 / edges_sw * sum_xi_sw
-	const ellipsoidYsw = 1 / edges_sw * sum_yi_sw
 
 	if (Number.isNaN(ellipsoidX) || Number.isNaN(ellipsoidY)) return undefined
 	if (ellipsoidX === Infinity || ellipsoidY === Infinity) return undefined
@@ -262,8 +263,8 @@ export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): Gr
 	if (distanceA === Infinity || distanceB === Infinity) return undefined
 	if (distanceA === 0 || distanceB === 0) return undefined
 
-	// exit if it's too flat
-	if (Math.abs(distanceA - distanceB) > (maxHeight / 10)) return undefined
+	// // exit if it's too flat
+	// if (Math.abs(distanceA - distanceB) > (maxHeight / 10)) return undefined
 	// This would mean you're too close
 	if (distanceB > (maxHeight / 4)) return undefined
 	// Ellipse may not exit the screen at the bottom
@@ -296,11 +297,6 @@ export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): Gr
 		xMinSE, xMaxSE,
 		yMinSE, yMaxSE,
 		xMinSW, xMaxSW,
-		yMinSW, yMaxSW,
-
-		ellipsoidXse,
-		ellipsoidYse,
-		ellipsoidXsw,
-		ellipsoidYsw
+		yMinSW, yMaxSW
 	}
 }
