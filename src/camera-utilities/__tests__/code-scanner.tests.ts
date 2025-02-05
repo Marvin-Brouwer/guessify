@@ -26,6 +26,7 @@ test.concurrent.for(timestamps)('scan-steps', async ([timestamp, expectedResult]
 	canvasConfiguration.clearBeforeDraw = false;
 
 	// Act
+	// TODO add steps before this, we need the pixel data.
 	const inputGrid = imageDataToPixelGrid(inputData, inputDataInverted)!
 	debugCanvas.getContext('2d').putImageData(createImageData(toPixelArray(inputGrid), inputGrid.width, inputGrid.height),0,0)
 	await writeCanvas(debugCanvas, __dirname, `./edge-detect/.output/camera-feed-${timestamp}-01-lines.png`)

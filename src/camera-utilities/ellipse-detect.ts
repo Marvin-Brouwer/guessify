@@ -37,7 +37,7 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 			const relative = (dx: number, dy: number) => grid.pixel(x + dx, y + dy)
 			// const left = (number: number) => grid.pixel(x - number, y)
 			// const right = (number: number) => grid.pixel(x + number, y)
-			const up = (number: number) => grid.pixel(x, y - number)
+			// const up = (number: number) => grid.pixel(x, y - number)
 			// const down = (number: number) => grid.pixel(x, y + number)
 
 			const leftUp = (number: number) => grid.pixel(x - number, y - number)
