@@ -2,11 +2,11 @@ import { expect, test } from 'vitest'
 
 import { imageDataToPixelGrid } from '../pixel-grid'
 import { readImageFile, writeCanvas } from '../../__tests__/test-utils'
-import { findEllipsoid, markEdges } from '../edge-map'
+import { findEllipsoid, markEdges } from '../ellipse-detect'
 import { createCanvas, createImageData } from 'canvas'
 import { drawEdgeMap } from '../edge-map.debug'
 import { toPixelArray } from '../pixel-grid.debug'
-import { drawEllipsoid } from '../edge-score.debug'
+import { drawEllipsoid } from '../ellipse-detect.debug'
 import { canvasConfiguration } from '../canvas'
 
 test('edge-detect', async () => {

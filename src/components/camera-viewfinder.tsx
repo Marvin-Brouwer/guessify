@@ -9,7 +9,7 @@ import { blurViewFinder, readViewFinder } from '../camera-utilities/read-viewfin
 import { canvasToPixelGrid } from '../camera-utilities/pixel-grid'
 
 import debug from './camera-viewfinder.debug'
-import { findEllipsoid, markEdges } from '../camera-utilities/edge-map'
+import { findEllipsoid, markEdges } from '../camera-utilities/ellipse-detect'
 
 // This is just as an example:
 const [codeExample, _setCode] = createSignal('')

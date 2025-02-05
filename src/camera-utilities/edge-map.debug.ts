@@ -1,5 +1,5 @@
 import { canvasConfiguration } from './canvas'
-import { edgeDirections, EdgeMap } from './edge-map'
+import { edgeDirections, EdgeMap } from './ellipse-detect'
 import { DebugCanvas, getDebugCanvasContext } from './canvas.debug'
 
 export function drawEdgeMap<T extends DebugCanvas>(canvas: T, edges: EdgeMap | undefined): T {

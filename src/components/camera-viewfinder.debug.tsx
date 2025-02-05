@@ -2,10 +2,10 @@ import { Component, createEffect, createMemo, createSignal } from 'solid-js'
 import './camera-viewfinder.debug.pcss'
 import { canvas, Canvas, canvasConfiguration } from '../camera-utilities/canvas'
 import { PixelGrid } from '../camera-utilities/pixel-grid'
-import { EdgeMap, GridEllipsoid } from '../camera-utilities/edge-map'
+import { EdgeMap, GridEllipsoid } from '../camera-utilities/ellipse-detect'
 import { drawEdgeMap } from '../camera-utilities/edge-map.debug'
 import { toPixelArray } from '../camera-utilities/pixel-grid.debug'
-import { drawEllipsoid } from '../camera-utilities/edge-score.debug'
+import { drawEllipsoid } from '../camera-utilities/ellipse-detect.debug'
 
 
 type DebugCanvasProps = {

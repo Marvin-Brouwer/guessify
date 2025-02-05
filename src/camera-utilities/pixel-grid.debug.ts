@@ -1,4 +1,4 @@
-import { edgeScores } from './edge-score'
+import { edgeScores } from './edge-map'
 import { GridPixel, Pixel, PixelGrid } from './pixel-grid'
 
 export function toPixelArray(grid: PixelGrid) {

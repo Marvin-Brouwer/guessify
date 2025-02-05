@@ -1,5 +1,5 @@
 import { Canvas } from './canvas'
-import { checkEdgeScore, EdgeScore } from './edge-score'
+import { checkEdgeScore, EdgeScore } from './edge-map'
 
 const rowPos = Symbol.for('rowPos')
 const rowS = Symbol.for('rowSize')
