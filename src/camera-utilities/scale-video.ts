@@ -21,16 +21,20 @@ function calculateVideoScale(videoElement: HTMLVideoElement, videoFrame: MediaSt
 	if (!frameWidth) frameWidth = frameHeight! * aspectRatio!
 	if (!frameHeight) frameHeight = frameWidth! * aspectRatio!
 
-	const resizeRatio = Math.max(videoBox.width / frameWidth, videoBox.height / frameHeight)
-	const resizedWidth = frameWidth * resizeRatio
-	const resizedHeight = frameHeight * resizeRatio
-	var offsetX = (videoBox.width - frameWidth * resizeRatio) / 2
-	var offsetY = (videoBox.height - frameHeight * resizeRatio) / 2
+	// The video feed may decide to rotate the stream
+	const trueWidth = Math.min(frameHeight, frameWidth)
+	const trueHeight = Math.max(frameHeight, frameWidth)
+
+	const resizeRatio = Math.max(videoBox.width / trueWidth, videoBox.height / trueHeight)
+	const resizedWidth = trueWidth * resizeRatio
+	const resizedHeight = trueHeight * resizeRatio
+	var offsetX = (videoBox.width - trueWidth * resizeRatio) / 2
+	var offsetY = (videoBox.height - trueHeight * resizeRatio) / 2
 
 	return {
 		boxWidth: resizedWidth,
 		boxHeight: resizedHeight,
-		frameWidth, frameHeight,
+		frameWidth: trueWidth, frameHeight: trueHeight,
 		offsetX, offsetY
 	}
 }
