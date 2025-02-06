@@ -6,7 +6,7 @@ import { EdgeMap, GridEllipsoid } from '../camera-utilities/ellipse-detect'
 import { drawEdgeMap } from '../camera-utilities/edge-map.debug'
 import { toPixelArray } from '../camera-utilities/pixel-grid.debug'
 import { drawEllipsoid } from '../camera-utilities/ellipse-detect.debug'
-
+import * as fflate from 'fflate';
 
 type DebugCanvasProps = {
 	canvas: Canvas,
@@ -84,6 +84,8 @@ const debugGridPixels = (show: boolean, id: string, grid: PixelGrid) =>
 		grid.width, grid.height
 	))
 
+const [getViewfinderRectForDownload, setViewfinderRectForDownload] = createSignal<DOMRect>()
+
 const debugEdgeMap = (show: boolean, grid: PixelGrid, edges: EdgeMap | undefined) =>
 	debugCanvas(show, drawEdgeMap(canvas('edge', grid.width, grid.height), edges))
 const debugEllipsoid = (show: boolean, grid: PixelGrid, ellipsoid: GridEllipsoid | undefined) =>
@@ -118,20 +120,54 @@ const DebugGridDisplay: Component = () => {
 const downloadCanvasData = async () => {
 	const date = Date.now()
 
+	const zippables: fflate.AsyncZippable = { }
+
+	const viewfinderRect = getViewfinderRectForDownload()
+	const viewFinderData = new Blob([JSON.stringify(viewfinderRect ?? '')], {
+		type: 'application/json'
+	})
+	const viewFinderDataArray = new Uint8Array(await viewFinderData.arrayBuffer());
+
+	zippables[`camera-feed-${date}-viewfinder.json`] = [viewFinderDataArray, { level: 9 }]
+
 	for (const { canvas } of Object.values(debugCanvases())) {
-		await canvas.writeOutput?.(date)
+		const canvasBlob = await canvas.convertToBlob({
+			type: 'image/png'
+		})
+		const canvasBlobArray = new Uint8Array(await canvasBlob.arrayBuffer());
+		zippables[`camera-feed-${date}-${canvas.id}.png`] = [canvasBlobArray, { level: 0 }]
 	}
 	for (const [id, { image }] of Object.entries(images())) {
 		const tempCanvas = canvas(id, image.width, image.height)
 		tempCanvas.putImageData(image)
-		await tempCanvas.writeOutput?.(date)
+		const canvasBlob = await tempCanvas.convertToBlob({
+			type: 'image/png'
+		})
+		const canvasBlobArray = new Uint8Array(await canvasBlob.arrayBuffer());
+		zippables[`camera-feed-${date}-${id}.png`] = [canvasBlobArray, { level: 0 }]
 	}
+
+	const zip = await new Promise<Uint8Array>((res, rej) =>
+		fflate.zip(zippables, (err, data) => err ? rej(err) : res(data))
+	);
+	const link = document.createElement('a');
+	link.download = `camera-feed-${date}.zip`
+	const fileReader = new FileReader()
+	link.href = await new Promise((r) => {
+		fileReader.onload = (e) => {
+			r(e.target!.result as string)
+		}
+		fileReader.readAsDataURL(new Blob([zip], {
+			type:'application/octet-stream'
+		}))
+	})
+	link.click()
 }
 
 const debug = canvasConfiguration.debugEnabled()
 	? {
 		DebugCanvasDisplay, debugCanvas, DebugGridDisplay, debugImageData,
-		debugGridPixels, debugEdgeMap, debugEllipsoid
+		debugGridPixels, debugEdgeMap, debugEllipsoid, setViewfinderRectForDownload
 	}
 	: undefined
 

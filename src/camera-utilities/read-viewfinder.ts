@@ -16,7 +16,7 @@ export function readViewFinder(viewFinderRect: DOMRectReadOnly, videoInput: Canv
 		// Fiddle with the image to make black more clear and glare less obvious
 		// Todo dynamic lighting?
 		grayScaleCanvas
-			.getCanvasContext().filter = `grayscale() ${invert ? 'invert()' : ''} contrast(4.5)`
+			.getCanvasContext().filter = `grayscale() ${invert ? 'invert(100%)' : ''} contrast(4.5)`
 		grayScaleCanvas
 			.getCanvasContext()
 			.drawImage(

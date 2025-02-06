@@ -1,10 +1,8 @@
-
 export const canvasConfiguration = {
 	canvasContextOptions: {
 		willReadFrequently: true,
 		desynchronized: true
 	} as CanvasRenderingContext2DSettings,
-
 
 	clearBeforeDraw: true,
 
@@ -14,7 +12,7 @@ export const canvasConfiguration = {
 	showEllipsoid: true,
 	sampleRate: import.meta.env.PROD ? 200 : 1000,
 
-	blurAmount: 3,
+	blurAmount: 1,
 	debugEnabled() {
 		return this.showScaleCanvas
 			|| this.showGrayscaleImage

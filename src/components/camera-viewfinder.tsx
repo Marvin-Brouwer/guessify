@@ -53,6 +53,9 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		if (!scaledUpCanvas) return requestAnimationFrame(scanFrame)
 		debug?.debugCanvas(canvasConfiguration.showScaleCanvas, scaledUpCanvas)
 
+		if (canvasConfiguration.debugEnabled())
+			debug?.setViewfinderRectForDownload(viewFinderRect)
+
 		const viewFinderCanvasses = await Promise.all([
 			readViewFinder(viewFinderRect, scaledUpCanvas, false),
 			readViewFinder(viewFinderRect, scaledUpCanvas, true)

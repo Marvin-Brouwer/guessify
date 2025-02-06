@@ -38,46 +38,61 @@ export function drawEdgeMap<T extends DebugCanvas>(canvas: T, edges: EdgeMap | u
 			continue
 		}
 
-		if (edge.edgeDirection === edgeDirections.SE) {
+		if (edge.edgeDirection === edgeDirections.NE) {
 
-			// Draw SW
+			ctx.lineWidth = 1;
 			ctx.beginPath()
-			ctx.moveTo(edge.x + 2, edge.y - 2)
-			ctx.lineTo(edge.x - 2, edge.y + 2)
+			ctx.moveTo(edge.x - 2, edge.y + 2)
+			ctx.lineTo(edge.x + 2, edge.y - 2)
 			ctx.stroke()
-			// Draw exclusion zones
-			ctx.lineWidth = .5;
-			ctx.strokeStyle = 'rgba(30, 0, 255, 0.8)';
+			ctx.lineWidth = 2;
 			ctx.beginPath()
-			ctx.moveTo(edge.x -3, edge.y - 6)
-			ctx.lineTo(edge.x +3, edge.y - 6)
+			ctx.moveTo(edge.x - 1, edge.y - 3)
+			ctx.lineTo(edge.x + 3, edge.y + 1)
 			ctx.stroke()
-			ctx.strokeStyle = 'rgba(0, 255, 247, 0.8)';
-			ctx.beginPath()
-			ctx.moveTo(edge.x -3, edge.y - 8)
-			ctx.lineTo(edge.x +3, edge.y - 8)
-			ctx.stroke()
+
 			continue
 		}
 
 		if (edge.edgeDirection === edgeDirections.SW) {
 
-			// Draw SE
+			ctx.lineWidth = 1;
 			ctx.beginPath()
-			ctx.moveTo(edge.x - 2, edge.y - 2)
-			ctx.lineTo(edge.x + 2, edge.y + 2)
+			ctx.moveTo(edge.x - 2, edge.y + 2)
+			ctx.lineTo(edge.x + 2, edge.y - 2)
 			ctx.stroke()
-			// Draw exclusion zones
-			ctx.lineWidth = .5;
-			ctx.strokeStyle = 'rgba(30, 0, 255, 0.8)';
+			ctx.lineWidth = 2;
 			ctx.beginPath()
-			ctx.moveTo(edge.x -3, edge.y + 6)
-			ctx.lineTo(edge.x +3, edge.y + 6)
+			ctx.moveTo(edge.x + 1, edge.y + 3)
+			ctx.lineTo(edge.x - 3, edge.y - 1)
 			ctx.stroke()
-			ctx.strokeStyle = 'rgba(0, 255, 247, 0.8)';
+			continue
+		}
+		if (edge.edgeDirection === edgeDirections.SE) {
+
+			ctx.lineWidth = 1;
 			ctx.beginPath()
-			ctx.moveTo(edge.x -3, edge.y + 8)
-			ctx.lineTo(edge.x +3, edge.y + 8)
+			ctx.moveTo(edge.x + 2, edge.y + 2)
+			ctx.lineTo(edge.x - 2, edge.y - 2)
+			ctx.stroke()
+			ctx.lineWidth = 2;
+			ctx.beginPath()
+			ctx.moveTo(edge.x - 1, edge.y + 3)
+			ctx.lineTo(edge.x + 3, edge.y - 1)
+			ctx.stroke()
+			continue
+		}
+		if (edge.edgeDirection === edgeDirections.NW) {
+
+			ctx.lineWidth = 1;
+			ctx.beginPath()
+			ctx.moveTo(edge.x + 2, edge.y + 2)
+			ctx.lineTo(edge.x - 2, edge.y - 2)
+			ctx.stroke()
+			ctx.lineWidth = 2;
+			ctx.beginPath()
+			ctx.moveTo(edge.x + 1, edge.y - 3)
+			ctx.lineTo(edge.x - 3, edge.y + 1)
 			ctx.stroke()
 			continue
 		}

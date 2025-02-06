@@ -3,12 +3,16 @@ import { readFile, writeFile } from 'node:fs/promises'
 import sizeOf from 'image-size'
 import { join } from 'node:path'
 import getPixels from 'get-pixels'
-import { Canvas, createCanvas, createImageData } from 'canvas'
+import { ImageData, Canvas } from 'skia-canvas'
 
 type Callback = Parameters<typeof getPixels>[2];
 type ArrayThing = Parameters<Callback>[1]
 
-global.ImageData = await require('@canvas/image-data')
+export const fixTestEnvironment = () => {
+	global.ImageData = ImageData as unknown as typeof global.ImageData
+	global.OffscreenCanvas = Canvas as unknown as typeof OffscreenCanvas
+	global.requestAnimationFrame = (cb) => { cb(-1); return -1 }
+}
 
 export const readImageFile = async (dirname: string, file: string) => {
 	const buffer = await readFile(join(dirname, file))
@@ -20,13 +24,17 @@ export const readImageFile = async (dirname: string, file: string) => {
 
 export const writeImageFile = async (dirname: string, file: string, imageData: ImageData) => {
 
-	const canvas = createCanvas(imageData.width, imageData.height)
-	canvas.getContext('2d').putImageData(createImageData(imageData.data, imageData.width, imageData.height), 0, 0)
+	const canvas = new Canvas(imageData.width, imageData.height)
+	canvas.getContext('2d')!.putImageData(imageData, 0, 0)
 	await writeCanvas(canvas, dirname, file)
 }
 
-export const writeCanvas = async (canvas: Canvas, dirname: string, file: string) => {
+export const writeCanvas = async (canvas: Canvas | OffscreenCanvas, dirname: string, file: string) => {
 
-	const imageData = canvas.createPNGStream()
+	if (canvas.constructor.name !== 'Canvas') {
+		throw new Error('Tests incorrectly configured '+ canvas.constructor.name)
+	}
+
+	const imageData = await (canvas as Canvas).toBuffer('png')
 	await writeFile(join(dirname, file), imageData)
 }

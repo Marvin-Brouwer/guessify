@@ -5,14 +5,18 @@ import { PixelGrid } from './pixel-grid'
 export const edgeDirections = {
 	NS: 1,
 	EW: 2,
-	SE: 3,
-	SW: 4
+	NE: 3,
+	SE: 4,
+	NW: 5,
+	SW: 6
 } as const
 
 export type EdgeDirection =
 	| typeof edgeDirections['NS']
 	| typeof edgeDirections['EW']
+	| typeof edgeDirections['NE']
 	| typeof edgeDirections['SE']
+	| typeof edgeDirections['NW']
 	| typeof edgeDirections['SW']
 
 type EdgeRecord = { x: number, y: number, edgeDirection: EdgeDirection }
@@ -20,141 +24,112 @@ export type EdgeMap = Array<EdgeRecord>
 
 export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 
-	const stepSize = 3
 	const edgeOffset = canvasConfiguration.blurAmount * 4
 	const leftOffset = Math.ceil(grid.width / 9)
 
 	const edges = new Array()
+	let nwCount = 0
 	let swCount = 0
+	let neCount = 0
 	let seCount = 0
 
-	for (let x = leftOffset + edgeOffset; x < (grid.width / 2); x += stepSize) {
-		for (let y = edgeOffset; y < (grid.height - edgeOffset); y += stepSize) {
+	for (let x = leftOffset + edgeOffset; x < (grid.width / 2); x ++) {
+		for (let y = edgeOffset; y < (grid.height - edgeOffset); y ++) {
 			const pixel = grid.pixel(x, y)
 
 			if (pixel.edgeScore !== edgeScores.compoundEdge) continue
 
 			const relative = (dx: number, dy: number) => grid.pixel(x + dx, y + dy)
-			// const left = (number: number) => grid.pixel(x - number, y)
-			// const right = (number: number) => grid.pixel(x + number, y)
-			// const up = (number: number) => grid.pixel(x, y - number)
-			// const down = (number: number) => grid.pixel(x, y + number)
+			const left = (number: number) => grid.pixel(x - number, y)
+			const right = (number: number) => grid.pixel(x + number, y)
+			const up = (number: number) => grid.pixel(x, y - number)
+			const down = (number: number) => grid.pixel(x, y + number)
 
 			const leftUp = (number: number) => grid.pixel(x - number, y - number)
 			const rightUp = (number: number) => grid.pixel(x + number, y - number)
 			const leftDown = (number: number) => grid.pixel(x - number, y + number)
 			const rightDown = (number: number) => grid.pixel(x + number, y + number)
 
-			// Filter out straight lines
-			// if (
-			// 	right(1).edgeScore === edgeScores.compoundEdge &&
-			// 	right(2).edgeScore === edgeScores.compoundEdge &&
-			// 	right(3).edgeScore !== edgeScores.notEdge &&
-			// 	relative(+ 3, - 1).edgeScore !== edgeScores.notEdge &&
-			// 	relative(+ 3, + 1).edgeScore !== edgeScores.notEdge &&
-			// 	relative(+ 3, - 2).edgeScore !== edgeScores.notEdge &&
-			// 	relative(+ 3, + 2).edgeScore !== edgeScores.notEdge &&
-			// 	(right(4).edgeScore !== edgeScores.notEdge || left(4).edgeScore !== edgeScores.notEdge)
-			// ) {
-			// 	continue
-			// }
-			// if (
-			// 	down(1).edgeScore === edgeScores.compoundEdge &&
-			// 	down(2).edgeScore === edgeScores.compoundEdge &&
-			// 	down(3).edgeScore !== edgeScores.notEdge &&
-			// 	relative(- 1,+ 3).edgeScore !== edgeScores.notEdge &&
-			// 	relative(+ 1,+ 3).edgeScore !== edgeScores.notEdge &&
-			// 	relative(- 2,+ 3).edgeScore !== edgeScores.notEdge &&
-			// 	relative(+ 2,+ 3).edgeScore !== edgeScores.notEdge &&
-			// 	(down(4).edgeScore !== edgeScores.notEdge || up(4).edgeScore !== edgeScores.notEdge)
-			// ) {
-			// 	continue
-			// }
-			// if (
-			// 	rightDown(1).edgeScore === edgeScores.compoundEdge &&
-			// 	rightDown(2).edgeScore === edgeScores.compoundEdge &&
-			// 	rightDown(3).edgeScore !== edgeScores.notEdge &&
-			// 	relative(+ 3,+ 4).edgeScore !== edgeScores.notEdge &&
-			// 	relative(+ 3,+ 4).edgeScore !== edgeScores.notEdge &&
-			// 	relative(+ 4,+ 3).edgeScore !== edgeScores.notEdge &&
-			// 	relative(+ 4,+ 3).edgeScore !== edgeScores.notEdge &&
-			// 	(rightDown(4).edgeScore !== edgeScores.notEdge || leftUp(4).edgeScore !== edgeScores.notEdge)
-			// ) {
-			// 	continue
-			// }
-
-			// Diagonal SE
+			// NorthEast
 			if (
-				rightDown(1).edgeScore === edgeScores.compoundEdge &&
-				rightDown(2).edgeScore === edgeScores.compoundEdge &&
-				rightDown(5).edgeScore !== edgeScores.notEdge &&
-				leftDown(2).edgeScore !== edgeScores.compoundEdge &&
-				rightUp(2).edgeScore !== edgeScores.compoundEdge &&
+				rightDown(3).edgeScore !== edgeScores.notEdge &&
+				rightDown(6).edgeScore !== edgeScores.notEdge &&
 				leftDown(3).edgeScore === edgeScores.notEdge &&
+				leftDown(3).r === 255 &&
 				rightUp(3).edgeScore === edgeScores.notEdge &&
-				leftDown(4).edgeScore === edgeScores.notEdge &&
-				rightUp(4).edgeScore === edgeScores.notEdge
+				rightUp(3).r === 0 &&
+				right(6).edgeScore === edgeScores.notEdge &&
+				right(6).r === 0 &&
+				true
 			) {
-				if (
-					relative(+0, -6).edgeScore === edgeScores.compoundEdge &&
-					relative(+0, -8).edgeScore === edgeScores.compoundEdge
-				) continue
-				if (
-					relative(-3, -6).edgeScore === edgeScores.compoundEdge &&
-					relative(-3, -8).edgeScore === edgeScores.compoundEdge
-				) continue
-				if (
-					relative(+3, -6).edgeScore === edgeScores.compoundEdge &&
-					relative(+3, -8).edgeScore === edgeScores.compoundEdge
-				) continue
-
-				seCount++
+				neCount++
 				edges.push({
-					x, y, edgeDirection: edgeDirections.SE
+					x, y, edgeDirection: edgeDirections.NE
 				})
 				continue
 			}
-
-			// Diagonal SW
+			// SouthWest
 			if (
-				leftDown(1).edgeScore === edgeScores.compoundEdge &&
-				leftDown(2).edgeScore === edgeScores.compoundEdge &&
-				leftDown(5).edgeScore !== edgeScores.notEdge &&
-				rightDown(2).edgeScore !== edgeScores.compoundEdge &&
-				leftUp(2).edgeScore !== edgeScores.compoundEdge &&
-				rightDown(3).edgeScore === edgeScores.notEdge &&
-				leftUp(3).edgeScore === edgeScores.notEdge &&
-				rightDown(4).edgeScore === edgeScores.notEdge &&
-				leftUp(4).edgeScore === edgeScores.notEdge
+				leftUp(3).edgeScore !== edgeScores.notEdge &&
+				leftUp(6).edgeScore !== edgeScores.notEdge &&
+				rightUp(3).r === 255 &&
+				rightUp(3).edgeScore === edgeScores.notEdge &&
+				leftDown(3).edgeScore === edgeScores.notEdge &&
+				leftDown(3).r === 0 &&
+				left(6).edgeScore === edgeScores.notEdge &&
+				left(6).r === 0 &&
+				true
 			) {
-				// Erase left corners of black square
-				if (
-					relative(+0, +6).edgeScore === edgeScores.compoundEdge &&
-					relative(+0, +8).edgeScore === edgeScores.compoundEdge
-				) continue
-				if (
-					relative(-3, +6).edgeScore === edgeScores.compoundEdge &&
-					relative(-3, +8).edgeScore === edgeScores.compoundEdge
-				) continue
-				if (
-					relative(+3, +6).edgeScore === edgeScores.compoundEdge &&
-					relative(+3, +8).edgeScore === edgeScores.compoundEdge
-				) continue
-
 				swCount++
 				edges.push({
 					x, y, edgeDirection: edgeDirections.SW
 				})
 				continue
 			}
-
-			// TODO maybe include NS and EW for accuracy
+			// SouthEast
+			if (
+				leftDown(3).edgeScore !== edgeScores.notEdge &&
+				leftDown(6).edgeScore !== edgeScores.notEdge &&
+				leftUp(3).r === 255 &&
+				leftUp(3).edgeScore === edgeScores.notEdge &&
+				rightDown(3).edgeScore === edgeScores.notEdge &&
+				rightDown(3).r === 0 &&
+				right(6).edgeScore === edgeScores.notEdge &&
+				right(6).r === 0 &&
+				true
+			) {
+				seCount++
+				edges.push({
+					x, y, edgeDirection: edgeDirections.SE
+				})
+				continue
+			}
+			// NorthWest
+			if (
+				rightUp(3).edgeScore !== edgeScores.notEdge &&
+				rightUp(6).edgeScore !== edgeScores.notEdge &&
+				rightDown(3).r === 255 &&
+				rightDown(3).edgeScore === edgeScores.notEdge &&
+				leftUp(3).edgeScore === edgeScores.notEdge &&
+				leftUp(3).r === 0 &&
+				left(6).edgeScore === edgeScores.notEdge &&
+				left(6).r === 0 &&
+				true
+			) {
+				nwCount++
+				edges.push({
+					x, y, edgeDirection: edgeDirections.NW
+				})
+				continue
+			}
 		}
 	}
 
-	/// todo tweak
-	if (seCount < 2) return undefined
-	if (swCount < 2) return undefined
+	// todo tweak
+	if (seCount < 1) return undefined
+	if (swCount < 1) return undefined
+	if (neCount < 1) return undefined
+	if (nwCount < 1) return undefined
 	if (edges.length >= grid.width / 2) return undefined
 
 	return edges
@@ -170,15 +145,14 @@ export type GridEllipsoid = {
 	averageX: number,
 	averageY: number,
 
-	xMinSE: number,
-	xMaxSE: number,
-	yMinSE: number,
-	yMaxSE: number,
-
-	xMinSW: number,
-	xMaxSW: number,
-	yMinSW: number,
-	yMaxSW: number
+	xSouthEast: number,
+	xSouthWest: number,
+	xNorthWest: number,
+	xNorthEast: number,
+	ySouthEast: number,
+	ySouthWest: number,
+	yNorthWest: number,
+	yNorthEast: number,
 }
 
 /**
@@ -198,22 +172,39 @@ export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): Gr
 	let sum_xi_sw = 0
 	let sum_yi_sw = 0
 	let edges_sw = 0;
+	let sum_xi_nw = 0
+	let sum_yi_nw = 0
+	let edges_nw = 0;
 	let sum_xi_se = 0
 	let sum_yi_se = 0
 	let edges_se = 0;
+	let sum_xi_ne = 0
+	let sum_yi_ne = 0
+	let edges_ne = 0;
 
 	let xMinSE = 0
 	let xMaxSE = Infinity
 	let yMinSE = Infinity
 	let yMaxSE = 0
 
+	let xMinNE = 0
+	let xMaxNE = Infinity
+	let yMinNE = Infinity
+	let yMaxNE = 0
+
 	let xMinSW = Infinity
 	let xMaxSW = 0
 	let yMinSW = Infinity
 	let yMaxSW = 0
 
+	let xMinNW = Infinity
+	let xMaxNW = 0
+	let yMinNW = Infinity
+	let yMaxNW = 0
+
 	let distanceA = 0
 	let distanceB = 0
+	let distanceC = 0
 
 	for (let i = 0; i < edges.length; i++) {
 		const edge = edges[i]
@@ -230,14 +221,34 @@ export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): Gr
 			edges_se ++;
 		}
 		if (edge.edgeDirection === edgeDirections.SW) {
-			xMinSW = Math.min(xMinSW, edge.x)
-			xMaxSW = Math.max(xMaxSW, edge.x)
+			xMinSW = Math.max(xMinSW, edge.x)
+			xMaxSW = Math.min(xMaxSW, edge.x)
 			yMinSW = Math.min(yMinSW, edge.y)
 			yMaxSW = Math.max(yMaxSW, edge.y)
 
 			sum_xi_sw += edge.x
 			sum_yi_sw += edge.y
 			edges_sw ++;
+		}
+		if (edge.edgeDirection === edgeDirections.NW) {
+			xMinNW = Math.min(xMinNW, edge.x)
+			xMaxNW = Math.max(xMaxNW, edge.x)
+			yMinNW = Math.min(yMinNW, edge.y)
+			yMaxNW = Math.max(yMaxNW, edge.y)
+
+			sum_xi_nw += edge.x
+			sum_yi_nw += edge.y
+			edges_nw ++;
+		}
+		if (edge.edgeDirection === edgeDirections.NE) {
+			xMinNE = Math.min(xMinNE, edge.x)
+			xMaxNE = Math.max(xMaxNE, edge.x)
+			yMinNE = Math.min(yMinNE, edge.y)
+			yMaxNE = Math.max(yMaxNE, edge.y)
+
+			sum_xi_ne += edge.x
+			sum_yi_ne += edge.y
+			edges_ne ++;
 		}
 
 		sum_xi += edge.x
@@ -247,6 +258,19 @@ export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): Gr
 	const ellipsoidX = 1 / edges.length * sum_xi
 	const ellipsoidY = 1 / edges.length * sum_yi
 
+	const xSouthEast = 1 / edges_se * sum_xi_se
+	const xSouthWest = 1 / edges_sw * sum_xi_sw
+	const xNorthWest = 1 / edges_nw * sum_xi_nw
+	const xNorthEast = 1 / edges_ne * sum_xi_ne
+	const ySouthEast = 1 / edges_se * sum_yi_se
+	const ySouthWest = 1 / edges_sw * sum_yi_sw
+	const yNorthWest = 1 / edges_nw * sum_yi_nw
+	const yNorthEast = 1 / edges_ne * sum_yi_ne
+
+	// Average the extremities to get an accurate center
+	const averageX = (xSouthEast + xSouthWest + xNorthEast + xNorthWest) / 4
+	const averageY = (ySouthEast + ySouthWest + yNorthEast + yNorthWest) / 4
+
 	if (Number.isNaN(ellipsoidX) || Number.isNaN(ellipsoidY)) return undefined
 	if (ellipsoidX === Infinity || ellipsoidY === Infinity) return undefined
 	if (ellipsoidX === 0 || ellipsoidY === 0) return undefined
@@ -255,9 +279,13 @@ export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): Gr
 		const edge = edges[i]
 		if (!edge) continue
 
-		distanceA = Math.max(distanceA, Math.abs(edge.x - ellipsoidX))
-		distanceB = Math.max(distanceB, Math.abs(edge.y - ellipsoidY))
+		distanceA = Math.max(distanceA, Math.abs(edge.x - averageX))
+		distanceB = Math.max(distanceB, Math.abs(edge.y - averageY))
 	}
+
+	// https://stackoverflow.com/a/6716520
+	distanceB = Math.max(xNorthEast - xNorthWest, xSouthEast - xSouthWest) / Math.SQRT2
+	distanceA = Math.max(ySouthEast - yNorthEast, ySouthWest - yNorthWest) / Math.SQRT2
 
 	if (Number.isNaN(distanceA) || Number.isNaN(distanceB)) return undefined
 	if (distanceA === Infinity || distanceB === Infinity) return undefined
@@ -274,17 +302,6 @@ export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): Gr
 	// Ellipse may not exit the screen on the left
 	if (ellipsoidX - distanceA < 3) return undefined
 
-	// Average the extremities to get an accurate center
-	const averageX = (
-		xMinSW + ((xMaxSW - xMinSW) / 2) +
-		xMinSE + ((xMaxSE - xMinSE) / 2)
-	) / 2
-
-	const averageY = (
-		yMinSW + ((yMaxSW - yMinSW) / 2) +
-		yMinSE + ((yMaxSE - yMinSE) / 2)
-	) / 2
-
 	// TODO see if we can determine rotation somehow?
 	return {
 		ellipsoidX,
@@ -294,9 +311,13 @@ export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): Gr
 
 		averageX,
 		averageY,
-		xMinSE, xMaxSE,
-		yMinSE, yMaxSE,
-		xMinSW, xMaxSW,
-		yMinSW, yMaxSW
+		xSouthEast,
+		xSouthWest,
+		xNorthWest,
+		xNorthEast,
+		ySouthEast,
+		ySouthWest,
+		yNorthWest,
+		yNorthEast,
 	}
 }
