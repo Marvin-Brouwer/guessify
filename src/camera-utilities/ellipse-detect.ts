@@ -39,11 +39,11 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 
 			if (pixel.edgeScore !== edgeScores.compoundEdge) continue
 
-			const relative = (dx: number, dy: number) => grid.pixel(x + dx, y + dy)
+			// const relative = (dx: number, dy: number) => grid.pixel(x + dx, y + dy)
 			const left = (number: number) => grid.pixel(x - number, y)
 			const right = (number: number) => grid.pixel(x + number, y)
-			const up = (number: number) => grid.pixel(x, y - number)
-			const down = (number: number) => grid.pixel(x, y + number)
+			// const up = (number: number) => grid.pixel(x, y - number)
+			// const down = (number: number) => grid.pixel(x, y + number)
 
 			const leftUp = (number: number) => grid.pixel(x - number, y - number)
 			const rightUp = (number: number) => grid.pixel(x + number, y - number)
@@ -204,7 +204,6 @@ export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): Gr
 
 	let distanceA = 0
 	let distanceB = 0
-	let distanceC = 0
 
 	for (let i = 0; i < edges.length; i++) {
 		const edge = edges[i]

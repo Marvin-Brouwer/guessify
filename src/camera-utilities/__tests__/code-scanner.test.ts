@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { canvasToPixelGrid, imageDataToPixelGrid } from '../pixel-grid'
+import { canvasToPixelGrid } from '../pixel-grid'
 import { fixTestEnvironment, readImageFile, writeCanvas } from '../../__tests__/test-utils'
 import { findEllipsoid, markEdges } from '../ellipse-detect'
 import { Canvas, ImageData } from 'skia-canvas'
@@ -17,10 +17,10 @@ fixTestEnvironment()
 
 const timestamps = [
 	[1738858808669, {}],
-	// [1738791708507, {}],
+	[1738791708507, {}],
 	// [1738791708511, { }],
 	// [1738791723711, { }],
-	// [1738791723715, { }],
+	[1738791723715, { }],
 	// [1738791743953, { }],
 	// [1738791743958, { }]
 ]
@@ -61,11 +61,11 @@ test.concurrent.for(timestamps)('scan-steps', async ([timestamp, expectedResult]
 	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-05-lines.png`)
 
 	const edgeMap = inputGrid ? markEdges(inputGrid) : undefined
-	drawEdgeMap(debugCanvas, edgeMap)
+	drawEdgeMap(debugCanvas as any, edgeMap)
 	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-06-edge.png`)
 
 	const ellipsoid = findEllipsoid(edgeMap, inputGrid?.height ?? 0)
-	drawEllipsoid(debugCanvas as unknown as globalThis.OffscreenCanvas, ellipsoid)
+	drawEllipsoid(debugCanvas as any, ellipsoid)
 	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-07-ellipse.png`)
 
 	// Assert

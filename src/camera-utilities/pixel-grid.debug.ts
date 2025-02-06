@@ -1,3 +1,4 @@
+import { canvasConfiguration } from './canvas'
 import { edgeScores } from './edge-map'
 import { GridPixel, Pixel, PixelGrid } from './pixel-grid'
 
@@ -14,7 +15,7 @@ export function toPixelArray(grid: PixelGrid) {
 	return uintPixels
 }
 
-const markLine = ({ edgeScore }: GridPixel): Pixel => {
+const markLine = ({ edgeScore }: GridPixel): Partial<Pixel> => {
 
 	if (edgeScore === edgeScores.primaryEdge) return {
 		r: 0, g: 128, b: 100, a: 50
@@ -28,6 +29,7 @@ const markLine = ({ edgeScore }: GridPixel): Pixel => {
 		r: 0, g: 255, b: 0, a: 255
 	}
 
+	if (!canvasConfiguration.clearBeforeDraw) return { a: 40 }
 	return {
 		r: 0, g: 0, b: 0, a: 0
 	}
