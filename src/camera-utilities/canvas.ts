@@ -5,11 +5,13 @@ export const canvasConfiguration = {
 	} as CanvasRenderingContext2DSettings,
 
 	clearBeforeDraw: true,
+	useOptions: true,
 
 	showScaleCanvas: false,
-	showGrayscaleImage: import.meta.env.DEV,
-	showOrientationLines: true,
+	showGrayscaleImage: false,
+	showOrientationLines: import.meta.env.DEV,
 	showEllipsoid: true,
+	showAngles: true,
 	sampleRate: import.meta.env.PROD ? 200 : 1000,
 
 	blurAmount: 1,
@@ -21,18 +23,10 @@ export const canvasConfiguration = {
 	}
 }
 
-export type Canvas = OffscreenCanvas & {
-	id: string,
-	writeOutput?: (date: number) => Promise<void>
-	getImageData: () => ImageData
-	putImageData: (image: ImageData) => void
-	getCanvasContext: () => CanvasContext
-}
-
-const writeOutput = !canvasConfiguration.debugEnabled() ? undefined : async (canvas: Canvas, date: number) => {
+export const writeOutput = !canvasConfiguration.debugEnabled() ? undefined : async (id: 'string', canvas: OffscreenCanvas, date: number) => {
 
 	const link = document.createElement('a')
-	link.download = `camera-feed-${date}-${canvas.id}.png`
+	link.download = `camera-feed-${date}-${id}.png`
 	if (canvas instanceof HTMLCanvasElement) {
 		link.href = canvas.toDataURL()
 	} else {
@@ -50,24 +44,8 @@ const writeOutput = !canvasConfiguration.debugEnabled() ? undefined : async (can
 	link.click()
 }
 
-export const canvas = (id: string, width: number, height: number, alpha: boolean = true): Canvas => {
-
-	const canvas = new OffscreenCanvas(width, height)
-
-	const getCanvasContext = () => canvas.getContext( '2d', {
+export const getCanvasContext = <T extends OffscreenCanvas>(canvas: T, alpha = true) =>
+	canvasConfiguration.useOptions ? canvas.getContext( '2d', {
 		...canvasConfiguration.canvasContextOptions,
 		alpha
-	}) as CanvasContext
-	const getImageData = () => getCanvasContext().getImageData(0, 0, width, height)
-	const putImageData = (image: ImageData) => getCanvasContext().putImageData(image, 0, 0)
-
-	return Object.assign(canvas, {
-		id,
-		writeOutput: writeOutput && ((date: number) => writeOutput(canvas as Canvas, date)),
-		getCanvasContext,
-		getImageData,
-		putImageData
-	}) as Canvas
-}
-
-export type CanvasContext = OffscreenCanvasRenderingContext2D
+	})! : canvas.getContext( '2d')!

@@ -32,7 +32,7 @@ export function checkEdgeThreshold(red: number, green: number, blue: number) {
 
 	// TODO: These should be constants
 	const whiteThreshold = 180
-	const blackThreshold = 30
+	const blackThreshold = 20
 
 	if (red > whiteThreshold || red < blackThreshold) return false
 	if (green > whiteThreshold || green < blackThreshold) return false

@@ -1,5 +1,5 @@
-import { Canvas } from './canvas'
 import { checkEdgeScore, EdgeScore } from './edge-map'
+import { getCanvasContext } from './canvas';
 
 const rowPos = Symbol.for('rowPos')
 const rowS = Symbol.for('rowSize')
@@ -46,7 +46,15 @@ export type PixelGrid = Iterable<GridPixel> & {
 	toArray() : Array<GridPixel>
 }
 
-function pixelFromOffset(imageData: ImageData, invertedImageData: ImageData, x: number, y: number): GridPixel {
+function pixelFromOffset(
+	imageData: ImageData,
+	blurryImageData: ImageData,
+	invertedBlurryImageData: ImageData,
+	xIn: number, yIn: number
+): GridPixel {
+
+	const x = Math.floor(xIn)
+	const y = Math.floor(yIn)
 
 	const pixelSize = 4
 	const rowSize = imageData.width * 4
@@ -56,11 +64,12 @@ function pixelFromOffset(imageData: ImageData, invertedImageData: ImageData, x: 
 
 	const start = columnOffset + rowOffset
 	const [r, g, b, a] = imageData.data.slice(start, start + 4)
-	const [ri, gi, bi] = invertedImageData.data.slice(start, start + 4)
+	const [rb, gb, bb] = blurryImageData.data.slice(start, start + 4)
+	const [rbi, gbi, bbi] = invertedBlurryImageData.data.slice(start, start + 4)
 
 	// We already mark the pixels here so we don't need to edge-map in a separate pass
 	// This should shave significant processing time
-	const edgeScore = checkEdgeScore(r, g, b, ri, gi, bi);
+	const edgeScore = checkEdgeScore(rb, gb, bb, rbi, gbi, bbi);
 
 	const debugInfo = import.meta.env.PROD
 		? {}
@@ -105,15 +114,27 @@ function *iterateRow(y: number, grid: PixelGrid) {
  * Convert the bitmap to a grid of polar coordinate pixels.
  * This makes it easier for trigonometry purposes and every index corresponds to a single pixel.
  */
-export function canvasToPixelGrid(imageCanvas: Canvas, invertedCanvas: Canvas): PixelGrid | undefined {
-	return imageDataToPixelGrid(imageCanvas.getImageData(), invertedCanvas.getImageData());
+export function canvasToPixelGrid(
+	imageCanvas: OffscreenCanvas,
+	blurryCanvas: OffscreenCanvas,
+	invertedBlurryCanvas: OffscreenCanvas
+): PixelGrid | undefined {
+	return imageDataToPixelGrid(
+		getCanvasContext(imageCanvas).getImageData(0, 0, imageCanvas.width, imageCanvas.height),
+		getCanvasContext(blurryCanvas).getImageData(0, 0, blurryCanvas.width, blurryCanvas.height),
+		getCanvasContext(invertedBlurryCanvas).getImageData(0, 0, invertedBlurryCanvas.width, invertedBlurryCanvas.height),
+	);
 }
 
 /**
  * Convert the bitmap to a grid of polar coordinate pixels.
  * This makes it easier for trigonometry purposes and every index corresponds to a single pixel.
  */
-export function imageDataToPixelGrid(imageData: ImageData, invertedImageData: ImageData): PixelGrid | undefined {
+export function imageDataToPixelGrid(
+	imageData: ImageData,
+	blurryImageData: ImageData,
+	invertedBlurryImageData: ImageData
+): PixelGrid | undefined {
 
 	if (Number.isNaN(imageData.width) || imageData.width === 0) return undefined
 	// Very costly operation, makes debugging easier
@@ -129,14 +150,14 @@ export function imageDataToPixelGrid(imageData: ImageData, invertedImageData: Im
 	return {
 		width: imageData.width, height: imageData.height, size: imageData.data.length,
 		pixel(x, y) {
-			return pixelFromOffset(imageData, invertedImageData, x, y)
+			return pixelFromOffset(imageData, blurryImageData, invertedBlurryImageData, x, y)
 		},
 		row(y) {
 			const rowOffset = Math.min(y, imageData.height)
 			const iterator = iterateRow(y, this)
 			return {
 				y,
-				pixel: (x) => pixelFromOffset(imageData, invertedImageData, x, rowOffset),
+				pixel: (x) => pixelFromOffset(imageData, blurryImageData, invertedBlurryImageData, x, rowOffset),
 				[Symbol.iterator]() {
 					return iterator;
 				},
@@ -148,7 +169,7 @@ export function imageDataToPixelGrid(imageData: ImageData, invertedImageData: Im
 		column(x) {
 			const columnOffset = Math.min(x, imageData.width)
 			return {
-				pixel: (y) => pixelFromOffset(imageData, invertedImageData, columnOffset, y)
+				pixel: (y) => pixelFromOffset(imageData, blurryImageData, invertedBlurryImageData, columnOffset, y)
 			}
 		},
 		[Symbol.iterator]() {

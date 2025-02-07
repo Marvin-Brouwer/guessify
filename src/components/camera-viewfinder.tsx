@@ -10,6 +10,7 @@ import { canvasToPixelGrid } from '../camera-utilities/pixel-grid'
 
 import debug from './camera-viewfinder.debug'
 import { findEllipsoid, markEdges } from '../camera-utilities/ellipse-detect'
+import { findAngles } from '../camera-utilities/angle-scan'
 
 // This is just as an example:
 const [codeExample, _setCode] = createSignal('')
@@ -51,7 +52,7 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 
 		const scaledUpCanvas = await scaleupVideo(videoElement, videoFrame)
 		if (!scaledUpCanvas) return requestAnimationFrame(scanFrame)
-		debug?.debugCanvas(canvasConfiguration.showScaleCanvas, scaledUpCanvas)
+		debug?.debugCanvas('scale', canvasConfiguration.showScaleCanvas, scaledUpCanvas)
 
 		if (canvasConfiguration.debugEnabled())
 			debug?.setViewfinderRectForDownload(viewFinderRect)
@@ -60,17 +61,17 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 			readViewFinder(viewFinderRect, scaledUpCanvas, false),
 			readViewFinder(viewFinderRect, scaledUpCanvas, true)
 		])
-		debug?.debugCanvas(canvasConfiguration.showGrayscaleImage, viewFinderCanvasses[0])
-		debug?.debugCanvas(canvasConfiguration.showGrayscaleImage, viewFinderCanvasses[1])
+		debug?.debugCanvas('grayscale', canvasConfiguration.showGrayscaleImage, viewFinderCanvasses[0])
+		debug?.debugCanvas('grayscale-inverted', canvasConfiguration.showGrayscaleImage, viewFinderCanvasses[1])
 
 		const blurryViewFinderCanvasses = await Promise.all([
 			blurViewFinder(viewFinderCanvasses[0]),
 			blurViewFinder(viewFinderCanvasses[1]),
 		])
-		debug?.debugCanvas(false, blurryViewFinderCanvasses[0])
-		debug?.debugCanvas(false, blurryViewFinderCanvasses[1])
+		debug?.debugCanvas('blur', false, blurryViewFinderCanvasses[0])
+		debug?.debugCanvas('blur-inverted', false, blurryViewFinderCanvasses[1])
 
-		const pixelGrid = canvasToPixelGrid(blurryViewFinderCanvasses[0], blurryViewFinderCanvasses[1])
+		const pixelGrid = canvasToPixelGrid(viewFinderCanvasses[0], blurryViewFinderCanvasses[0], blurryViewFinderCanvasses[1])
 		if (!pixelGrid) return requestAnimationFrame(scanFrame)
 
 		debug?.debugGridPixels(canvasConfiguration.showOrientationLines, 'lines', pixelGrid)
@@ -88,6 +89,9 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 			interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
 			return;
 		}
+
+		const angles = findAngles(ellipsoid, pixelGrid);
+		debug?.debugAngles(canvasConfiguration.showAngles, pixelGrid, ellipsoid, angles)
 
 		// TODO detect circle
 		// TODO detect code end

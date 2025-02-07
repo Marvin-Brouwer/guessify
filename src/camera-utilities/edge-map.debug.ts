@@ -1,10 +1,9 @@
-import { canvasConfiguration } from './canvas'
+import { canvasConfiguration, getCanvasContext } from './canvas'
 import { edgeDirections, EdgeMap } from './ellipse-detect'
-import { getDebugCanvasContext } from './canvas.debug'
 
 export function drawEdgeMap<T extends OffscreenCanvas>(canvas: T, edges: EdgeMap | undefined): T {
 
-	const ctx = getDebugCanvasContext(canvas);
+	const ctx = getCanvasContext(canvas);
 	if(canvasConfiguration.clearBeforeDraw) ctx.clearRect(0, 0, canvas.width, canvas.height)
 
 	if (!edges) return canvas;

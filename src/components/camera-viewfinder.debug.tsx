@@ -1,23 +1,26 @@
 import { Component, createEffect, createMemo, createSignal } from 'solid-js'
 import './camera-viewfinder.debug.pcss'
-import { canvas, Canvas, canvasConfiguration } from '../camera-utilities/canvas'
 import { PixelGrid } from '../camera-utilities/pixel-grid'
 import { EdgeMap, GridEllipsoid } from '../camera-utilities/ellipse-detect'
 import { drawEdgeMap } from '../camera-utilities/edge-map.debug'
 import { toPixelArray } from '../camera-utilities/pixel-grid.debug'
 import { drawEllipsoid } from '../camera-utilities/ellipse-detect.debug'
 import * as fflate from 'fflate';
+import { canvasConfiguration, getCanvasContext } from '../camera-utilities/canvas';
+import { drawAngleDetail } from '../camera-utilities/angle-scan.debug'
+import { AngleDetail } from '../camera-utilities/angle-scan'
 
 type DebugCanvasProps = {
-	canvas: Canvas,
+	id: string,
+	canvas: OffscreenCanvas,
 	show: boolean
 }
-const DebugCanvas: Component<DebugCanvasProps> = ({ canvas, show }) => {
+const DebugCanvas: Component<DebugCanvasProps> = ({ id, canvas, show }) => {
 
 	if (!show) return undefined
 
 	const debugCanvas = Object.assign(document.createElement('canvas'), {
-		id: canvas.id,
+		id,
 		width: canvas.width,
 		height: canvas.height
 	})
@@ -27,7 +30,7 @@ const DebugCanvas: Component<DebugCanvasProps> = ({ canvas, show }) => {
 	})!
 
 	createEffect(() => {
-		const image = canvas.getImageData()
+		const image = getCanvasContext(canvas).getImageData(0,0, canvas.width, canvas.height)
 		debugContext.putImageData(image, 0, 0)
 	})
 
@@ -61,14 +64,14 @@ const DebugImageCanvas: Component<DebugImageCanvasProps> = ({ id, image, show })
 	return debugCanvas
 }
 
-const [debugCanvases, setDebugCanvases] = createSignal<{ [key: string]: { canvas: Canvas, show: boolean } }>({})
-const debugCanvas = (show: boolean, canvas: Canvas) =>
-	setDebugCanvases?.(p => ({ ...p, [canvas.id]: { canvas, show } }))
+const [debugCanvases, setDebugCanvases] = createSignal<{ [key: string]: { canvas: OffscreenCanvas, show: boolean } }>({})
+const debugCanvas = (id: string, show: boolean, canvas: OffscreenCanvas) =>
+	setDebugCanvases?.(p => ({ ...p, [id]: { canvas, show } }))
 
 const DebugCanvasDisplay: Component = () => {
 
 	const canvasDisplays = createMemo(() => Object.entries(debugCanvases())
-		.map(([_id, { canvas, show }]) => <DebugCanvas canvas={canvas} show={show} />), () => Object.keys(debugCanvases()))
+		.map(([id, { canvas, show }]) => <DebugCanvas id={id} canvas={canvas} show={show} />), () => Object.keys(debugCanvases()))
 
 	return <>
 		{canvasDisplays()}
@@ -87,9 +90,11 @@ const debugGridPixels = (show: boolean, id: string, grid: PixelGrid) =>
 const [getViewfinderRectForDownload, setViewfinderRectForDownload] = createSignal<DOMRect>()
 
 const debugEdgeMap = (show: boolean, grid: PixelGrid, edges: EdgeMap | undefined) =>
-	debugCanvas(show, drawEdgeMap(canvas('edge', grid.width, grid.height), edges))
+	debugCanvas('edge', show, drawEdgeMap(new OffscreenCanvas(grid.width, grid.height), edges))
 const debugEllipsoid = (show: boolean, grid: PixelGrid, ellipsoid: GridEllipsoid | undefined) =>
-	debugCanvas(show, drawEllipsoid(canvas('ellipsoid', grid.width, grid.height), ellipsoid))
+	debugCanvas('ellipsoid', show, drawEllipsoid(new OffscreenCanvas(grid.width, grid.height), ellipsoid))
+const debugAngles = (show:boolean, grid: PixelGrid, ellipsoid: GridEllipsoid | undefined, angles: AngleDetail | undefined) =>
+	debugCanvas('angles', show, drawAngleDetail(new OffscreenCanvas(grid.width, grid.height), ellipsoid, angles))
 
 const DebugGridDisplay: Component = () => {
 
@@ -130,16 +135,16 @@ const downloadCanvasData = async () => {
 
 	zippables[`camera-feed-${date}-viewfinder.json`] = [viewFinderDataArray, { level: 9 }]
 
-	for (const { canvas } of Object.values(debugCanvases())) {
+	for (const [id, { canvas }] of Object.entries(debugCanvases())) {
 		const canvasBlob = await canvas.convertToBlob({
 			type: 'image/png'
 		})
 		const canvasBlobArray = new Uint8Array(await canvasBlob.arrayBuffer());
-		zippables[`camera-feed-${date}-${canvas.id}.png`] = [canvasBlobArray, { level: 0 }]
+		zippables[`camera-feed-${date}-${id}.png`] = [canvasBlobArray, { level: 0 }]
 	}
 	for (const [id, { image }] of Object.entries(images())) {
-		const tempCanvas = canvas(id, image.width, image.height)
-		tempCanvas.putImageData(image)
+		const tempCanvas = new OffscreenCanvas(image.width, image.height)
+		getCanvasContext(tempCanvas).putImageData(image, 0, 0)
 		const canvasBlob = await tempCanvas.convertToBlob({
 			type: 'image/png'
 		})
@@ -167,7 +172,7 @@ const downloadCanvasData = async () => {
 const debug = canvasConfiguration.debugEnabled()
 	? {
 		DebugCanvasDisplay, debugCanvas, DebugGridDisplay, debugImageData,
-		debugGridPixels, debugEdgeMap, debugEllipsoid, setViewfinderRectForDownload
+		debugGridPixels, debugEdgeMap, debugEllipsoid, setViewfinderRectForDownload, debugAngles
 	}
 	: undefined
 

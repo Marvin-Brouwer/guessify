@@ -11,16 +11,22 @@ import { canvasConfiguration } from '../canvas'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { blurViewFinder, readViewFinder } from '../read-viewfinder'
-import { getDebugCanvasContext } from '../canvas.debug'
+import { findAngles } from '../angle-scan'
+import { drawAngleDetail } from '../angle-scan.debug'
 
 fixTestEnvironment()
 
 const timestamps = [
+	// Horizontal
 	[1738858808669, {}],
-	[1738791708507, {}],
+	// Skewed left
+	[1738791723715, { }],
+	// Skewed right
+	[1738962275690, { }],
+
+	// [1738791708507, { }],
 	// [1738791708511, { }],
 	// [1738791723711, { }],
-	[1738791723715, { }],
 	// [1738791743953, { }],
 	// [1738791743958, { }]
 ]
@@ -29,14 +35,16 @@ test.concurrent.for(timestamps)('scan-steps', async ([timestamp, expectedResult]
 
 	// Arrange
 	canvasConfiguration.clearBeforeDraw = false
+	canvasConfiguration.useOptions = false
 	// Not sure why skia-canvas needs this to be 1.5 the size
-	canvasConfiguration.blurAmount = 1.5;
+	canvasConfiguration.blurAmount = 1;
 
 	const inputData = await readImageFile(__dirname, `./code-scanner/photo-reference/camera-feed-${timestamp}-scale.png`)
 	const inputDataRect: DOMRect = JSON.parse((await readFile(join(__dirname, `./code-scanner/photo-reference/camera-feed-${timestamp}-viewfinder.json`))).toString())
-	const inputDataCanvas = new Canvas(inputData.width, inputData.height) as unknown as globalThis.OffscreenCanvas
-	getDebugCanvasContext(inputDataCanvas).putImageData(inputData, 0, 0)
-	// Not sure why skia-canvas needs this to be twice the size
+	const inputDataCanvas = new Canvas(inputData.width, inputData.height) as unknown as OffscreenCanvas
+	inputDataCanvas.getContext('2d')?.putImageData(inputData, 0, 0)
+	// readViewFinder takes twice the size
+	// TODO maybe remove
 	const debugCanvas = new Canvas(inputDataRect.width * 2, inputDataRect.height * 2)
 
 	// Act
@@ -54,7 +62,11 @@ test.concurrent.for(timestamps)('scan-steps', async ([timestamp, expectedResult]
 	await writeCanvas(blurryViewFinderCanvasses[0], __dirname, `./code-scanner/.output/camera-feed-${timestamp}-03-blur.png`)
 	await writeCanvas(blurryViewFinderCanvasses[1], __dirname, `./code-scanner/.output/camera-feed-${timestamp}-04-blur-inverted.png`)
 
-	const inputGrid = canvasToPixelGrid(blurryViewFinderCanvasses[0], blurryViewFinderCanvasses[1])
+	const inputGrid = canvasToPixelGrid(
+		viewFinderCanvasses[0],
+		blurryViewFinderCanvasses[0],
+		blurryViewFinderCanvasses[1]
+	)
 
 	if (inputGrid)
 		debugCanvas.getContext('2d')!.putImageData(new ImageData(toPixelArray(inputGrid), inputGrid.width, inputGrid.height), 0, 0)
@@ -67,6 +79,10 @@ test.concurrent.for(timestamps)('scan-steps', async ([timestamp, expectedResult]
 	const ellipsoid = findEllipsoid(edgeMap, inputGrid?.height ?? 0)
 	drawEllipsoid(debugCanvas as any, ellipsoid)
 	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-07-ellipse.png`)
+
+	const alpha = findAngles(ellipsoid, inputGrid)
+	drawAngleDetail(debugCanvas as any, ellipsoid, alpha)
+	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-08-alpha.png`)
 
 	// Assert
 	// TODO write assertions

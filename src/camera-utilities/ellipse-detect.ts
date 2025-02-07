@@ -58,6 +58,7 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 				leftDown(3).r === 255 &&
 				rightUp(3).edgeScore === edgeScores.notEdge &&
 				rightUp(3).r === 0 &&
+				rightUp(6).r === 0 &&
 				right(6).edgeScore === edgeScores.notEdge &&
 				right(6).r === 0 &&
 				true
@@ -76,6 +77,7 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 				rightUp(3).edgeScore === edgeScores.notEdge &&
 				leftDown(3).edgeScore === edgeScores.notEdge &&
 				leftDown(3).r === 0 &&
+				leftDown(6).r === 0 &&
 				left(6).edgeScore === edgeScores.notEdge &&
 				left(6).r === 0 &&
 				true
@@ -112,6 +114,7 @@ export function markEdges(grid: PixelGrid): EdgeMap | undefined {
 				rightDown(3).edgeScore === edgeScores.notEdge &&
 				leftUp(3).edgeScore === edgeScores.notEdge &&
 				leftUp(3).r === 0 &&
+				leftUp(6).r === 0 &&
 				left(6).edgeScore === edgeScores.notEdge &&
 				left(6).r === 0 &&
 				true
@@ -288,7 +291,7 @@ export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): Gr
 
 	if (Number.isNaN(distanceA) || Number.isNaN(distanceB)) return undefined
 	if (distanceA === Infinity || distanceB === Infinity) return undefined
-	if (distanceA === 0 || distanceB === 0) return undefined
+	if (distanceA <= 1 || distanceB <= 1) return undefined
 
 	// // exit if it's too flat
 	// if (Math.abs(distanceA - distanceB) > (maxHeight / 10)) return undefined

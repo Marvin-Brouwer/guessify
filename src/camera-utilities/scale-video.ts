@@ -1,5 +1,5 @@
-import { canvas } from './canvas'
 import { awaitAnimationFrame } from './frame-helper'
+import { getCanvasContext } from './canvas';
 
 type ScaledVideoFrame = {
 	boxWidth: number,
@@ -53,13 +53,11 @@ export function scaleupVideo(videoElement: HTMLVideoElement, videoFrame: MediaSt
 	if (boxWidth === 0 || Number.isNaN(boxWidth)) return undefined
 
 	return awaitAnimationFrame(() => {
-		const scaleCanvas = canvas(
-			'scale',
+		const scaleCanvas = new OffscreenCanvas(
 			boxWidth,
 			boxHeight
 		)
-		scaleCanvas
-			.getCanvasContext()
+		getCanvasContext(scaleCanvas)
 			.drawImage(
 				videoElement,
 				0, 0,
