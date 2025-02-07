@@ -254,6 +254,3 @@ export function drawAngleDetail<T extends OffscreenCanvas>(canvas: T, ellipsoid:
 
 	return canvas
 }
-function Degree2Rad(degree: number){
-  return degree*Math.PI/180
-}
