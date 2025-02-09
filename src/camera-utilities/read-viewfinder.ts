@@ -1,5 +1,5 @@
 import { awaitAnimationFrame } from './frame-helper'
-import { canvasConfiguration, getCanvasContext } from './canvas';
+import { canvasConfiguration } from './canvas';
 
 /**
  * Extract the viewfinder pixels from video source.
@@ -14,8 +14,11 @@ export function readViewFinder(viewFinderRect: DOMRectReadOnly, videoInput: Canv
 		)
 		// Fiddle with the image to make black more clear and glare less obvious
 		// Todo dynamic lighting?
-		getCanvasContext(grayScaleCanvas).filter = `grayscale() ${invert ? 'invert(100%)' : ''} contrast(4.5)`
-		getCanvasContext(grayScaleCanvas)
+		canvasConfiguration
+			.getCanvasContext(grayScaleCanvas)
+			.filter = `grayscale() ${invert ? 'invert(100%)' : ''} contrast(4.5)`
+		canvasConfiguration
+			.getCanvasContext(grayScaleCanvas)
 			.drawImage(
 				videoInput,
 				viewFinderRect.x, viewFinderRect.y,
@@ -41,8 +44,11 @@ export function blurViewFinder(viewFinderCanvas: OffscreenCanvas) {
 			viewFinderCanvas.height
 		)
 		// Blur and up the contrast so we can edge detect later
-		getCanvasContext(blurredCanvas).filter = `blur(${canvasConfiguration.blurAmount}px)`
-		getCanvasContext(blurredCanvas)
+		canvasConfiguration
+			.getCanvasContext(blurredCanvas)
+			.filter = `blur(${canvasConfiguration.blurAmount}px)`
+		canvasConfiguration
+			.getCanvasContext(blurredCanvas)
 			.drawImage(
 				viewFinderCanvas,
 				0, 0,

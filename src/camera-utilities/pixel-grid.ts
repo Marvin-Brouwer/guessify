@@ -1,5 +1,5 @@
 import { checkEdgeScore, EdgeScore } from './edge-map'
-import { getCanvasContext } from './canvas';
+import { canvasConfiguration } from './canvas';
 
 const rowPos = Symbol.for('rowPos')
 const rowS = Symbol.for('rowSize')
@@ -13,16 +13,16 @@ export type Pixel = {
 	g: number,
 	b: number,
 	a: number,
+
+	abs: number,
+
+	x: number,
+	y: number,
 }
 
 export type GridPixel = Pixel & {
 
-	x: number,
-	y: number,
-
-	edgeScore: EdgeScore,
-
-	abs: number
+	edgeScore: EdgeScore
 }
 
 export type PixelRow = Iterable<GridPixel> & {
@@ -44,6 +44,40 @@ export type PixelGrid = Iterable<GridPixel> & {
 	rows(): Iterable<PixelRow>
 
 	toArray() : Array<GridPixel>
+}
+
+export function pixelDataFromOffset(
+	imageData: ImageData,
+	xIn: number, yIn: number
+): Pixel {
+
+	const x = Math.floor(xIn)
+	const y = Math.floor(yIn)
+
+	const pixelSize = 4
+	const rowSize = imageData.width * 4
+
+	const columnOffset = x * pixelSize
+	const rowOffset = y * rowSize
+
+	const start = columnOffset + rowOffset
+	const [r, g, b, a] = imageData.data.slice(start, start + 4)
+
+	const debugInfo = import.meta.env.PROD
+		? {}
+		: {
+			[rowPos]: rowOffset,
+			[rowS]: rowSize,
+			[colPos]: columnOffset,
+		}
+
+	return {
+		r, g, b, a,
+
+		x, y, abs: start,
+
+		...debugInfo
+	}
 }
 
 function pixelFromOffset(
@@ -120,9 +154,9 @@ export function canvasToPixelGrid(
 	invertedBlurryCanvas: OffscreenCanvas
 ): PixelGrid | undefined {
 	return imageDataToPixelGrid(
-		getCanvasContext(imageCanvas).getImageData(0, 0, imageCanvas.width, imageCanvas.height),
-		getCanvasContext(blurryCanvas).getImageData(0, 0, blurryCanvas.width, blurryCanvas.height),
-		getCanvasContext(invertedBlurryCanvas).getImageData(0, 0, invertedBlurryCanvas.width, invertedBlurryCanvas.height),
+		canvasConfiguration.getCanvasContext(imageCanvas).getImageData(0, 0, imageCanvas.width, imageCanvas.height),
+		canvasConfiguration.getCanvasContext(blurryCanvas).getImageData(0, 0, blurryCanvas.width, blurryCanvas.height),
+		canvasConfiguration.getCanvasContext(invertedBlurryCanvas).getImageData(0, 0, invertedBlurryCanvas.width, invertedBlurryCanvas.height),
 	);
 }
 

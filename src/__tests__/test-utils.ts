@@ -29,12 +29,17 @@ export const writeImageFile = async (dirname: string, file: string, imageData: I
 	await writeCanvas(canvas, dirname, file)
 }
 
-export const writeCanvas = async (canvas: Canvas | OffscreenCanvas, dirname: string, file: string) => {
+export const writeCanvas = async (canvas: Canvas | OffscreenCanvas | undefined, dirname: string, file: string) => {
+
+	if (canvas === undefined) return;
 
 	if (canvas.constructor.name !== 'Canvas') {
 		throw new Error('Tests incorrectly configured '+ canvas.constructor.name)
 	}
 
-	const imageData = await (canvas as Canvas).toBuffer('png')
+	const skiaCanvas = (canvas as Canvas)
+	if (!skiaCanvas.getContext('2d')) return
+
+	const imageData = await skiaCanvas.toBuffer('png')
 	await writeFile(join(dirname, file), imageData)
 }

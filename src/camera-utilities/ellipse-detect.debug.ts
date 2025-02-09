@@ -1,9 +1,9 @@
-import { canvasConfiguration, getCanvasContext } from './canvas'
+import { canvasConfiguration } from './canvas'
 import { GridEllipsoid } from './ellipse-detect'
 
 export function drawEllipsoid<T extends OffscreenCanvas>(canvas: T, ellipsoid: GridEllipsoid | undefined) : T {
 
-	const ctx = getCanvasContext(canvas)
+	const ctx = canvasConfiguration.getCanvasContext(canvas)
 	if(canvasConfiguration.clearBeforeDraw) ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	if (!ellipsoid) return canvas;

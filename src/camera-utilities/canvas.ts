@@ -5,7 +5,13 @@ export const canvasConfiguration = {
 	} as CanvasRenderingContext2DSettings,
 
 	clearBeforeDraw: true,
-	useOptions: true,
+
+	getCanvasContext<T extends OffscreenCanvas>(canvas: T, alpha = true){
+		return canvas.getContext( '2d', {
+			...this.canvasContextOptions,
+			alpha
+		})!
+	},
 
 	showScaleCanvas: false,
 	showGrayscaleImage: false,
@@ -43,9 +49,3 @@ export const writeOutput = !canvasConfiguration.debugEnabled() ? undefined : asy
 	}
 	link.click()
 }
-
-export const getCanvasContext = <T extends OffscreenCanvas>(canvas: T, alpha = true) =>
-	canvasConfiguration.useOptions ? canvas.getContext( '2d', {
-		...canvasConfiguration.canvasContextOptions,
-		alpha
-	})! : canvas.getContext( '2d')!

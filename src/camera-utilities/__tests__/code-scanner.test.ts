@@ -1,9 +1,9 @@
 import { expect, test } from 'vitest'
 
-import { canvasToPixelGrid } from '../pixel-grid'
+import { canvasToPixelGrid, pixelDataFromOffset } from '../pixel-grid'
 import { fixTestEnvironment, readImageFile, writeCanvas } from '../../__tests__/test-utils'
 import { findEllipsoid, markEdges } from '../ellipse-detect'
-import { Canvas, ImageData } from 'skia-canvas'
+import { Canvas, ImageData, Canvas as SkiaCanvas } from 'skia-canvas'
 import { drawEdgeMap } from '../edge-map.debug'
 import { toPixelArray } from '../pixel-grid.debug'
 import { drawEllipsoid } from '../ellipse-detect.debug'
@@ -13,16 +13,19 @@ import { join } from 'node:path'
 import { blurViewFinder, readViewFinder } from '../read-viewfinder'
 import { findAngles } from '../angle-scan'
 import { drawAngleDetail } from '../angle-scan.debug'
+import { redrawCode } from '../code-redraw'
 
 fixTestEnvironment()
 
 const timestamps = [
 	// Horizontal
-	[1738858808669, {}],
-	// Skewed left
-	[1738791723715, { }],
+	[1738858808669, '05120643716777731637070'],
+	// // Skewed left
+	[1738791723715, '06607602231707646146410'],
+	// TODO figure out rotation glitch
+	// [1738791723715, '06607602231707646147410'],
 	// Skewed right
-	[1738962275690, { }],
+	[1738962275690, '06607602231707646147410'],
 
 	// [1738791708507, { }],
 	// [1738791708511, { }],
@@ -35,9 +38,15 @@ test.concurrent.for(timestamps)('scan-steps', async ([timestamp, expectedResult]
 
 	// Arrange
 	canvasConfiguration.clearBeforeDraw = false
-	canvasConfiguration.useOptions = false
-	// Not sure why skia-canvas needs this to be 1.5 the size
-	canvasConfiguration.blurAmount = 1;
+	canvasConfiguration.getCanvasContext = (canvas) => {
+		const skiaCanvas = (canvas as unknown as SkiaCanvas)
+		if (skiaCanvas.getContext('2d') == null) {
+			skiaCanvas
+				.newPage(canvas.width, canvas.height)
+				.save()
+		}
+		return skiaCanvas.getContext('2d') as any
+	}
 
 	const inputData = await readImageFile(__dirname, `./code-scanner/photo-reference/camera-feed-${timestamp}-scale.png`)
 	const inputDataRect: DOMRect = JSON.parse((await readFile(join(__dirname, `./code-scanner/photo-reference/camera-feed-${timestamp}-viewfinder.json`))).toString())
@@ -80,11 +89,97 @@ test.concurrent.for(timestamps)('scan-steps', async ([timestamp, expectedResult]
 	drawEllipsoid(debugCanvas as any, ellipsoid)
 	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-07-ellipse.png`)
 
-	const alpha = findAngles(ellipsoid, inputGrid)
-	drawAngleDetail(debugCanvas as any, ellipsoid, alpha)
+	const angles = findAngles(ellipsoid, inputGrid)
+	drawAngleDetail(debugCanvas as any, ellipsoid, angles)
 	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-08-alpha.png`)
 
+	const codeCanvas = redrawCode(viewFinderCanvasses[0], inputGrid, ellipsoid, angles)
+	await writeCanvas(codeCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-09-redraw.png`)
+
+	const codeImage = canvasConfiguration
+		.getCanvasContext(codeCanvas!)
+		.getImageData(0, 0, codeCanvas!.width, codeCanvas!.height)
+
+	let code = ''
+	code += testRowValue(codeImage, 0).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 2).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 4).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 6).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 8).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 10).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 12).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 14).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 16).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 18).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 20).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 22).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 24).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 26).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 28).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 30).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 32).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 34).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 36).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 38).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 40).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 42).toString().padEnd(3)
+	code += '|'
+	code += testRowValue(codeImage, 44).toString().padEnd(3)
+
+	console.log(timestamp, '[' + expectedResult.toString().split('').map((_, i) => i + 1).map(x => x.toString().padStart(3)).join('|') + ']')
+	console.log(timestamp, '[' + expectedResult.toString().split('').map(x => (+x)).map(x => x.toString().padEnd(3)).join('|') + ']')
+	console.log()
+	console.log(timestamp, '[' + code + ']')
+	console.log(timestamp, '[' + expectedResult.toString().split('').map((_, i) => i + 1).map(x => x.toString().padStart(3)).join('|') + ']')
+
+	const realCode = code.split('|').map(x => x.trim()).join('');
+	console.log(timestamp, expectedResult)
+	console.log(timestamp, realCode)
+
 	// Assert
-	// TODO write assertions
-	expect(ellipsoid).not.toBe(expectedResult)
+	expect(realCode).toBe(expectedResult)
 })
+
+function testRowValue(image: globalThis.ImageData, x: number) {
+	return (
+		testRow(image, x)
+	)
+}
+
+function testRow(image: globalThis.ImageData, x: number) {
+
+	let whitePixels = 0
+
+	const threshold = 200
+
+	for(let y = 0; y < image.height; y++){
+		const pixel = pixelDataFromOffset(image, x, y)
+		if (pixel.r >= threshold) {
+			whitePixels ++
+		}
+	}
+
+	// return Math.round((whitePixels / (8)) * 10) / 10
+	return Math.round(whitePixels / 8) -1
+}

@@ -6,7 +6,7 @@ import { drawEdgeMap } from '../camera-utilities/edge-map.debug'
 import { toPixelArray } from '../camera-utilities/pixel-grid.debug'
 import { drawEllipsoid } from '../camera-utilities/ellipse-detect.debug'
 import * as fflate from 'fflate';
-import { canvasConfiguration, getCanvasContext } from '../camera-utilities/canvas';
+import { canvasConfiguration } from '../camera-utilities/canvas';
 import { drawAngleDetail } from '../camera-utilities/angle-scan.debug'
 import { AngleDetail } from '../camera-utilities/angle-scan'
 
@@ -30,8 +30,11 @@ const DebugCanvas: Component<DebugCanvasProps> = ({ id, canvas, show }) => {
 	})!
 
 	createEffect(() => {
-		const image = getCanvasContext(canvas).getImageData(0,0, canvas.width, canvas.height)
-		debugContext.putImageData(image, 0, 0)
+		const image = canvasConfiguration
+			.getCanvasContext(canvas)
+			.getImageData(0,0, canvas.width, canvas.height)
+		debugContext
+			.putImageData(image, 0, 0)
 	})
 
 	return debugCanvas
@@ -144,7 +147,9 @@ const downloadCanvasData = async () => {
 	}
 	for (const [id, { image }] of Object.entries(images())) {
 		const tempCanvas = new OffscreenCanvas(image.width, image.height)
-		getCanvasContext(tempCanvas).putImageData(image, 0, 0)
+		canvasConfiguration
+			.getCanvasContext(tempCanvas)
+			.putImageData(image, 0, 0)
 		const canvasBlob = await tempCanvas.convertToBlob({
 			type: 'image/png'
 		})
