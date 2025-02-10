@@ -37,7 +37,7 @@ export function redrawCode(
 	// And where the first 0 starts
 	rotateContext.translate(-angles.lengthAC + 2, codeHeight + 3)
 	// Rotate back to horizontal
-	rotateContext.rotate(-angles.alphaRad)
+	rotateContext.rotate(-angles.alphaDegree)
 	// Draw at left top
 	rotateContext.drawImage(centerCanvas, -centerCanvas.width / 2, -centerCanvas.height / 2)
 	rotateContext.save()

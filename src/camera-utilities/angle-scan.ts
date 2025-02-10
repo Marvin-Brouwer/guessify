@@ -1,7 +1,7 @@
 import { GridEllipsoid } from './ellipse-detect'
 import { PixelGrid } from './pixel-grid'
 
-const betaRad = (90 * (180 / Math.PI));
+const betaRad = (90 * (180 / Math.PI))
 export type AngleDetail = {
 
 	zeroX: number
@@ -23,35 +23,57 @@ export function findAngles(ellipsoid: GridEllipsoid | undefined, grid: PixelGrid
 	if (!ellipsoid) return undefined
 	if (!grid) return undefined
 
-	const bigRadius = Math.max(ellipsoid.radiusA, ellipsoid.radiusB)
-
 	// First find the first 0 bar
+	let minX = Infinity
+	let maxY = 0
+	let minY = Infinity
 
-	let zeroX = 0
-	let zeroY = 0
-
-	for (let y = ellipsoid.averageY - (bigRadius * 1.5); y < ellipsoid.averageY + (bigRadius * 1.5); y++) {
-		for (let x = ellipsoid.averageX + (bigRadius * 1.5); x < ellipsoid.averageX + (bigRadius * 2); x++) {
-			const pixel = grid.pixel(x, y)
+	for (let xStart = ellipsoid.averageRadius / 2; xStart < ellipsoid.averageRadius; xStart += 2) {
+		for (let theta = 0; theta < (10 * Math.PI); theta++) {
+			const x = xStart + (ellipsoid.averageRadius * Math.cos((theta - (5 * Math.PI)) / 10))
+			const y = ellipsoid.averageRadius * Math.sin((theta - (5 * Math.PI)) / 10)
+			const absoluteX = Math.round(ellipsoid.averageX + x)
+			const absoluteY = Math.round(ellipsoid.averageY + y)
+			const pixel = grid.pixel(absoluteX, absoluteY)
 			if (pixel.r === 255 && pixel.g === 255) {
-				if (grid.pixel(x - 1, y -4).r !== 0) continue
-				if (grid.pixel(x - 1, y +6).r !== 0) continue
-				if (grid.pixel(x +6, y -3).r !== 0) continue
-				if (grid.pixel(x +6, y +6).r !== 0) continue
-				zeroX = x
-				zeroY = y
-				break
+				// debugger
+				// if (grid.pixel(absoluteX - 1, absoluteY - 7).r !== 0) continue
+				// if (grid.pixel(absoluteX - 1, absoluteY + 9).r !== 0) continue
+				// if (grid.pixel(absoluteX + 5, absoluteY - 3).r !== 0) continue
+				// if (grid.pixel(absoluteX + 5, absoluteY + 6).r !== 0) continue
+				minX = Math.min(minX, pixel.x)
+				minY = Math.min(minY, pixel.y)
+				maxY = Math.max(maxY, pixel.y + 1)
+
 			}
 		}
 	}
 
+	const zeroX = minX;
+	const zeroY = Math.floor((maxY + minY) / 2)
+
+	// for (let y = ellipsoid.averageY - (ellipsoid.bigRadius * 1.5); y < ellipsoid.averageY + (ellipsoid.bigRadius * 1.5); y++) {
+	// 	for (let x = ellipsoid.averageX + (ellipsoid.bigRadius * 1.5); x < ellipsoid.averageX + (ellipsoid.bigRadius * 2); x++) {
+	// 		const pixel = grid.pixel(x, y)
+	// 		if (pixel.r === 255 && pixel.g === 255) {
+	// 			if (grid.pixel(x - 1, y -4).r !== 0) continue
+	// 			if (grid.pixel(x - 1, y +6).r !== 0) continue
+	// 			if (grid.pixel(x +5, y -3).r !== 0) continue
+	// 			if (grid.pixel(x +5, y +6).r !== 0) continue
+	// 			zeroX = x
+	// 			zeroY = y
+	// 			break
+	// 		}
+	// 	}
+	// }
+
 	const sideAB = zeroX - ellipsoid.averageX
 	const sideBC = zeroY - ellipsoid.averageY
-	const alphaRad = Math.tan(sideBC / sideAB)
-	const alphaDegree = alphaRad * (180 / Math.PI)
+	const alphaDegree = Math.tan(sideBC / sideAB)
+	const alphaRad = alphaDegree * (Math.PI / 180)
 	const betaDegree = 90
 	const gammaDegree = (betaDegree - Math.abs(alphaDegree)) * (alphaDegree > 0 ? 1 : -1)
-	const gammaRad = gammaDegree * (180 / Math.PI)
+	const gammaRad = gammaDegree * (Math.PI / 180)
 
 	const lengthAB = zeroX - ellipsoid.averageX
 	const lengthBC = Math.abs(zeroY - ellipsoid.averageY)

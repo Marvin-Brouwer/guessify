@@ -91,7 +91,7 @@ test.concurrent.for(timestamps)('scan-steps', async ([timestamp, expectedResult]
 
 	const angles = findAngles(ellipsoid, inputGrid)
 	drawAngleDetail(debugCanvas as any, ellipsoid, angles)
-	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-08-alpha.png`)
+	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-08-angles.png`)
 
 	const codeCanvas = redrawCode(viewFinderCanvasses[0], inputGrid, ellipsoid, angles)
 	await writeCanvas(codeCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-09-redraw.png`)

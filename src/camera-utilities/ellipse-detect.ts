@@ -144,6 +144,9 @@ export type GridEllipsoid = {
 	ellipsoidY: number,
 	radiusA: number,
 	radiusB: number,
+	bigRadius: number,
+	smallRadius: number,
+	averageRadius: number,
 
 	averageX: number,
 	averageY: number,
@@ -304,12 +307,20 @@ export function findEllipsoid(edges: EdgeMap | undefined, maxHeight: number): Gr
 	// Ellipse may not exit the screen on the left
 	if (ellipsoidX - distanceA < 3) return undefined
 
+	const bigRadius = Math.max(distanceA, distanceB)
+	const smallRadius = Math.min(distanceA, distanceB)
+	const averageRadius = (bigRadius + smallRadius) / 2
+
 	// TODO see if we can determine rotation somehow?
 	return {
 		ellipsoidX,
 		ellipsoidY,
 		radiusA: distanceA,
 		radiusB: distanceB,
+
+		bigRadius,
+		smallRadius,
+		averageRadius,
 
 		averageX,
 		averageY,
