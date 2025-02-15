@@ -18,6 +18,8 @@ export type AngleDetail = {
 	lengthAB: number,
 	lengthBC: number,
 	lengthAC: number,
+
+	rotatedUpwards: boolean
 }
 export function findAngles(ellipsoid: GridEllipsoid | undefined, grid: PixelGrid | undefined): AngleDetail | undefined {
 	if (!ellipsoid) return undefined
@@ -36,15 +38,9 @@ export function findAngles(ellipsoid: GridEllipsoid | undefined, grid: PixelGrid
 			const absoluteY = Math.round(ellipsoid.averageY + y)
 			const pixel = grid.pixel(absoluteX, absoluteY)
 			if (pixel.r === 255 && pixel.g === 255) {
-				// debugger
-				// if (grid.pixel(absoluteX - 1, absoluteY - 7).r !== 0) continue
-				// if (grid.pixel(absoluteX - 1, absoluteY + 9).r !== 0) continue
-				// if (grid.pixel(absoluteX + 5, absoluteY - 3).r !== 0) continue
-				// if (grid.pixel(absoluteX + 5, absoluteY + 6).r !== 0) continue
 				minX = Math.min(minX, pixel.x)
 				minY = Math.min(minY, pixel.y)
 				maxY = Math.max(maxY, pixel.y + 1)
-
 			}
 		}
 	}
@@ -80,6 +76,7 @@ export function findAngles(ellipsoid: GridEllipsoid | undefined, grid: PixelGrid
 	// Math.sqrt is supposedly very slow, so we just use the cos of the radial alpha corner
 	// const lengthAC = Math.sqrt(Math.pow(lengthAB, 2) + Math.pow(lengthBC, 2))
 	const lengthAC = lengthAB / Math.cos(alphaRad)
+	const rotatedUpwards = alphaDegree < 0
 
 	return {
 		zeroX,
@@ -96,6 +93,8 @@ export function findAngles(ellipsoid: GridEllipsoid | undefined, grid: PixelGrid
 
 		lengthAB,
 		lengthAC,
-		lengthBC
+		lengthBC,
+
+		rotatedUpwards
 	}
 }

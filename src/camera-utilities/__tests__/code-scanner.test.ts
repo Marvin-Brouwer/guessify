@@ -14,6 +14,8 @@ import { blurViewFinder, readViewFinder } from '../read-viewfinder'
 import { findAngles } from '../angle-scan'
 import { drawAngleDetail } from '../angle-scan.debug'
 import { redrawCode } from '../code-redraw'
+import { findBoundary } from '../boundary-scan'
+import { drawBoundaryDetail } from '../boundary-scan.debug'
 
 fixTestEnvironment()
 
@@ -93,8 +95,12 @@ test.concurrent.for(timestamps)('scan-steps', async ([timestamp, expectedResult]
 	drawAngleDetail(debugCanvas as any, ellipsoid, angles)
 	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-08-angles.png`)
 
+	const boundary = findBoundary(angles, ellipsoid, inputGrid)
+	drawBoundaryDetail(debugCanvas as any, boundary, ellipsoid, angles)
+	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-09-bounds.png`)
+
 	const codeCanvas = redrawCode(viewFinderCanvasses[0], inputGrid, ellipsoid, angles)
-	await writeCanvas(codeCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-09-redraw.png`)
+	await writeCanvas(codeCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-99-redraw.png`)
 
 	const codeImage = canvasConfiguration
 		.getCanvasContext(codeCanvas!)
