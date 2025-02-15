@@ -2,6 +2,10 @@ import { canvasConfiguration } from './canvas'
 import { edgeScores } from './edge-map'
 import { GridPixel, Pixel, PixelGrid } from './pixel-grid'
 
+/**
+ * Convert the pixelGrid back to a {@link Uint8ClampedArray} so we can draw it on a canvas and inspect it.\
+ * The edges are drawn in green
+ */
 export function toPixelArray(grid: PixelGrid) {
 	const uintPixels = new Uint8ClampedArray(grid.size)
 	for (let pixel of grid) {

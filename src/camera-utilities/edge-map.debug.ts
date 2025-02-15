@@ -1,11 +1,11 @@
 import { canvasConfiguration } from './canvas'
 import { edgeDirections, EdgeMap } from './ellipse-detect'
 
+/** Draw a representation of where we think the diagonal edges of the elliptical logo hang out */
 export function drawEdgeMap<T extends OffscreenCanvas>(canvas: T, edges: EdgeMap | undefined): T {
 
 	const ctx = canvasConfiguration.getCanvasContext(canvas);
 	if(canvasConfiguration.clearBeforeDraw) ctx.clearRect(0, 0, canvas.width, canvas.height)
-
 	if (!edges) return canvas;
 
 	for (const edge of edges) {
