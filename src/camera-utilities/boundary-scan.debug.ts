@@ -14,6 +14,8 @@ export function drawBoundaryDetail<T extends OffscreenCanvas>(canvas: T, boundar
 	markLastZeroEstimation(ctx, ellipsoid, angles, boundary)
 	markLastZeroSearch(ctx, ellipsoid, boundary)
 	markLastZeroLocation(ctx, boundary)
+	markCenterSearch(ctx, ellipsoid, angles, boundary)
+	markCenterLocation(ctx, boundary)
 
 	// TODO
 	// Calculate upper and lower position of the middle 7 bar using pythagoras and the two blue +'s
@@ -23,6 +25,54 @@ export function drawBoundaryDetail<T extends OffscreenCanvas>(canvas: T, boundar
 	// Calculate the rectangle using more pythagoras, perhaps in it's own file like 'boundary-calculator'
 
 	return canvas
+}
+
+/** Illustrate the point cloud we'll be calculating the last bar position in */
+function markCenterSearch(
+	ctx: OffscreenCanvasRenderingContext2D,
+	ellipsoid: GridEllipsoid,
+	angles: AngleDetail,
+	boundary: BoundaryDetail
+) {
+	const centerX = (boundary.zeroLeftX + boundary.zeroRightX) / 2
+	const centerY = (boundary.zeroLeftY + boundary.zeroRightY) / 2
+
+	const estimatedTopX = (ellipsoid.averageRadius) * Math.tan((angles.alphaDegree * -1))
+	const estimatedTopY = (ellipsoid.averageRadius) * Math.sin(Math.abs(angles.gammaDegree))
+
+	ctx.strokeStyle = 'rgba(255, 0, 217, 0.5)'
+	ctx.beginPath()
+	ctx.ellipse(
+		Math.round(centerX + estimatedTopX) -1, Math.round(centerY + estimatedTopY),
+		boundary.widthDifference * 1.2, boundary.widthDifference * 1.4,
+		0, 0, 180
+	)
+	ctx.stroke()
+	ctx.beginPath()
+	ctx.ellipse(
+		Math.round(centerX - estimatedTopX) +1, Math.round(centerY - estimatedTopY),
+		boundary.widthDifference * 1.2, boundary.widthDifference * 1.4,
+		0, 0, 180
+	)
+	ctx.stroke()
+
+	for (let xStart = boundary.widthDifference; xStart > 0; xStart --) {
+		ctx.fillStyle = `rgba(255, 0, 217, ${.05 * xStart})`
+		for (let theta = 0; theta < (10 * Math.PI); theta++) {
+			const x = ((xStart * 1.2) * Math.cos(theta))
+			const y = ((xStart * 1.4) * Math.sin(theta))
+			ctx.fillRect(
+				centerX + estimatedTopX + x,
+				centerY + estimatedTopY + y,
+				1, 1
+			)
+			ctx.fillRect(
+				centerX - estimatedTopX + x,
+				centerY - estimatedTopY + y,
+				1, 1
+			)
+		}
+	}
 }
 
 /** Mark the last zero bar position on the canvas */
@@ -35,13 +85,32 @@ function markLastZeroLocation(
 	ctx.fillRect(Math.round(boundary.zeroRightX), Math.round(boundary.zeroRightY - 2), 1, 5)
 }
 
+/** Mark the middle between the two zero bars on the canvas */
+function markCenterLocation(
+	ctx: OffscreenCanvasRenderingContext2D,
+	boundary: BoundaryDetail
+) {
+	// (purely illustrational)
+	ctx.fillStyle = 'rgb(0, 0, 255)'
+	const centerX = (boundary.zeroLeftX + boundary.zeroRightX) / 2
+	const centerY = (boundary.zeroLeftY + boundary.zeroRightY) / 2
+	ctx.fillRect(Math.round(centerX - 1), Math.round(centerY), 3, 1)
+	ctx.fillRect(Math.round(centerX), Math.round(centerY - 2), 1, 5)
+
+	ctx.fillStyle = 'rgb(0, 225, 255)'
+	ctx.fillRect(Math.round(boundary.sevenTopX ), Math.round(boundary.sevenTopY - 1), 1, 3)
+	ctx.fillRect(Math.round(boundary.sevenTopX - 2), Math.round(boundary.sevenTopY ), 5, 1)
+	ctx.fillRect(Math.round(boundary.sevenBottomX ), Math.round(boundary.sevenBottomY - 1), 1, 3)
+	ctx.fillRect(Math.round(boundary.sevenBottomX - 2), Math.round(boundary.sevenBottomY), 5, 1)
+}
+
 /** Illustrate the point cloud we'll be calculating the last bar position in */
 function markLastZeroSearch(
 	ctx: OffscreenCanvasRenderingContext2D,
 	ellipsoid: GridEllipsoid,
 	boundary: BoundaryDetail
 ) {
-	ctx.strokeStyle = 'rgba(25, 0, 255, 0.5)'
+	ctx.strokeStyle = 'rgba(255, 0, 217, 0.5)'
 	ctx.beginPath()
 	ctx.ellipse(
 		ellipsoid.averageX + boundary.estimatedLastZeroX, ellipsoid.averageY + boundary.estimatedLastZeroY,
@@ -51,7 +120,7 @@ function markLastZeroSearch(
 	ctx.stroke()
 
 	for (let xStart = boundary.widthDifference; xStart > 0; xStart --) {
-		ctx.fillStyle = `rgba(25, 0, 255, ${.05 * xStart})`
+		ctx.fillStyle = `rgba(255, 0, 217, ${.05 * xStart})`
 		for (let theta = 0; theta < (10 * Math.PI); theta++) {
 			const x = ((xStart * 1.2) * Math.cos(theta))
 			const y = ((xStart * 2.5) * Math.sin(theta))
