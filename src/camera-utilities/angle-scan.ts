@@ -48,21 +48,6 @@ export function findAngles(ellipsoid: GridEllipsoid | undefined, grid: PixelGrid
 	const zeroX = minX;
 	const zeroY = Math.floor((maxY + minY) / 2)
 
-	// for (let y = ellipsoid.averageY - (ellipsoid.bigRadius * 1.5); y < ellipsoid.averageY + (ellipsoid.bigRadius * 1.5); y++) {
-	// 	for (let x = ellipsoid.averageX + (ellipsoid.bigRadius * 1.5); x < ellipsoid.averageX + (ellipsoid.bigRadius * 2); x++) {
-	// 		const pixel = grid.pixel(x, y)
-	// 		if (pixel.r === 255 && pixel.g === 255) {
-	// 			if (grid.pixel(x - 1, y -4).r !== 0) continue
-	// 			if (grid.pixel(x - 1, y +6).r !== 0) continue
-	// 			if (grid.pixel(x +5, y -3).r !== 0) continue
-	// 			if (grid.pixel(x +5, y +6).r !== 0) continue
-	// 			zeroX = x
-	// 			zeroY = y
-	// 			break
-	// 		}
-	// 	}
-	// }
-
 	const sideAB = zeroX - ellipsoid.averageX
 	const sideBC = zeroY - ellipsoid.averageY
 	const alphaDegree = Math.tan(sideBC / sideAB)

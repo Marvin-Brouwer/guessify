@@ -76,53 +76,48 @@ export function findBoundary(angles: AngleDetail | undefined, ellipsoid: GridEll
 	const zeroRightX = maxX;
 	const zeroRightY = Math.floor((maxY + minY) / 2)
 
-	let sevenTopMaxX = 0
-	let sevenTopMinY = Infinity
-	let sevenTopMinX = Infinity
 
-	let sevenBottomMaxX = 0
-	let sevenBottomMinX = Infinity
-	let sevenBottomMaxY = 0
+	const estimatedMiddleX = (angles.zeroX + zeroRightX) / 2
+	let minMiddleX = Infinity;
+	let maxMiddleX = 0;
+	const middleY = (angles.zeroY + zeroRightY) / 2
 
+	for (let offset = -1 * widthDifference; offset <= widthDifference; offset ++){
+		let pixel = grid.pixel(estimatedMiddleX + offset, middleY)
+		if (pixel.r === 255 && pixel.g === 255) {
+			minMiddleX = Math.min(minMiddleX, pixel.x)
+			maxMiddleX = Math.max(maxMiddleX, pixel.x)
+		}
+	}
+	const middleX = Math.round((maxMiddleX + minMiddleX) / 2)
 
-	const centerX = (angles.zeroX + zeroRightX) / 2
-	const centerY = (angles.zeroY + zeroRightY) / 2
-	const estimatedTopX = (ellipsoid.averageRadius) * Math.tan((angles.alphaDegree * -1))
-	const estimatedTopY = (ellipsoid.averageRadius) * Math.sin(Math.abs(angles.gammaDegree))
+	const sideAB = zeroRightX - angles.zeroX
+	const sideBC = zeroRightY - angles.zeroY
+	const recalculatedRotationAlphaDegree = Math.tan(sideBC / sideAB)
 
-	for (let xStart = widthDifference; xStart > 0; xStart --) {
-		for (let theta = 0; theta < (10 * Math.PI); theta++) {
-			const x = ((xStart * 1.2) * Math.cos(theta))
-			const y = ((xStart * 1.4) * Math.sin(theta))
+	const sevenTopX = middleX - (ellipsoid.averageRadius * Math.tan((recalculatedRotationAlphaDegree * -1)))
+	const sevenBottomX = middleX + (ellipsoid.averageRadius * Math.tan((recalculatedRotationAlphaDegree * -1)))
+	let sevenTopY = Infinity;
+	let sevenBottomY = 0;
 
-			const absoluteTopX = Math.round(centerX + estimatedTopX + x)
-			const absoluteTopY = Math.round(centerY - estimatedTopY + y)
+	for (let offset = -1 * widthDifference; offset <= widthDifference; offset ++){
+		const checkDistance = ellipsoid.averageRadius + offset;
 
-			let pixel = grid.pixel(absoluteTopX, absoluteTopY)
-			if (pixel.r === 255 && pixel.g === 255) {
-				sevenTopMinX = Math.min(sevenTopMinX, pixel.x)
-				sevenTopMaxX = Math.max(sevenTopMaxX, pixel.x)
-				sevenTopMinY = Math.min(sevenTopMinY, pixel.y - 1)
-			}
+		const estimatedTopY = middleY - (checkDistance * Math.cos(Math.abs(recalculatedRotationAlphaDegree)))
+		let pixel = grid.pixel(sevenTopX, estimatedTopY)
+		if (pixel.r === 255 && pixel.g === 255) {
+			sevenTopY = Math.min(sevenTopY, pixel.y)
+		}
 
-			const absoluteBottomX = Math.round(centerX + estimatedTopX + x)
-			const absoluteBottomY = Math.round(centerY + estimatedTopY + y)
-
-			pixel = grid.pixel(absoluteBottomX, absoluteBottomY)
-			if (pixel.r === 255 && pixel.g === 255) {
-				sevenBottomMinX = Math.min(sevenBottomMinX, pixel.x)
-				sevenBottomMaxX = Math.max(sevenBottomMaxX, pixel.x)
-				sevenBottomMaxY = Math.max(sevenBottomMaxY, pixel.y + 1)
-			}
+		const estimatedBottomY = middleY + (checkDistance * Math.cos(Math.abs(recalculatedRotationAlphaDegree)))
+		pixel = grid.pixel(sevenBottomX, estimatedBottomY)
+		if (pixel.r === 255 && pixel.g === 255) {
+			sevenBottomY = Math.max(sevenBottomY, pixel.y)
 		}
 	}
 
-	// TODO, it's probably better to calculate the difference from the center using these coordinates
-	// and then using pythagoras
-	const sevenTopX = Math.floor((sevenTopMaxX + sevenBottomMinX + centerX - estimatedTopX) / 3);
-	const sevenTopY = sevenTopMinY
-	const sevenBottomX = Math.floor((sevenBottomMaxX + sevenBottomMinX + centerX - estimatedTopX) / 3)
-	const sevenBottomY = sevenBottomMaxY
+	sevenTopY--;
+	sevenBottomY++;
 
 	return {
 		zeroLeftX: angles.zeroX,

@@ -14,65 +14,12 @@ export function drawBoundaryDetail<T extends OffscreenCanvas>(canvas: T, boundar
 	markLastZeroEstimation(ctx, ellipsoid, angles, boundary)
 	markLastZeroSearch(ctx, ellipsoid, boundary)
 	markLastZeroLocation(ctx, boundary)
-	markCenterSearch(ctx, ellipsoid, angles, boundary)
 	markCenterLocation(ctx, boundary)
-
-	// TODO
-	// Calculate upper and lower position of the middle 7 bar using pythagoras and the two blue +'s
-	// Check if that's accurate, otherwise add another circle scan on both sides
 
 	// TODO
 	// Calculate the rectangle using more pythagoras, perhaps in it's own file like 'boundary-calculator'
 
 	return canvas
-}
-
-/** Illustrate the point cloud we'll be calculating the last bar position in */
-function markCenterSearch(
-	ctx: OffscreenCanvasRenderingContext2D,
-	ellipsoid: GridEllipsoid,
-	angles: AngleDetail,
-	boundary: BoundaryDetail
-) {
-	const centerX = (boundary.zeroLeftX + boundary.zeroRightX) / 2
-	const centerY = (boundary.zeroLeftY + boundary.zeroRightY) / 2
-
-	const estimatedTopX = (ellipsoid.averageRadius) * Math.tan((angles.alphaDegree * -1))
-	const estimatedTopY = (ellipsoid.averageRadius) * Math.sin(Math.abs(angles.gammaDegree))
-
-	ctx.strokeStyle = 'rgba(255, 0, 217, 0.5)'
-	ctx.beginPath()
-	ctx.ellipse(
-		Math.round(centerX + estimatedTopX) -1, Math.round(centerY + estimatedTopY),
-		boundary.widthDifference * 1.2, boundary.widthDifference * 1.4,
-		0, 0, 180
-	)
-	ctx.stroke()
-	ctx.beginPath()
-	ctx.ellipse(
-		Math.round(centerX - estimatedTopX) +1, Math.round(centerY - estimatedTopY),
-		boundary.widthDifference * 1.2, boundary.widthDifference * 1.4,
-		0, 0, 180
-	)
-	ctx.stroke()
-
-	for (let xStart = boundary.widthDifference; xStart > 0; xStart --) {
-		ctx.fillStyle = `rgba(255, 0, 217, ${.05 * xStart})`
-		for (let theta = 0; theta < (10 * Math.PI); theta++) {
-			const x = ((xStart * 1.2) * Math.cos(theta))
-			const y = ((xStart * 1.4) * Math.sin(theta))
-			ctx.fillRect(
-				centerX + estimatedTopX + x,
-				centerY + estimatedTopY + y,
-				1, 1
-			)
-			ctx.fillRect(
-				centerX - estimatedTopX + x,
-				centerY - estimatedTopY + y,
-				1, 1
-			)
-		}
-	}
 }
 
 /** Mark the last zero bar position on the canvas */
