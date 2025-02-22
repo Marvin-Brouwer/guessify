@@ -24,6 +24,8 @@ export type BoundaryDetail = {
 	// rightBottomX: number
 	// rightBottomY: number
 
+	recalculatedAlphaDegree: number
+
 	/** This is the difference between the circle diameter and the length of the distance to the first 0 */
 	widthDifference:number,
 	/** This is an estimated distance to where the last 0 might be */
@@ -133,6 +135,7 @@ export function findBoundary(angles: AngleDetail | undefined, ellipsoid: GridEll
 		sevenTopX,
 		sevenTopY,
 		sevenBottomX,
-		sevenBottomY
+		sevenBottomY,
+		recalculatedAlphaDegree: recalculatedRotationAlphaDegree
 	}
 }

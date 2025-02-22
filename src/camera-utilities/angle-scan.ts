@@ -1,7 +1,7 @@
 import { GridEllipsoid } from './ellipse-detect'
 import { PixelGrid } from './pixel-grid'
 
-const betaRad = (90 * (180 / Math.PI))
+export const toRad = (angle: number): number => angle * (Math.PI / 180)
 export type AngleDetail = {
 
 	zeroX: number
@@ -10,10 +10,6 @@ export type AngleDetail = {
 	alphaDegree: number
 	betaDegree: 90
 	gammaDegree: number
-
-	alphaRad: number
-	betaRad: typeof betaRad
-	gammaRad: number
 
 	lengthAB: number,
 	lengthBC: number,
@@ -54,7 +50,6 @@ export function findAngles(ellipsoid: GridEllipsoid | undefined, grid: PixelGrid
 	const alphaRad = alphaDegree * (Math.PI / 180)
 	const betaDegree = 90
 	const gammaDegree = (betaDegree - Math.abs(alphaDegree)) * (alphaDegree > 0 ? 1 : -1)
-	const gammaRad = gammaDegree * (Math.PI / 180)
 
 	const lengthAB = zeroX - ellipsoid.averageX
 	const lengthBC = Math.abs(zeroY - ellipsoid.averageY)
@@ -67,14 +62,9 @@ export function findAngles(ellipsoid: GridEllipsoid | undefined, grid: PixelGrid
 		zeroX,
 		zeroY,
 
-		alphaRad,
 		alphaDegree,
-
-		betaRad,
 		betaDegree,
-
 		gammaDegree,
-		gammaRad,
 
 		lengthAB,
 		lengthAC,

@@ -23,9 +23,7 @@ const timestamps = [
 	// Horizontal
 	[1738858808669, '05120643716777731637070'],
 	// // Skewed left
-	[1738791723715, '06607602231707646146410'],
-	// TODO figure out rotation glitch
-	// [1738791723715, '06607602231707646147410'],
+	[1738791723715, '06607602231707646147410'],
 	// Skewed right
 	[1738962275690, '06607602231707646147410'],
 
@@ -99,7 +97,7 @@ test.concurrent.for(timestamps)('scan-steps', async ([timestamp, expectedResult]
 	drawBoundaryDetail(debugCanvas as any, boundary, ellipsoid, angles)
 	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-09-bounds.png`)
 
-	const codeCanvas = redrawCode(viewFinderCanvasses[0], inputGrid, ellipsoid, angles)
+	const codeCanvas = redrawCode(viewFinderCanvasses[0], ellipsoid, angles, boundary)
 	await writeCanvas(codeCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-99-redraw.png`)
 
 	const codeImage = canvasConfiguration
@@ -177,7 +175,14 @@ function testRow(image: globalThis.ImageData, x: number) {
 
 	let whitePixels = 0
 
-	const threshold = 200
+	const threshold = 130
+	let midHeight = 0
+	for(let y = 0; y < image.height; y++){
+		const pixel = pixelDataFromOffset(image, 22, y)
+		if (pixel.r >= threshold) {
+			midHeight ++
+		}
+	}
 
 	for(let y = 0; y < image.height; y++){
 		const pixel = pixelDataFromOffset(image, x, y)
@@ -186,6 +191,8 @@ function testRow(image: globalThis.ImageData, x: number) {
 		}
 	}
 
+	console.log('x', x, 'whitePixels', whitePixels, 'midHeight', midHeight, image.height)
 	// return Math.round((whitePixels / (8)) * 10) / 10
-	return Math.round(whitePixels / 8) -1
+	const roundResult = Math.round((whitePixels / midHeight) * 8) -1
+	return roundResult > 0 ? roundResult : 0;
 }
