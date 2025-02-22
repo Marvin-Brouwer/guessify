@@ -19,22 +19,14 @@ import { drawBoundaryDetail } from '../boundary-scan.debug'
 
 fixTestEnvironment()
 
-const timestamps = [
-	// Horizontal
-	[1738858808669, '05120643716777731637070'],
-	// // Skewed left
-	[1738791723715, '06607602231707646147410'],
-	// Skewed right
-	[1738962275690, '06607602231707646147410'],
-
-	// [1738791708507, { }],
-	// [1738791708511, { }],
-	// [1738791723711, { }],
-	// [1738791743953, { }],
-	// [1738791743958, { }]
+type TestData = [name: string, timestamp: number, expectedResult: string]
+const timestamps: TestData[] = [
+	['horizontal', 1738858808669, '05120643716777731637070'],
+	['skewed left', 1738791723715, '06607602231707646147410'],
+	['skewed right', 1738962275690, '06607602231707646147410'],
 ]
 
-test.concurrent.for(timestamps)('scan-steps', async ([timestamp, expectedResult]) => {
+test.concurrent.for(timestamps)('scan-steps [%s]', async ([_, timestamp, expectedResult]) => {
 
 	// Arrange
 	canvasConfiguration.clearBeforeDraw = false
@@ -100,99 +92,55 @@ test.concurrent.for(timestamps)('scan-steps', async ([timestamp, expectedResult]
 	const codeCanvas = redrawCode(viewFinderCanvasses[0], ellipsoid, angles, boundary)
 	await writeCanvas(codeCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-99-redraw.png`)
 
+	const code = parseCode(codeCanvas)
+
+	// Assert
+	expect(code).toBe(expectedResult)
+})
+
+
+const barThreshold = 130
+
+function countColumnHeight(image: globalThis.ImageData, x: number) {
+
+	let whitePixelCount = 0
+	for (let y = 0; y < image.height; y++) {
+		const pixel = pixelDataFromOffset(image, x, y)
+		if (pixel.r >= barThreshold) {
+			whitePixelCount++
+		}
+	}
+
+	return whitePixelCount
+}
+
+function countColumn(image: globalThis.ImageData, x: number, midHeight: number) {
+
+
+	const barHeight = countColumnHeight(image, x)
+
+	const roundResult = Math.round((barHeight / midHeight) * 8) - 1
+	// Make sure negatives never happen
+	return roundResult > 0 ? roundResult : 0
+}
+
+function parseCode(codeCanvas: OffscreenCanvas | undefined) {
+	if (codeCanvas === undefined) return undefined
+
 	const codeImage = canvasConfiguration
 		.getCanvasContext(codeCanvas!)
 		.getImageData(0, 0, codeCanvas!.width, codeCanvas!.height)
 
+	const midHeight = countColumnHeight(codeImage, 22)
+
 	let code = ''
-	code += testRowValue(codeImage, 0).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 2).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 4).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 6).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 8).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 10).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 12).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 14).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 16).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 18).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 20).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 22).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 24).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 26).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 28).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 30).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 32).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 34).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 36).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 38).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 40).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 42).toString().padEnd(3)
-	code += '|'
-	code += testRowValue(codeImage, 44).toString().padEnd(3)
-
-	console.log(timestamp, '[' + expectedResult.toString().split('').map((_, i) => i + 1).map(x => x.toString().padStart(3)).join('|') + ']')
-	console.log(timestamp, '[' + expectedResult.toString().split('').map(x => (+x)).map(x => x.toString().padEnd(3)).join('|') + ']')
-	console.log()
-	console.log(timestamp, '[' + code + ']')
-	console.log(timestamp, '[' + expectedResult.toString().split('').map((_, i) => i + 1).map(x => x.toString().padStart(3)).join('|') + ']')
-
-	const realCode = code.split('|').map(x => x.trim()).join('');
-	console.log(timestamp, expectedResult)
-	console.log(timestamp, realCode)
-
-	// Assert
-	expect(realCode).toBe(expectedResult)
-})
-
-function testRowValue(image: globalThis.ImageData, x: number) {
-	return (
-		testRow(image, x)
-	)
-}
-
-function testRow(image: globalThis.ImageData, x: number) {
-
-	let whitePixels = 0
-
-	const threshold = 130
-	let midHeight = 0
-	for(let y = 0; y < image.height; y++){
-		const pixel = pixelDataFromOffset(image, 22, y)
-		if (pixel.r >= threshold) {
-			midHeight ++
-		}
+	for (let x = 0; x <= 44; x += 2) {
+		const columnHeight = countColumn(codeImage, x, midHeight)
+		if (x === 0 && columnHeight != 0) return undefined;
+		if (x === 22 && columnHeight != 7) return undefined;
+		if (x === 44 && columnHeight != 0) return undefined;
+		code += columnHeight.toString()
 	}
 
-	for(let y = 0; y < image.height; y++){
-		const pixel = pixelDataFromOffset(image, x, y)
-		if (pixel.r >= threshold) {
-			whitePixels ++
-		}
-	}
-
-	console.log('x', x, 'whitePixels', whitePixels, 'midHeight', midHeight, image.height)
-	// return Math.round((whitePixels / (8)) * 10) / 10
-	const roundResult = Math.round((whitePixels / midHeight) * 8) -1
-	return roundResult > 0 ? roundResult : 0;
+	return code;
 }
