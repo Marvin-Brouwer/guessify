@@ -1,3 +1,11 @@
+/**
+ * This test suite helps us with debugging scanned images. \
+ * It's mainly to prevent us from having to connect a phone and scan a real code
+ * whilst trying to figure out how to make the code work.
+ *
+ * It's basically one test that runs on a set of exported data using the app in dev-mode.
+ */
+
 import { expect, test } from 'vitest'
 
 import { canvasToPixelGrid } from '../pixel-grid'

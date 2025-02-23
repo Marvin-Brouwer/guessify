@@ -11,7 +11,7 @@ const codes: [code: string, expectedMediaRef: number][] = [
 	['05120643716777731637070', 75845227563],
 ]
 
-test.for(codes)(`code '%s' -> mediaref:%s`, ([codeString, expectedMediaRef]) => {
+test.for(codes)(`code '%s' -> media-ref:%s`, ([codeString, expectedMediaRef]) => {
 
 	// Arrange
 	const code = codeString.split('').map(Number)

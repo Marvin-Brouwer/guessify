@@ -12,7 +12,10 @@ import { createModel } from 'js-crc'
 type Bit = 0 | 1
 
 /**
- * Converts a binary array to an integer. (little endian)
+ * Converts a binary array to an integer.
+ *
+ * [!IMPORTANT] \
+ * This assumes little endian encoding
  *
  * @param bin - The binary array.
  * @param length - The number of bits to consider.
@@ -41,6 +44,7 @@ export function binToBytes(bin: Bit[], length: number): Bit[] {
 /**
  * CRC model for validating Spotify barcode data,
  * using Rocksoft model:
+ *
  * [!NOTE]\
  * this is not quite any of their predefined CRC's
  */
