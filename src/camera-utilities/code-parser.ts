@@ -35,14 +35,14 @@ export function parseCode(codeCanvas: OffscreenCanvas | undefined) {
 
 	const midHeight = countColumnHeight(codeImage, 22)
 
-	let code = ''
+	let code: number[] = []
 	for (let x = 0; x <= 44; x += 2) {
 		const columnHeight = countColumn(codeImage, x, midHeight)
 		// Some validation logic to make sure it's actually a spotify code
 		if (x === 0 && columnHeight != 0) return undefined;
 		if (x === 22 && columnHeight != 7) return undefined;
 		if (x === 44 && columnHeight != 0) return undefined;
-		code += columnHeight.toString()
+		code.push(columnHeight)
 	}
 
 	return code;

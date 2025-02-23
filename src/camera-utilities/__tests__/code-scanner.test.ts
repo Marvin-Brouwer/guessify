@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { canvasToPixelGrid, pixelDataFromOffset } from '../pixel-grid'
+import { canvasToPixelGrid } from '../pixel-grid'
 import { fixTestEnvironment, readImageFile, writeCanvas } from '../../__tests__/test-utils'
 import { findEllipsoid, markEdges } from '../ellipse-detect'
 import { Canvas, ImageData, Canvas as SkiaCanvas } from 'skia-canvas'
@@ -93,7 +93,7 @@ test.concurrent.for(timestamps)('scan-steps [%s]', async ([_, timestamp, expecte
 	const codeCanvas = redrawCode(viewFinderCanvasses[0], ellipsoid, angles, boundary)
 	await writeCanvas(codeCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-99-redraw.png`)
 
-	const code = parseCode(codeCanvas)
+	const code = parseCode(codeCanvas)?.join('')
 
 	// Assert
 	expect(code).toBe(expectedResult)
