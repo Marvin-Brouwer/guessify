@@ -3,6 +3,7 @@ import { UserProfile } from '@spotify/web-api-ts-sdk'
 import { Locale, storeLocale, useDictionaries } from '../i18n/dictionary'
 import { SpotifyStatus, useSpotifyApi } from './spotify-api-context'
 import { ensureRejectionStack, ErrorWithRestore } from '../error'
+import { decodeMediaRef } from '../spotify-decoder/decode-media-ref'
 
 const isAuthenticated = (status: Accessor<SpotifyStatus>) => status() === 'success'
 
@@ -53,6 +54,7 @@ async function logIn(locale: Locale) {
 export type SpotifyContext = {
 	logOut: () => void
 	logIn: () => Promise<void>
+	getMediaReference: (code: number[]) => Promise<string | undefined>,
 	isAuthenticating: Accessor<boolean>,
 	isAuthenticated: Accessor<boolean>,
 	isValid: Accessor<boolean>,
@@ -66,6 +68,7 @@ const [profile, setProfile] = createSignal<UserProfile>()
 const spotifyContext = createContext<SpotifyContext>({
 	logIn: () => Promise.resolve(),
 	logOut: () => Promise.resolve(),
+	getMediaReference: (_: number[]) => Promise.resolve<string | undefined>(undefined),
 	isAuthenticating,
 	isAuthenticated: () => false,
 	isValid: () => false,
@@ -97,9 +100,50 @@ export const SpotifyContext: ParentComponent = (props) => {
 		return dictionary().spotify.errors.unknown
 	}
 
+	const getMediaReference = async (code: number[]): Promise<string | undefined> => {
+
+		const mediaReference = await decodeMediaRef(code)
+		if (!mediaReference) return
+
+		const clientId = import.meta.env['VITE_SPOTIFY_CLIENT']
+		const HEADERS_LUT = {
+			"X-Client-Id": clientId,
+			// "App-Platform": "web",
+			"Accept": "*/*",
+			"Content-Type": "application/json"
+		}
+
+
+		const MEDIA_REF_LUT_URL = "https://spclient.wg.spotify.com:443/scannable-id/id"
+
+		// TODO, we're getting AUTH issues, I don't think spotify intends us to call this from web.
+		try {
+			// const auth = await fetch('https://open.spotify.com/get_access_token', {
+			// 	method: 'GET',
+			// 	credentials: 'include'
+			// }).then(r => r.json())
+			const test = await fetch(`${MEDIA_REF_LUT_URL}/${75845227563}?format=json`, {
+				method: 'GET',
+				headers: {
+					...HEADERS_LUT,
+					"Authorization": `Bearer ${(await api.getAccessToken())?.access_token}`
+				},
+				mode: 'cors',
+				credentials: 'include'
+
+			}).then(r => r.json())
+
+			return test.target
+		} catch (e) {
+			return mediaReference.toString()
+		}
+
+	}
+
 	return <spotifyContext.Provider value={{
 		isValid: createMemo(checkValid, [status, profile]),
 		isAuthenticated: createMemo(() => isAuthenticated(status), status),
+		getMediaReference,
 		errorMessage,
 		isAuthenticating,
 		logIn: () => logIn(locale()),

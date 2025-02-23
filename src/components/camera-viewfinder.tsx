@@ -11,11 +11,16 @@ import { canvasToPixelGrid } from '../camera-utilities/pixel-grid'
 import debug from './camera-viewfinder.debug'
 import { findEllipsoid, markEdges } from '../camera-utilities/ellipse-detect'
 import { findAngles } from '../camera-utilities/angle-scan'
+import { findBoundary } from '../camera-utilities/boundary-scan'
+import { redrawCode } from '../camera-utilities/code-redraw'
+import { parseCode } from '../camera-utilities/code-parser'
+import { decodeMediaRef } from '../spotify-decoder/decode-media-ref'
 
 // This is just as an example:
-const [codeExample, _setCode] = createSignal('')
+const [codeExample, setCodeExample] = createSignal('')
+const [mediaRefExample, setMediaRefExample] = createSignal('')
 
-const [codeDetected, _setCodeDetected] = createSignal(false)
+const [codeDetected, setCodeDetected] = createSignal(false)
 const [viewFinder, setViewFinder] = createSignal<HTMLDivElement>()
 
 export type CameraLensProps = {
@@ -28,7 +33,10 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 	let interval: NodeJS.Timeout | undefined
 
 	async function scanFrame() {
-		if (cameraContext.hasErrored()) return
+		if (cameraContext.hasErrored()) {
+			interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
+			return
+		}
 		if (!cameraContext.hasPermission()) {
 			if (import.meta.env.DEV) {
 				window.location.reload()
@@ -75,44 +83,44 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		if (!pixelGrid) return requestAnimationFrame(scanFrame)
 
 		debug?.debugGridPixels(canvasConfiguration.showOrientationLines, 'lines', pixelGrid)
-
-		const edges = markEdges(pixelGrid);
+		const edges = markEdges(pixelGrid)
 		debug?.debugEdgeMap(canvasConfiguration.showOrientationLines, pixelGrid, edges)
-		if (!canvasConfiguration.debugEnabled() && !edges) {
-			interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
-			return;
-		}
-
-		const ellipsoid = findEllipsoid(edges, pixelGrid.height);
+		const ellipsoid = findEllipsoid(edges, pixelGrid.height)
 		debug?.debugEllipsoid(canvasConfiguration.showEllipsoid, pixelGrid, ellipsoid)
-		if (!canvasConfiguration.debugEnabled() && !ellipsoid) {
+		const angles = findAngles(ellipsoid, pixelGrid)
+		debug?.debugAngles(canvasConfiguration.showAngles, pixelGrid, ellipsoid, angles)
+		const boundary = findBoundary(angles, ellipsoid, pixelGrid)
+		debug?.debugBoundary(canvasConfiguration.showBoundary, pixelGrid, boundary, ellipsoid, angles)
+
+		if (!boundary) {
 			interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
-			return;
+			return
 		}
 
-		const angles = findAngles(ellipsoid, pixelGrid);
-		debug?.debugAngles(canvasConfiguration.showAngles, pixelGrid, ellipsoid, angles)
+		const codeCanvas = redrawCode(viewFinderCanvasses[0], ellipsoid, angles, boundary)
+		if (!codeCanvas) {
+			interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
+			return
+		}
 
-		// TODO detect circle
-		// TODO detect code end
-		// TODO matrix transform
-		// TODO scan code
-		// const [result, codeValue] = await scanImage(image, canvasContext);
+		const code = parseCode(codeCanvas)
+		if (!code) {
+			setCodeDetected(false)
+			interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
+			return
+		}
 
-		// if(result === 'code-detected') {
-		// 	setCodeDetected(true);
-		// 	setCode(codeValue.toString());
-		// }
-		// else {
-		// 	setCodeDetected(false);
-		// 	setCode('');
-		// }
+		setCodeDetected(true)
+		setCodeExample(`code: ${code.join('')}`)
 
-		// TODO check if we can move this to a requestAnimationFrame without interval looping back on itself
+		const mediaRef = decodeMediaRef(code)
+		if (mediaRef) setMediaRefExample(`media-ref: ${code.join('')}`)
+
 		interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
 	}
 
 	onMount(async () => {
+
 		if (!cameraContext.hasPermission()) return
 
 		// TODO CameraContext.requestStreamStart()
@@ -138,6 +146,9 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 			{debug && <debug.DebugCanvasDisplay />}
 			{debug && <debug.DebugGridDisplay />}
 		</div>
-		<div class="feedback">{codeExample()}</div>
+		<div class="feedback">
+			{codeExample()}<br />
+			{mediaRefExample()}
+		</div>
 	</>
 }

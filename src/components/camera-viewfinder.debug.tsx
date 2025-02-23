@@ -9,6 +9,8 @@ import * as fflate from 'fflate';
 import { canvasConfiguration } from '../camera-utilities/canvas';
 import { drawAngleDetail } from '../camera-utilities/angle-scan.debug'
 import { AngleDetail } from '../camera-utilities/angle-scan'
+import { BoundaryDetail } from '../camera-utilities/boundary-scan'
+import { drawBoundaryDetail } from '../camera-utilities/boundary-scan.debug'
 
 type DebugCanvasProps = {
 	id: string,
@@ -98,6 +100,8 @@ const debugEllipsoid = (show: boolean, grid: PixelGrid, ellipsoid: GridEllipsoid
 	debugCanvas('ellipsoid', show, drawEllipsoid(new OffscreenCanvas(grid.width, grid.height), ellipsoid))
 const debugAngles = (show:boolean, grid: PixelGrid, ellipsoid: GridEllipsoid | undefined, angles: AngleDetail | undefined) =>
 	debugCanvas('angles', show, drawAngleDetail(new OffscreenCanvas(grid.width, grid.height), ellipsoid, angles))
+const debugBoundary = (show:boolean, grid: PixelGrid, boundary: BoundaryDetail | undefined, ellipsoid: GridEllipsoid | undefined, angles: AngleDetail | undefined) =>
+	debugCanvas('boundary', show, drawBoundaryDetail(new OffscreenCanvas(grid.width, grid.height), boundary, ellipsoid, angles))
 
 const DebugGridDisplay: Component = () => {
 
@@ -177,7 +181,8 @@ const downloadCanvasData = async () => {
 const debug = canvasConfiguration.debugEnabled()
 	? {
 		DebugCanvasDisplay, debugCanvas, DebugGridDisplay, debugImageData,
-		debugGridPixels, debugEdgeMap, debugEllipsoid, setViewfinderRectForDownload, debugAngles
+		debugGridPixels, debugEdgeMap, debugEllipsoid, setViewfinderRectForDownload, debugAngles,
+		debugBoundary
 	}
 	: undefined
 

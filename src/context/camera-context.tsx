@@ -331,6 +331,11 @@ export const CameraContext: ParentComponent = (props) => {
 			})
 
 		if(hasPermission() && !hasErrored() && !activeStream()) await requestCamera();
+
+		window.addEventListener('unload', async () => {
+			setCameraPermission('denied:system')
+			await stopCameraStreams()
+		}, { once: true })
 	})
 
 	onCleanup(async () => {

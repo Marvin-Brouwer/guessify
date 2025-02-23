@@ -6,8 +6,9 @@ export function drawAngleDetail<T extends OffscreenCanvas>(canvas: T, ellipsoid:
 
 	const ctx = canvasConfiguration.getCanvasContext(canvas)
 	if (canvasConfiguration.clearBeforeDraw) ctx.clearRect(0, 0, canvas.width, canvas.height)
-	if (!ellipsoid) return canvas
-	if (!angles) return canvas
+
+	if (ellipsoid === undefined) return canvas
+	if (angles === undefined) return canvas
 
 	illustrateFirstBarScanArea(ctx, ellipsoid)
 	drawMetaDetails(ctx, ellipsoid, angles)

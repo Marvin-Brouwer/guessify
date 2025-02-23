@@ -1,0 +1,39 @@
+@clientId = {{$dotenv CLIENT_ID}}
+@clientSecret = {{$dotenv CLIENT_SECRET}}
+
+###
+# @name authorize
+# Apparently, the accessToken we get for the spotify api doesn't work with this.
+# It's not allowed `RBAC: access denied`
+# This access token is the one spotify uses in the app, with this you can resolve the id
+# Perhaps there's a scope we can pass for it to work
+# We can't use https://open.spotify.com/get_access_token because it's not cors supported
+GET https://open.spotify.com/get_access_token HTTP/1.1
+###
+
+@accessToken = {{authorize.response.body.accessToken}}###
+
+##
+# @name authorizeWithSecret
+# Authorizing with a secret also returns `RBAC: access denied`, so you need user credentials and not app credentials
+POST https://accounts.spotify.com/api/token HTTP/1.1
+Authorization: Basic {{clientId}} {{clientSecret}}
+Content-Type: application/x-www-form-urlencoded
+
+&grant_type=client_credentials
+###
+
+@accessToken = {{authorizeWithSecret.response.body.access_token}}
+
+##
+# @name getUri
+GET https://spclient.wg.spotify.com:443/scannable-id/id/75845227563?format=json HTTP/1.1
+Authorization: Bearer {{accessToken}}
+X-Client-Id: {{clientId}}
+Accept-Encoding: gzip, deflate
+Connection: close
+App-Platform: iOS
+Accept: */*
+User-Agent: Spotify/8.5.68 iOS/13.4 (iPhone9,3)
+Accept-Language: en
+Spotify-App-Version: 8.5.68

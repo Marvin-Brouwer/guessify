@@ -45,5 +45,7 @@ export function parseCode(codeCanvas: OffscreenCanvas | undefined) {
 		code.push(columnHeight)
 	}
 
-	return code;
+	// TODO: Just return undefined if the length is too much
+
+	return code.slice(0, 23);
 }

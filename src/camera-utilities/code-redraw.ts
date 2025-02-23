@@ -1,6 +1,5 @@
 import { AngleDetail } from './angle-scan'
 import { GridEllipsoid } from './ellipse-detect'
-import { pixelDataFromOffset } from './pixel-grid'
 import { canvasConfiguration } from './canvas'
 import { BoundaryDetail } from './boundary-scan'
 

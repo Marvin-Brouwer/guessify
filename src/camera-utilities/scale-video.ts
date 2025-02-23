@@ -1,5 +1,6 @@
 import { awaitAnimationFrame } from './frame-helper'
 import { canvasConfiguration } from './canvas';
+import { getBrowserMetadata } from '../helpers/browser-metadata';
 
 type ScaledVideoFrame = {
 	boxWidth: number,
@@ -22,8 +23,8 @@ function calculateVideoScale(videoElement: HTMLVideoElement, videoFrame: MediaSt
 	if (!frameHeight) frameHeight = frameWidth! * aspectRatio!
 
 	// The video feed may decide to rotate the stream
-	const trueWidth = Math.min(frameHeight, frameWidth)
-	const trueHeight = Math.max(frameHeight, frameWidth)
+	const trueWidth = getBrowserMetadata().platform.type === 'desktop' ? frameWidth : Math.min(frameHeight, frameWidth)
+	const trueHeight = getBrowserMetadata().platform.type === 'desktop' ? frameHeight : Math.max(frameHeight, frameWidth)
 
 	const resizeRatio = Math.max(videoBox.width / trueWidth, videoBox.height / trueHeight)
 	const resizedWidth = trueWidth * resizeRatio
