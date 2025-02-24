@@ -15,23 +15,10 @@ export type BoundaryDetail = {
 	sevenBottomX: number
 	sevenBottomY: number
 
-	// leftTopX: number
-	// leftTopY: number
-	// leftBottomX: number
-	// leftBottomY: number
-	// rightTopX: number
-	// rightTopY: number
-	// rightBottomX: number
-	// rightBottomY: number
+	hills: [x: number, y: number][]
+	valleys: [x: number, y: number][]
 
 	recalculatedAlphaDegree: number
-
-	/** This is the difference between the circle diameter and the length of the distance to the first 0 */
-	widthDifference:number,
-	/** This is an estimated distance to where the last 0 might be */
-	estimatedWidth:number,
-	estimatedLastZeroX: number,
-	estimatedLastZeroY: number
 }
 
 export function findBoundary(angles: AngleDetail | undefined, ellipsoid: GridEllipsoid | undefined, grid: PixelGrid | undefined): BoundaryDetail | undefined {
@@ -39,58 +26,73 @@ export function findBoundary(angles: AngleDetail | undefined, ellipsoid: GridEll
 	if (!ellipsoid) return undefined
 	if (!grid) return undefined
 
-	// This is a product of trial and error
-	const widthDifference = ellipsoid.averageRadius <= angles.lengthAB
-		? Math.abs(angles.lengthAB - (ellipsoid.averageRadius * 2))
-		: Math.abs((ellipsoid.averageRadius * 2) - angles.lengthAB)
-	const estimatedWidth = (widthDifference * 53) - (angles.lengthBC * Math.abs(angles.alphaDegree) * 31) +
-		(angles.rotatedUpwards ? +(widthDifference * 2) : -(widthDifference * 2))
+	let onBar = false;
+	const hills: [x1: number, y1: number][] = []
+	const valleys: [x1: number, y1: number][] = []
 
-	// COS(alpha) = AB / AC
-	// COS(alpha) = X / averageRadius
-	// COS(alpha) * averageRadius = X
-	const estimatedLastZeroX = (estimatedWidth) * Math.cos(angles.alphaDegree)
-	// SIN(alpha) = BC / AC
-	// SIN(alpha) = Y / averageRadius
-	// SIN(alpha) * averageRadius = Y
-	const estimatedLastZeroY = (estimatedWidth) * Math.sin(angles.alphaDegree)
+	for (let xStart = 0; xStart <= grid.width - angles.zeroX; xStart++) {
 
-	// First find the last 0 bar
-	let maxX = 0
-	let maxY = 0
-	let minY = Infinity
+		if (valleys.length === 23) break;
 
-	for (let xStart = widthDifference; xStart > 0; xStart --) {
-		for (let theta = 0; theta < (10 * Math.PI); theta++) {
-			const x = ((xStart * 1.2) * Math.cos(theta))
-			const y = ((xStart * 2.5) * Math.sin(theta))
-			const absoluteX = Math.round(ellipsoid.averageX + estimatedLastZeroX + x)
-			const absoluteY = Math.round(ellipsoid.averageY + estimatedLastZeroY + y)
+		const absoluteX = angles.zeroX - 10 + (xStart * Math.cos(angles.alphaDegree))
+		const absoluteY = angles.zeroY + (xStart * Math.sin(angles.alphaDegree))
 
-			const pixel = grid.pixel(absoluteX, absoluteY)
-			if (pixel.r === 255 && pixel.g === 255) {
-				maxX = Math.max(maxX, pixel.x)
-				minY = Math.min(minY, pixel.y)
-				maxY = Math.max(maxY, pixel.y + 1)
+		if (onBar) {
+			let pixel = grid.pixel(absoluteX, absoluteY)
+			if (pixel.r === 0 && pixel.g === 0) {
+				onBar = false;
+				valleys.push([pixel.x, pixel.y])
+				continue;
 			}
+			pixel = grid.pixel(absoluteX, absoluteY -1)
+			if (pixel.r === 0 && pixel.g === 0) {
+				onBar = false;
+				valleys.push([pixel.x, pixel.y])
+				continue;
+			}
+			pixel = grid.pixel(absoluteX, absoluteY +1)
+			if (pixel.r === 0 && pixel.g === 0) {
+				onBar = false;
+				valleys.push([pixel.x, pixel.y])
+				continue;
+			}
+			continue;
 		}
-	}
-	const zeroRightX = maxX;
-	const zeroRightY = Math.floor((maxY + minY) / 2)
-
-
-	const estimatedMiddleX = (angles.zeroX + zeroRightX) / 2
-	let minMiddleX = Infinity;
-	let maxMiddleX = 0;
-	const middleY = (angles.zeroY + zeroRightY) / 2
-
-	for (let offset = -1 * widthDifference; offset <= widthDifference; offset ++){
-		let pixel = grid.pixel(estimatedMiddleX + offset, middleY)
+		let pixel = grid.pixel(absoluteX, absoluteY)
 		if (pixel.r === 255 && pixel.g === 255) {
-			minMiddleX = Math.min(minMiddleX, pixel.x)
-			maxMiddleX = Math.max(maxMiddleX, pixel.x)
+			onBar = true;
+			hills.push([pixel.x, pixel.y])
+			continue;
+		}
+		pixel = grid.pixel(absoluteX, absoluteY -1)
+		if (pixel.r === 255 && pixel.g === 255) {
+			onBar = true;
+			hills.push([pixel.x, pixel.y])
+			continue;
+		}
+		pixel = grid.pixel(absoluteX, absoluteY +1)
+		if (pixel.r === 255 && pixel.g === 255) {
+			onBar = true;
+			hills.push([pixel.x, pixel.y])
+			continue;
 		}
 	}
+
+	console.log('barCount', hills.length)
+	if (hills.length !== 23) return undefined
+
+	// TODO perhaps improve midpoint here
+	const zeroRightX = valleys.at(22)?.[0]!;
+	const zeroRightY = valleys.at(22)?.[1]!
+
+
+	const middleIndex = 11;
+	let minMiddleX = hills.at(middleIndex)?.[0]!;
+	let maxMiddleX = valleys.at(middleIndex)?.[0]!;
+	let minMiddleY = hills.at(middleIndex)?.[1]!;
+	let maxMiddleY = valleys.at(middleIndex)?.[1]!;
+
+	const middleY = Math.round((maxMiddleY + minMiddleY) / 2)
 	const middleX = Math.round((maxMiddleX + minMiddleX) / 2)
 
 	const sideAB = zeroRightX - angles.zeroX
@@ -102,8 +104,9 @@ export function findBoundary(angles: AngleDetail | undefined, ellipsoid: GridEll
 	let sevenTopY = Infinity;
 	let sevenBottomY = 0;
 
-	for (let offset = -1 * widthDifference; offset <= widthDifference; offset ++){
-		const checkDistance = ellipsoid.averageRadius + offset;
+	const maxCheck = ellipsoid.bigRadius + 2;
+	for (let offset = -1 * maxCheck; offset <= maxCheck; offset ++){
+		const checkDistance = offset;
 
 		const estimatedTopY = middleY - (checkDistance * Math.cos(Math.abs(recalculatedRotationAlphaDegree)))
 		let pixel = grid.pixel(sevenTopX, estimatedTopY)
@@ -118,19 +121,12 @@ export function findBoundary(angles: AngleDetail | undefined, ellipsoid: GridEll
 		}
 	}
 
-	sevenTopY--;
-	sevenBottomY++;
-
 	return {
+		hills, valleys,
 		zeroLeftX: angles.zeroX,
 		zeroLeftY: angles.zeroY,
 		zeroRightX,
 		zeroRightY,
-
-		widthDifference,
-		estimatedWidth,
-		estimatedLastZeroX,
-		estimatedLastZeroY,
 
 		sevenTopX,
 		sevenTopY,

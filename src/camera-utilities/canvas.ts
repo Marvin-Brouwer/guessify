@@ -15,11 +15,11 @@ export const canvasConfiguration = {
 
 	showScaleCanvas: false,
 	showGrayscaleImage: false,
-	showOrientationLines: import.meta.env.DEV,
+	showOrientationLines: false,
 	showEllipsoid: true,
-	showAngles: false,
+	showAngles: import.meta.env.DEV,
 	showBoundary: true,
-	sampleRate: import.meta.env.PROD ? 200 : 1000,
+	sampleRate: import.meta.env.PROD ? 20 : 200,
 
 	blurAmount: 1,
 	debugEnabled() {

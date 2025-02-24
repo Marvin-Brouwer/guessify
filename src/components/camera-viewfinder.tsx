@@ -86,6 +86,14 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		const edges = markEdges(pixelGrid)
 		debug?.debugEdgeMap(canvasConfiguration.showOrientationLines, pixelGrid, edges)
 		const ellipsoid = findEllipsoid(edges, pixelGrid.height)
+
+		if (!ellipsoid) {
+			setCodeExample(``)
+			setCodeDetected(false)
+			setMediaRefExample('')
+			interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
+		}
+
 		debug?.debugEllipsoid(canvasConfiguration.showEllipsoid, pixelGrid, ellipsoid)
 		const angles = findAngles(ellipsoid, pixelGrid)
 		debug?.debugAngles(canvasConfiguration.showAngles, pixelGrid, ellipsoid, angles)
@@ -99,6 +107,7 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 
 		const codeCanvas = redrawCode(viewFinderCanvasses[0], ellipsoid, angles, boundary)
 		if (!codeCanvas) {
+			setCodeDetected(false)
 			interval = setTimeout(() => requestAnimationFrame(scanFrame), canvasConfiguration.sampleRate)
 			return
 		}
