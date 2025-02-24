@@ -22,7 +22,7 @@ export const DependencyGate: Component<ParentProps> = (props) => {
 	</div>)
 
 	const dependenciesMet = createMemo(() =>
-		spotifyContext.isValid() &&
+		// spotifyContext.isValid() &&
 		cameraContext.hasPermission(),
 		[
 			spotifyContext.isValid,

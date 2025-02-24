@@ -10,37 +10,35 @@ import { expect, test } from 'vitest'
 
 import { canvasToPixelGrid } from '../pixel-grid'
 import { fixTestEnvironment, readImageFile, writeCanvas } from '../../__tests__/test-utils'
-import { findEllipsoid, markEdges } from '../ellipse-detect'
-import { Canvas, ImageData, Canvas as SkiaCanvas } from 'skia-canvas'
-import { drawEdgeMap } from '../edge-map.debug'
-import { toPixelArray } from '../pixel-grid.debug'
-import { drawEllipsoid } from '../ellipse-detect.debug'
+import { Canvas } from 'skia-canvas'
 import { canvasConfiguration } from '../canvas'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { blurViewFinder, readViewFinder } from '../read-viewfinder'
+import { readViewFinder } from '../read-viewfinder'
 import { findAngles } from '../angle-scan'
 import { drawAngleDetail } from '../angle-scan.debug'
 import { redrawCode } from '../code-redraw'
 import { findBoundary } from '../boundary-scan'
 import { drawBoundaryDetail } from '../boundary-scan.debug'
 import { parseCode } from '../code-parser'
+import { findEllipsoid } from '../ellipse-detect'
+import { drawEllipsoid } from '../ellipse-detect.debug'
 
 fixTestEnvironment()
 
-type TestData = [name: string, timestamp: number, expectedResult: string]
+type TestData = [name: string, timestamp: number, expectedResult: string, invert: boolean]
 const timestamps: TestData[] = [
-	['horizontal', 1738858808669, '05120643716777731637070'],
-	['skewed left', 1738791723715, '06607602231707646147410'],
-	['skewed right', 1738962275690, '06607602231707646147410'],
+	['horizontal', 1738858808669, '05120643716777731637070', false],
+	['skewed left', 1738791723715, '06607602231707646147410', false],
+	['skewed right', 1738962275690, '06607602231707646147410', false],
 ]
 
-test.concurrent.for(timestamps)('scan-steps [%s]', async ([_, timestamp, expectedResult]) => {
+test.concurrent.for(timestamps)('scan-steps [%s]', async ([_, timestamp, expectedResult, invert]) => {
 
 	// Arrange
 	canvasConfiguration.clearBeforeDraw = false
 	canvasConfiguration.getCanvasContext = (canvas) => {
-		const skiaCanvas = (canvas as unknown as SkiaCanvas)
+		const skiaCanvas = (canvas as unknown as Canvas)
 		if (skiaCanvas.getContext('2d') == null) {
 			skiaCanvas
 				.newPage(canvas.width, canvas.height)
@@ -58,48 +56,31 @@ test.concurrent.for(timestamps)('scan-steps [%s]', async ([_, timestamp, expecte
 	const debugCanvas = new Canvas(inputDataRect.width * 2, inputDataRect.height * 2)
 
 	// Act
-	const viewFinderCanvasses = await Promise.all([
-		readViewFinder(inputDataRect, inputDataCanvas, false),
-		readViewFinder(inputDataRect, inputDataCanvas, true)
-	])
-	await writeCanvas(viewFinderCanvasses[0], __dirname, `./code-scanner/.output/camera-feed-${timestamp}-01-grayscale.png`)
-	await writeCanvas(viewFinderCanvasses[1], __dirname, `./code-scanner/.output/camera-feed-${timestamp}-02-grayscale-inverted.png`)
+	const viewFinderCanvas = await readViewFinder(inputDataRect, inputDataCanvas, invert)
+	await writeCanvas(viewFinderCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-1-grayscale-${invert ? 'inverted' : 'regular'}.png`)
+	const inputGrid = canvasToPixelGrid(viewFinderCanvas)
 
-	const blurryViewFinderCanvasses = await Promise.all([
-		blurViewFinder(viewFinderCanvasses[0]),
-		blurViewFinder(viewFinderCanvasses[1]),
-	])
-	await writeCanvas(blurryViewFinderCanvasses[0], __dirname, `./code-scanner/.output/camera-feed-${timestamp}-03-blur.png`)
-	await writeCanvas(blurryViewFinderCanvasses[1], __dirname, `./code-scanner/.output/camera-feed-${timestamp}-04-blur-inverted.png`)
+	canvasConfiguration.getCanvasContext(debugCanvas as unknown as OffscreenCanvas)
+		.globalAlpha = .5
+	canvasConfiguration.getCanvasContext(debugCanvas as unknown as OffscreenCanvas)
+		.drawImage(viewFinderCanvas, 0, 0)
+	canvasConfiguration.getCanvasContext(debugCanvas as unknown as OffscreenCanvas)
+		.globalAlpha = 1
 
-	const inputGrid = canvasToPixelGrid(
-		viewFinderCanvasses[0],
-		blurryViewFinderCanvasses[0],
-		blurryViewFinderCanvasses[1]
-	)
-
-	if (inputGrid)
-		debugCanvas.getContext('2d')!.putImageData(new ImageData(toPixelArray(inputGrid), inputGrid.width, inputGrid.height), 0, 0)
-	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-05-lines.png`)
-
-	const edgeMap = inputGrid ? markEdges(inputGrid) : undefined
-	drawEdgeMap(debugCanvas as any, edgeMap)
-	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-06-edge.png`)
-
-	const ellipsoid = findEllipsoid(edgeMap, inputGrid?.height ?? 0)
+	const ellipsoid = findEllipsoid(inputGrid)
 	drawEllipsoid(debugCanvas as any, ellipsoid)
-	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-07-ellipse.png`)
+	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-2-ellipse.png`)
 
 	const angles = findAngles(ellipsoid, inputGrid)
 	drawAngleDetail(debugCanvas as any, ellipsoid, angles)
-	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-08-angles.png`)
+	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-3-angles.png`)
 
 	const boundary = findBoundary(angles, ellipsoid, inputGrid)
 	drawBoundaryDetail(debugCanvas as any, boundary, ellipsoid, angles)
-	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-09-bounds.png`)
+	await writeCanvas(debugCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-4-bounds.png`)
 
-	const codeCanvas = redrawCode(viewFinderCanvasses[0], ellipsoid, angles, boundary)
-	await writeCanvas(codeCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-99-redraw.png`)
+	const codeCanvas = redrawCode(viewFinderCanvas, ellipsoid, angles, boundary)
+	await writeCanvas(codeCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-5-redraw.png`)
 
 	const code = parseCode(codeCanvas)?.join('')
 

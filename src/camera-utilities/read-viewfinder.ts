@@ -30,33 +30,3 @@ export function readViewFinder(viewFinderRect: DOMRectReadOnly, videoInput: Canv
 		return grayScaleCanvas;
 	})
 }
-
-/**
- * Blur viewfinder pixels after grayscale has been applied.
- * This is a separate step to get better results
- */
-export function blurViewFinder(viewFinderCanvas: OffscreenCanvas) {
-
-	return awaitAnimationFrame(() => {
-
-		const blurredCanvas = new OffscreenCanvas(
-			viewFinderCanvas.width,
-			viewFinderCanvas.height
-		)
-		// Blur and up the contrast so we can edge detect later
-		canvasConfiguration
-			.getCanvasContext(blurredCanvas)
-			.filter = `blur(${canvasConfiguration.blurAmount}px)`
-		canvasConfiguration
-			.getCanvasContext(blurredCanvas)
-			.drawImage(
-				viewFinderCanvas,
-				0, 0,
-				viewFinderCanvas.width, viewFinderCanvas.height,
-				0, 0,
-				blurredCanvas.width, blurredCanvas.height
-			);
-
-		return blurredCanvas;
-	})
-}

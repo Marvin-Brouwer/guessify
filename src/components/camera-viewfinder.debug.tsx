@@ -1,9 +1,7 @@
 import { Component, createEffect, createMemo, createSignal } from 'solid-js'
 import './camera-viewfinder.debug.pcss'
 import { PixelGrid } from '../camera-utilities/pixel-grid'
-import { EdgeMap, GridEllipsoid } from '../camera-utilities/ellipse-detect'
-import { drawEdgeMap } from '../camera-utilities/edge-map.debug'
-import { toPixelArray } from '../camera-utilities/pixel-grid.debug'
+import { GridEllipsoid } from '../camera-utilities/ellipse-detect'
 import { drawEllipsoid } from '../camera-utilities/ellipse-detect.debug'
 import * as fflate from 'fflate';
 import { canvasConfiguration } from '../camera-utilities/canvas';
@@ -86,16 +84,9 @@ const DebugCanvasDisplay: Component = () => {
 const [images, setImages] = createSignal<{ [key: string]: { image: ImageData, show: boolean } }>({})
 const debugImageData = (show: boolean, id: string, image: ImageData) =>
 	setImages?.(p => ({ ...p, [id]: { image, show } }))
-const debugGridPixels = (show: boolean, id: string, grid: PixelGrid) =>
-	debugImageData(show, id, new ImageData(
-		toPixelArray(grid),
-		grid.width, grid.height
-	))
 
 const [getViewfinderRectForDownload, setViewfinderRectForDownload] = createSignal<DOMRect>()
 
-const debugEdgeMap = (show: boolean, grid: PixelGrid, edges: EdgeMap | undefined) =>
-	debugCanvas('edge', show, drawEdgeMap(new OffscreenCanvas(grid.width, grid.height), edges))
 const debugEllipsoid = (show: boolean, grid: PixelGrid, ellipsoid: GridEllipsoid | undefined) =>
 	debugCanvas('ellipsoid', show, drawEllipsoid(new OffscreenCanvas(grid.width, grid.height), ellipsoid))
 const debugAngles = (show:boolean, grid: PixelGrid, ellipsoid: GridEllipsoid | undefined, angles: AngleDetail | undefined) =>
@@ -181,7 +172,7 @@ const downloadCanvasData = async () => {
 const debug = canvasConfiguration.debugEnabled()
 	? {
 		DebugCanvasDisplay, debugCanvas, DebugGridDisplay, debugImageData,
-		debugGridPixels, debugEdgeMap, debugEllipsoid, setViewfinderRectForDownload, debugAngles,
+		debugEllipsoid, setViewfinderRectForDownload, debugAngles,
 		debugBoundary
 	}
 	: undefined

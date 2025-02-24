@@ -1,13 +1,12 @@
-import { canvasConfiguration } from './canvas'
-import { pixelDataFromOffset } from './pixel-grid'
+import { canvasToPixelGrid, PixelGrid } from './pixel-grid'
 
 const barThreshold = 130
 
-function countColumnHeight(image: globalThis.ImageData, x: number) {
+function countColumnHeight(grid: PixelGrid, x: number) {
 
 	let whitePixelCount = 0
-	for (let y = 0; y < image.height; y++) {
-		const pixel = pixelDataFromOffset(image, x, y)
+	for (let y = 0; y < grid.height; y++) {
+		const pixel = grid.pixel(x, y)
 		if (pixel.r >= barThreshold) {
 			whitePixelCount++
 		}
@@ -16,10 +15,10 @@ function countColumnHeight(image: globalThis.ImageData, x: number) {
 	return whitePixelCount
 }
 
-function countColumn(image: globalThis.ImageData, x: number, midHeight: number) {
+function countColumn(grid: PixelGrid, x: number, midHeight: number) {
 
 
-	const barHeight = countColumnHeight(image, x)
+	const barHeight = countColumnHeight(grid, x)
 
 	const roundResult = Math.round((barHeight / midHeight) * 8) - 1
 	// Make sure negatives never happen
@@ -29,15 +28,14 @@ function countColumn(image: globalThis.ImageData, x: number, midHeight: number) 
 export function parseCode(codeCanvas: OffscreenCanvas | undefined) {
 	if (codeCanvas === undefined) return undefined
 
-	const codeImage = canvasConfiguration
-		.getCanvasContext(codeCanvas!)
-		.getImageData(0, 0, codeCanvas!.width, codeCanvas!.height)
+	const barcodeGrid = canvasToPixelGrid(codeCanvas)
+	if (!barcodeGrid) return undefined
 
-	const midHeight = countColumnHeight(codeImage, 22)
+	const midHeight = countColumnHeight(barcodeGrid, 22)
 
 	let code: number[] = []
 	for (let x = 0; x <= 44; x += 2) {
-		const columnHeight = countColumn(codeImage, x, midHeight)
+		const columnHeight = countColumn(barcodeGrid, x, midHeight)
 		// Some validation logic to make sure it's actually a spotify code
 		if (x === 0 && columnHeight != 0) return undefined;
 		if (x === 22 && columnHeight != 7) return undefined;
@@ -45,7 +43,6 @@ export function parseCode(codeCanvas: OffscreenCanvas | undefined) {
 		code.push(columnHeight)
 	}
 
-	// TODO: Just return undefined if the length is too much
-
-	return code.slice(0, 23);
+	if (code.length !== 23) return undefined
+	return code
 }

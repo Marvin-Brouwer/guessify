@@ -2,58 +2,65 @@ import { canvasConfiguration } from './canvas'
 import { GridEllipsoid } from './ellipse-detect'
 
 /** Draw debug information about the ellipse's positioning */
-export function drawEllipsoid<T extends OffscreenCanvas>(canvas: T, ellipsoid: GridEllipsoid | undefined) : T {
+export function drawEllipsoid<T extends OffscreenCanvas>(canvas: T, circleMatch: GridEllipsoid | undefined): T {
 
 	const ctx = canvasConfiguration.getCanvasContext(canvas)
-	if(canvasConfiguration.clearBeforeDraw) ctx.clearRect(0, 0, canvas.width, canvas.height);
+	if (canvasConfiguration.clearBeforeDraw) ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-	if (!ellipsoid) return canvas;
+	ctx.lineWidth = 1
+	const edgeOffset = canvasConfiguration.blurAmount * 10
+	const rightOffset = Math.ceil(canvas.width / 9)
 
-	markExtremities(ctx, ellipsoid)
-	drawEllipse(ctx, ellipsoid)
+	ctx.setLineDash([0])
+	ctx.lineWidth = 1
+	ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)'
+	ctx.strokeRect(edgeOffset, edgeOffset, (canvas.width / 2) - (edgeOffset) - rightOffset, canvas.height - (edgeOffset * 2))
+	ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
+	ctx.strokeRect(edgeOffset -1, edgeOffset -1, 2 + (canvas.width / 2) - (edgeOffset) - rightOffset, 2 + canvas.height - (edgeOffset * 2))
+
+	const radius = circleMatch?.checkRadiusInner ?? edgeOffset * 2
+	for (let x = edgeOffset + radius; x < (canvas.width / 2) - rightOffset - radius; x += 3) {
+		for (let y = edgeOffset + radius; y < (canvas.height - edgeOffset - radius); y += 2) {
+			ctx.fillStyle = 'rgba(0, 255, 255, 0.3)'
+			ctx.fillRect(x, y, 1, 1)
+		}
+	}
+
+	if (circleMatch === undefined) return canvas
+
+	ctx.strokeStyle = 'rgb(255, 255, 0)'
+	ctx.lineWidth = 3;
+	ctx.beginPath()
+	ctx.ellipse(
+		circleMatch.averageX, circleMatch.averageY,
+		circleMatch.radiusA, circleMatch.radiusB,
+		0, 0, 180
+	)
+	ctx.stroke()
+
+	ctx.fillStyle = 'rgb(255, 255, 0)'
+	ctx.fillRect(circleMatch.averageX - 2, circleMatch.averageY - 2, 4, 4)
+
+	ctx.lineWidth = 1
+	ctx.setLineDash([3]);
+	ctx.strokeStyle = 'rgb(0, 13, 255)'
+	ctx.beginPath()
+	ctx.ellipse(
+		circleMatch.checkX, circleMatch.checkY,
+		circleMatch.checkRadiusInner, circleMatch.checkRadiusInner,
+		0, 0, 180
+	)
+	ctx.stroke()
+
+	ctx.strokeStyle = 'rgb(0, 6, 124)'
+	ctx.beginPath()
+	ctx.ellipse(
+		circleMatch.checkX, circleMatch.checkY,
+		circleMatch.checkRadiusOuter, circleMatch.checkRadiusOuter,
+		0, 0, 180
+	)
+	ctx.stroke()
+	ctx.setLineDash([0]);
 
 	return canvas
-}
-
-/** Draw a clear indication of where we think the ellipse currently is in the viewfinder */
-function drawEllipse(ctx: OffscreenCanvasRenderingContext2D, ellipsoid: GridEllipsoid) {
-
-	ctx.fillStyle = 'yellow'
-	ctx.strokeStyle = 'yellow'
-
-	// Mark center
-	ctx.fillRect(ellipsoid.averageX - 2, ellipsoid.averageY - 2, 4, 4)
-
-	// Draw a stroke around the ellipse
-	ctx.lineWidth = 3;
-	ctx.beginPath();
-	ctx.ellipse(
-		ellipsoid.averageX,
-		ellipsoid.averageY,
-		ellipsoid.radiusA - 1,
-		ellipsoid.radiusB - 1,
-		-45, 0, 180
-	);
-	ctx.stroke()
-}
-
-/** Mark a cross along the x and y coordinates which dictate the diameter of the ellipsoid */
-function markExtremities(ctx: OffscreenCanvasRenderingContext2D, ellipsoid: GridEllipsoid) {
-
-	ctx.fillStyle = 'rgb(255, 149, 0)'
-	ctx.lineWidth = 1;
-	ctx.strokeStyle = 'rgba(255, 149, 0, 0.8)'
-
-	ctx.fillRect(ellipsoid.xNorthEast, ellipsoid.yNorthEast, 2, 2)
-	ctx.fillRect(ellipsoid.xSouthWest -2, ellipsoid.ySouthWest -2, 2, 2)
-	ctx.beginPath();
-	ctx.moveTo(ellipsoid.xNorthEast, ellipsoid.yNorthEast)
-	ctx.lineTo(ellipsoid.xSouthWest, ellipsoid.ySouthWest)
-	ctx.stroke();
-	ctx.fillRect(ellipsoid.xNorthWest, ellipsoid.yNorthWest, 2, 2)
-	ctx.fillRect(ellipsoid.xSouthEast -2, ellipsoid.ySouthEast -2, 2, 2)
-	ctx.beginPath();
-	ctx.moveTo(ellipsoid.xNorthWest, ellipsoid.yNorthWest)
-	ctx.lineTo(ellipsoid.xSouthEast, ellipsoid.ySouthEast)
-	ctx.stroke();
 }

@@ -135,27 +135,6 @@ function markLastZeroSearch(
 			1, 1
 		)
 	}
-
-	// ctx.strokeStyle = 'rgba(255, 0, 217, 0.5)'
-	// ctx.beginPath()
-	// ctx.ellipse(
-	// 	ellipsoid.averageX + boundary.estimatedLastZeroX, ellipsoid.averageY + boundary.estimatedLastZeroY,
-	// 	boundary.widthDifference * 1.2, boundary.widthDifference * 2.5,
-	// 	0, 0, 180
-	// )
-	// ctx.stroke()
-	// for (let xStart = boundary.widthDifference; xStart > 0; xStart--) {
-	// 	ctx.fillStyle = `rgba(255, 0, 217, ${.05 * xStart})`
-	// 	for (let theta = 0; theta < (10 * Math.PI); theta++) {
-	// 		const x = ((xStart * 1.2) * Math.cos(theta))
-	// 		const y = ((xStart * 2.5) * Math.sin(theta))
-	// 		ctx.fillRect(
-	// 			ellipsoid.averageX + boundary.estimatedLastZeroX + x,
-	// 			ellipsoid.averageY + boundary.estimatedLastZeroY + y,
-	// 			1, 1
-	// 		)
-	// 	}
-	// }
 }
 
 /** Illustrate where we think the last zero bar might be and how we got there */

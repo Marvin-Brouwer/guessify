@@ -5,16 +5,16 @@ import './camera-viewfinder.pcss'
 import { useCameraContext } from '../context/camera-context'
 import { canvasConfiguration } from '../camera-utilities/canvas'
 import { scaleupVideo } from '../camera-utilities/scale-video'
-import { blurViewFinder, readViewFinder } from '../camera-utilities/read-viewfinder'
+import { readViewFinder } from '../camera-utilities/read-viewfinder'
 import { canvasToPixelGrid } from '../camera-utilities/pixel-grid'
 
 import debug from './camera-viewfinder.debug'
-import { findEllipsoid, markEdges } from '../camera-utilities/ellipse-detect'
 import { findAngles } from '../camera-utilities/angle-scan'
 import { findBoundary } from '../camera-utilities/boundary-scan'
 import { redrawCode } from '../camera-utilities/code-redraw'
 import { parseCode } from '../camera-utilities/code-parser'
 import { decodeMediaRef } from '../spotify-decoder/decode-media-ref'
+import { findEllipsoid } from '../camera-utilities/ellipse-detect'
 
 // This is just as an example:
 const [codeExample, setCodeExample] = createSignal('')
@@ -65,6 +65,7 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		if (canvasConfiguration.debugEnabled())
 			debug?.setViewfinderRectForDownload(viewFinderRect)
 
+		// TODO promise.all regular, inverted and flipped
 		const viewFinderCanvasses = await Promise.all([
 			readViewFinder(viewFinderRect, scaledUpCanvas, false),
 			readViewFinder(viewFinderRect, scaledUpCanvas, true)
@@ -72,22 +73,11 @@ export const ViewFinder: Component<CameraLensProps> = ({ videoElement }) => {
 		debug?.debugCanvas('grayscale', canvasConfiguration.showGrayscaleImage, viewFinderCanvasses[0])
 		debug?.debugCanvas('grayscale-inverted', canvasConfiguration.showGrayscaleImage, viewFinderCanvasses[1])
 
-		const blurryViewFinderCanvasses = await Promise.all([
-			blurViewFinder(viewFinderCanvasses[0]),
-			blurViewFinder(viewFinderCanvasses[1]),
-		])
-		debug?.debugCanvas('blur', false, blurryViewFinderCanvasses[0])
-		debug?.debugCanvas('blur-inverted', false, blurryViewFinderCanvasses[1])
-
-		const pixelGrid = canvasToPixelGrid(viewFinderCanvasses[0], blurryViewFinderCanvasses[0], blurryViewFinderCanvasses[1])
+		const pixelGrid = canvasToPixelGrid(viewFinderCanvasses[0])
 		if (!pixelGrid) return requestAnimationFrame(scanFrame)
 
-		debug?.debugGridPixels(canvasConfiguration.showOrientationLines, 'lines', pixelGrid)
-		const edges = markEdges(pixelGrid)
-		debug?.debugEdgeMap(canvasConfiguration.showOrientationLines, pixelGrid, edges)
-		const ellipsoid = findEllipsoid(edges, pixelGrid.height)
-
-		if (!ellipsoid) {
+		const ellipsoid = findEllipsoid(pixelGrid)
+		if (!ellipsoid && codeDetected()) {
 			setCodeExample(``)
 			setCodeDetected(false)
 			setMediaRefExample('')

@@ -57,13 +57,13 @@ function drawMetaDetails(ctx: OffscreenCanvasRenderingContext2D, ellipsoid: Grid
 		ctx.fillText(text, textX + x, textY + y)
 	}
 	// Show Triangle lengths
-	drawText(`AB = ${Math.round(angles.lengthAB * 100000) / 100000}`, -65, -30)
-	drawText(`BC = ${Math.round(angles.lengthBC * 100000) / 100000}`, -65, -20)
-	drawText(`AC = ${Math.round(angles.lengthAC * 100000) / 100000}`, -65, -10)
+	drawText(`AB = ${Math.round(angles.lengthAB * 100000) / 100000}`, +45, -30)
+	drawText(`BC = ${Math.round(angles.lengthBC * 100000) / 100000}`, +45, -20)
+	drawText(`AC = ${Math.round(angles.lengthAC * 100000) / 100000}`, +45, -10)
 	// Show angles
-	drawText(`α = ${Math.round(angles.alphaDegree * 100) / 100}°`, +5, -30)
-	drawText(`β = ${Math.round(angles.betaDegree * 100) / 100}°`, +5, -20)
-	drawText(`γ = ${Math.round(angles.gammaDegree * 100) / 100}°`, +5, -10)
+	drawText(`α = ${Math.round(angles.alphaDegree * 100) / 100}°`, -15, -30)
+	drawText(`β = ${Math.round(angles.betaDegree * 100) / 100}°`, -15, -20)
+	drawText(`γ = ${Math.round(angles.gammaDegree * 100) / 100}°`, -15, -10)
 }
 
 /** Illustrate how we find the first 0 bar exactly */

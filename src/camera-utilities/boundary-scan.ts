@@ -78,7 +78,6 @@ export function findBoundary(angles: AngleDetail | undefined, ellipsoid: GridEll
 		}
 	}
 
-	console.log('barCount', hills.length)
 	if (hills.length !== 23) return undefined
 
 	// TODO perhaps improve midpoint here
