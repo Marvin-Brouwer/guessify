@@ -54,11 +54,11 @@ function markCenterLocation(
 ) {
 	// (purely illustrational)
 	ctx.fillStyle = 'rgb(0, 0, 255)'
-	const middleIndex = 11;
-	let minMiddleX = boundary.hills.at(middleIndex)?.[0]!;
-	let maxMiddleX = boundary.valleys.at(middleIndex)?.[0]!;
-	let minMiddleY = boundary.hills.at(middleIndex)?.[1]!;
-	let maxMiddleY = boundary.valleys.at(middleIndex)?.[1]!;
+	const middleIndex = 11
+	let minMiddleX = boundary.hills.at(middleIndex)?.[0]!
+	let maxMiddleX = boundary.valleys.at(middleIndex)?.[0]!
+	let minMiddleY = boundary.hills.at(middleIndex)?.[1]!
+	let maxMiddleY = boundary.valleys.at(middleIndex)?.[1]!
 	const centerX = (minMiddleX + maxMiddleX) / 2
 	const centerY = (minMiddleY + maxMiddleY) / 2
 	ctx.fillRect(Math.round(centerX - 1), Math.round(centerY), 3, 1)
@@ -93,10 +93,10 @@ function markLastZeroSearch(
 	boundary: BoundaryDetail
 ) {
 
-	for (let xStart = 0; xStart <= ctx.canvas.width - angles.zeroX; xStart++) {
+	for (let xStart = 0; xStart <= ctx.canvas.width - angles.zeroMinX; xStart++) {
 
-		const x = angles.zeroX + (xStart * Math.cos(angles.alphaDegree))
-		const y = angles.zeroY + (xStart * Math.sin(angles.alphaDegree))
+		const x = angles.zeroMinX + (xStart * Math.cos(angles.alphaDegree))
+		const y = angles.zeroAverageY + (xStart * Math.sin(angles.alphaDegree))
 
 		if (xStart % 2 !== 0) continue
 
@@ -107,16 +107,18 @@ function markLastZeroSearch(
 			1, 1
 		)
 		ctx.fillStyle = 'rgba(255, 0, 217, 0.3)'
-		ctx.fillRect(
-			x,
-			y - 2,
-			1, 1
-		)
-		ctx.fillRect(
-			x,
-			y + 2,
-			1, 1
-		)
+		if (angles.rotatedUpwards && Math.abs(angles.alphaDegree) > .1)
+			ctx.fillRect(
+				x,
+				y - 4,
+				1, 1
+			)
+		else if (Math.abs(angles.alphaDegree) > .1)
+			ctx.fillRect(
+				x,
+				y + 4,
+				1, 1
+			)
 	}
 	ctx.fillStyle = 'red'
 

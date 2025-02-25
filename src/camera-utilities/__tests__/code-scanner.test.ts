@@ -60,6 +60,7 @@ test.concurrent.for(timestamps)('scan-steps [%s]', async ([_, timestamp, expecte
 	await writeCanvas(viewFinderCanvas, __dirname, `./code-scanner/.output/camera-feed-${timestamp}-1-grayscale-${invert ? 'inverted' : 'regular'}.png`)
 	const inputGrid = canvasToPixelGrid(viewFinderCanvas)
 
+	// Add see through original image for debugging help
 	canvasConfiguration.getCanvasContext(debugCanvas as unknown as OffscreenCanvas)
 		.globalAlpha = .5
 	canvasConfiguration.getCanvasContext(debugCanvas as unknown as OffscreenCanvas)

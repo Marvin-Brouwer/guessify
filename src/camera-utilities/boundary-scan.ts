@@ -21,64 +21,79 @@ export type BoundaryDetail = {
 	recalculatedAlphaDegree: number
 }
 
+type Groove = {
+	hills: [x: number, y: number][]
+	valleys: [x: number, y: number][]
+}
+type Grooves = {
+	primary: Groove,
+	secondary: Groove
+}
+
 export function findBoundary(angles: AngleDetail | undefined, ellipsoid: GridEllipsoid | undefined, grid: PixelGrid | undefined): BoundaryDetail | undefined {
 	if (!angles) return undefined
 	if (!ellipsoid) return undefined
 	if (!grid) return undefined
 
 	let onBar = false;
-	const hills: [x1: number, y1: number][] = []
-	const valleys: [x1: number, y1: number][] = []
+	const offset = angles.rotatedUpwards ? -4 : +4
+	const grooves: Grooves = {
+		primary: {  hills: [[angles.zeroMinX, angles.zeroAverageY]], valleys: [[angles.zeroMaxX, angles.zeroAverageY]] } ,
+		secondary: {  hills: [[angles.zeroMinX, angles.zeroAverageY + offset]], valleys: [[angles.zeroMaxX, angles.zeroAverageY + offset]] }
+	}
 
-	for (let xStart = 0; xStart <= grid.width - angles.zeroX; xStart++) {
+	for (let xStart = 0; xStart <= grid.width - angles.zeroMinX; xStart++) {
 
-		if (valleys.length === 23) break;
+		if (grooves.primary.valleys.length === 23) break;
+		if (grooves.secondary.valleys.length === 23) break;
 
-		const absoluteX = angles.zeroX - 10 + (xStart * Math.cos(angles.alphaDegree))
-		const absoluteY = angles.zeroY + (xStart * Math.sin(angles.alphaDegree))
+		const absoluteX = angles.zeroMaxX + 1 + (xStart * Math.cos(angles.alphaDegree))
+		const absoluteY = angles.zeroAverageY + (xStart * Math.sin(angles.alphaDegree))
 
 		if (onBar) {
 			let pixel = grid.pixel(absoluteX, absoluteY)
 			if (pixel.r === 0 && pixel.g === 0) {
 				onBar = false;
-				valleys.push([pixel.x, pixel.y])
-				continue;
+				grooves.primary.valleys.push([pixel.x, pixel.y])
 			}
-			pixel = grid.pixel(absoluteX, absoluteY -1)
+
+			// Don't bother if there's next to no (in|de)cline
+			if (angles.alphaDegree < .1) continue;
+
+			pixel = grid.pixel(absoluteX, absoluteY + offset)
 			if (pixel.r === 0 && pixel.g === 0) {
 				onBar = false;
-				valleys.push([pixel.x, pixel.y])
-				continue;
-			}
-			pixel = grid.pixel(absoluteX, absoluteY +1)
-			if (pixel.r === 0 && pixel.g === 0) {
-				onBar = false;
-				valleys.push([pixel.x, pixel.y])
+				grooves.secondary.valleys.push([pixel.x, pixel.y])
 				continue;
 			}
 			continue;
 		}
+
 		let pixel = grid.pixel(absoluteX, absoluteY)
 		if (pixel.r === 255 && pixel.g === 255) {
 			onBar = true;
-			hills.push([pixel.x, pixel.y])
-			continue;
+			grooves.primary.hills.push([pixel.x, pixel.y])
 		}
-		pixel = grid.pixel(absoluteX, absoluteY -1)
+
+		// Don't bother if there's next to no (in|de)cline
+		if (angles.alphaDegree < .1) continue;
+
+		pixel = grid.pixel(absoluteX, absoluteY + offset)
 		if (pixel.r === 255 && pixel.g === 255) {
 			onBar = true;
-			hills.push([pixel.x, pixel.y])
-			continue;
-		}
-		pixel = grid.pixel(absoluteX, absoluteY +1)
-		if (pixel.r === 255 && pixel.g === 255) {
-			onBar = true;
-			hills.push([pixel.x, pixel.y])
+			grooves.secondary.hills.push([pixel.x, pixel.y])
 			continue;
 		}
 	}
 
-	if (hills.length !== 23) return undefined
+	if (grooves.primary.hills.length !== 23 && grooves.secondary.hills.length !== 23) return undefined
+
+	const hills = grooves.primary.hills.length === 23
+		? grooves.primary.hills
+		: grooves.secondary.hills
+	const valleys = grooves.primary.valleys.length === 23
+		? grooves.primary.valleys
+		: grooves.secondary.valleys
 
 	// TODO perhaps improve midpoint here
 	const zeroRightX = valleys.at(22)?.[0]!;
@@ -94,8 +109,8 @@ export function findBoundary(angles: AngleDetail | undefined, ellipsoid: GridEll
 	const middleY = Math.round((maxMiddleY + minMiddleY) / 2)
 	const middleX = Math.round((maxMiddleX + minMiddleX) / 2)
 
-	const sideAB = zeroRightX - angles.zeroX
-	const sideBC = zeroRightY - angles.zeroY
+	const sideAB = zeroRightX - angles.zeroMinX
+	const sideBC = zeroRightY - angles.zeroAverageY
 	const recalculatedRotationAlphaDegree = Math.tan(sideBC / sideAB)
 
 	const sevenTopX = middleX - (ellipsoid.averageRadius * Math.tan((recalculatedRotationAlphaDegree * -1)))
@@ -122,8 +137,8 @@ export function findBoundary(angles: AngleDetail | undefined, ellipsoid: GridEll
 
 	return {
 		hills, valleys,
-		zeroLeftX: angles.zeroX,
-		zeroLeftY: angles.zeroY,
+		zeroLeftX: angles.zeroMinX,
+		zeroLeftY: angles.zeroAverageY,
 		zeroRightX,
 		zeroRightY,
 

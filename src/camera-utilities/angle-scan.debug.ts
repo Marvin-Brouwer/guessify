@@ -21,13 +21,13 @@ export function drawAngleDetail<T extends OffscreenCanvas>(canvas: T, ellipsoid:
 function drawFirstZeroTriangle(ctx: OffscreenCanvasRenderingContext2D, ellipsoid: GridEllipsoid, angles: AngleDetail) {
 
 	ctx.lineWidth = 1
-	if (Math.abs(angles.zeroY - ellipsoid.averageY) > 5) {
+	if (Math.abs(angles.zeroAverageY - ellipsoid.averageY) > 5) {
 		ctx.beginPath()
 		ctx.strokeStyle = 'rgb(64, 0, 255)'
 		ctx.setLineDash([2, 4])
 		ctx.moveTo(Math.round(ellipsoid.averageX + 3), Math.round(ellipsoid.averageY))
-		ctx.lineTo(Math.round(angles.zeroX), Math.round(ellipsoid.averageY))
-		ctx.lineTo(Math.round(angles.zeroX), Math.round(angles.zeroY))
+		ctx.lineTo(Math.round(angles.zeroAverageX), Math.round(ellipsoid.averageY))
+		ctx.lineTo(Math.round(angles.zeroAverageX), Math.round(angles.zeroAverageY))
 		ctx.stroke()
 	}
 
@@ -35,11 +35,11 @@ function drawFirstZeroTriangle(ctx: OffscreenCanvasRenderingContext2D, ellipsoid
 	ctx.strokeStyle = 'rgb(0, 225, 255)'
 	ctx.setLineDash([3])
 	ctx.moveTo(ellipsoid.averageX + 3, ellipsoid.averageY)
-	ctx.lineTo(Math.round(angles.zeroX), Math.round(angles.zeroY))
+	ctx.lineTo(Math.round(angles.zeroAverageX), Math.round(angles.zeroAverageY))
 	ctx.stroke()
 	ctx.fillStyle = 'rgb(0, 225, 255)'
-	ctx.fillRect(Math.round(angles.zeroX - 1), Math.round(angles.zeroY), 3, 1)
-	ctx.fillRect(Math.round(angles.zeroX), Math.round(angles.zeroY - 2), 1, 5)
+	ctx.fillRect(Math.round(angles.zeroAverageX - 1), Math.round(angles.zeroAverageY), 3, 1)
+	ctx.fillRect(Math.round(angles.zeroAverageX), Math.round(angles.zeroAverageY - 2), 1, 5)
 }
 
 /** Write out angle and length details for extra context */
