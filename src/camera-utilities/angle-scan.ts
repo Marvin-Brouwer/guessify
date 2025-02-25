@@ -19,6 +19,9 @@ export type AngleDetail = {
 
 	rotatedUpwards: boolean
 }
+
+const hillThreshold = 220;
+
 export function findAngles(ellipsoid: GridEllipsoid | undefined, grid: PixelGrid | undefined): AngleDetail | undefined {
 	if (!ellipsoid) return undefined
 	if (!grid) return undefined
@@ -36,7 +39,7 @@ export function findAngles(ellipsoid: GridEllipsoid | undefined, grid: PixelGrid
 			const absoluteX = Math.round(ellipsoid.averageX + x)
 			const absoluteY = Math.round(ellipsoid.averageY + y)
 			const pixel = grid.pixel(absoluteX, absoluteY)
-			if (pixel.r === 255 && pixel.g === 255) {
+			if (pixel.r >= hillThreshold && pixel.g >= hillThreshold) {
 				minX = Math.min(minX, pixel.x)
 				maxX = Math.max(maxX, pixel.x)
 				minY = Math.min(minY, pixel.y)

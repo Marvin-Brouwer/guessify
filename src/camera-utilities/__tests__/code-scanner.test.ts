@@ -26,11 +26,15 @@ import { drawEllipsoid } from '../ellipse-detect.debug'
 
 fixTestEnvironment()
 
-type TestData = [name: string, timestamp: number, expectedResult: string, invert: boolean]
+type TestData = [name: string, timestamp: number, expectedResult: string | undefined, invert: boolean]
 const timestamps: TestData[] = [
+	// Orientations
 	['horizontal', 1738858808669, '05120643716777731637070', false],
 	['skewed left', 1738791723715, '06607602231707646147410', false],
 	['skewed right', 1738962275690, '06607602231707646147410', false],
+	// Real user feedback (not sure if these are correct yet, but they are the same)
+	['sample 1', 1740469939024, '03707063000507745547051', false],
+	['sample 2', 1740469939012, '03707063000507745547051', false],
 ]
 
 test.concurrent.for(timestamps)('scan-steps [%s]', async ([_, timestamp, expectedResult, invert]) => {

@@ -16,7 +16,7 @@ export function readViewFinder(viewFinderRect: DOMRectReadOnly, videoInput: Canv
 		// Todo dynamic lighting?
 		canvasConfiguration
 			.getCanvasContext(grayScaleCanvas)
-			.filter = `grayscale() ${invert ? 'invert(100%)' : ''} contrast(4.5)`
+			.filter = `grayscale(100%) brightness(1.2) contrast(4.5) ${invert ? 'invert(100%)' : ''}`
 		canvasConfiguration
 			.getCanvasContext(grayScaleCanvas)
 			.drawImage(

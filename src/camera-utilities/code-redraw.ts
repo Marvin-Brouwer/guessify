@@ -33,7 +33,7 @@ export function redrawCode(
 	)
 	centerContext.resetTransform()
 
-	const codeHeight = Math.floor((ellipsoid.averageRadius / 8)) * 8
+	const codeHeight = (Math.floor((ellipsoid.bigRadius / 8)) * 8) + 4 // Give it some padding, we take the highest bar as divider anyway
 	const bigAC = (boundary.zeroRightX - boundary.zeroLeftX) / Math.cos(boundary.recalculatedAlphaDegree)
 	// Move the center slightly off left top according to logo radius
 	// And where the first 0 starts
@@ -44,12 +44,6 @@ export function redrawCode(
 	rotateContext.drawImage(centerCanvas, -centerCanvas.width / 2, -centerCanvas.height / 2)
 	rotateContext.save()
 	rotateContext.resetTransform()
-
-	// This seems to work better than grayscale
-	rotateContext.globalCompositeOperation = 'saturation'
-	rotateContext.fillStyle = "rgba(0, 0, 0, 1)"
-	rotateContext.fillRect(0, 0, rotateCanvas.width, rotateCanvas.height)
-	rotateContext.save()
 
 	const resizeCanvas = new OffscreenCanvas((22+23), (8 * 8) + 8)
 	const resizeContext = canvasConfiguration.getCanvasContext(resizeCanvas, false)
@@ -63,17 +57,6 @@ export function redrawCode(
 	)
 	resizeContext.resetTransform()
 
-	// resizeContext.globalCompositeOperation = 'source-over'
-	// for (let x = 0; x <= resizeCanvas.width; x += 4) {
-	// 	resizeContext.fillStyle = 'rgb(255, 0, 251)'
-	// 	resizeContext.fillRect(x+2, 0, 2, resizeCanvas.height)
-	// }
-
-	// resizeContext.globalCompositeOperation = 'screen'
-	// for (let y = 0; y <= resizeCanvas.height ; y += 3) {
-	// 	resizeContext.fillStyle = 'rgb(251, 151, 0)'
-	// 	resizeContext.fillRect(1, y, 1, 1)
-	// }
 	resizeContext.fillStyle = 'rgb(251, 151, 0)'
 	resizeContext.fillRect(1, 4 * 8, 1, 1)
 	resizeContext.fillRect(1, 4 * 7, 1, 1)
